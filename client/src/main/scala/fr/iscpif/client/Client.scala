@@ -1,8 +1,10 @@
 package client
 
+import fr.iscpif.client.Connexion
 import org.scalajs.dom
 import scala.concurrent.Future
 import scalatags.JsDom.{tags ⇒ tags}
+import fr.iscpif.scaladget.tools.JsRxTags._
 import scalatags.JsDom.all._
 import rx._
 import scala.scalajs.js.annotation.JSExport
@@ -20,10 +22,11 @@ object Client {
   @JSExport
   def run(): Unit = {
     val body = dom.document.body
+    val connexion = new Connexion
 
 
     dom.document.body.appendChild(
-      tags.div("iscpifWUI !").render
+      connexion.render
     )
 
     val maindiv = dom.document.body.appendChild(tags.div.render)
