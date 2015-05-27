@@ -23,7 +23,7 @@ object Client {
 
 
     dom.document.body.appendChild(
-      tags.div("iscpifWUI !").render
+      tags.div("iscpifWUI !!").render
     )
 
     val maindiv = dom.document.body.appendChild(tags.div.render)
