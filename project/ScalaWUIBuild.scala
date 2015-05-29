@@ -59,7 +59,8 @@ object ScalaWUIBuild extends Build {
         "org.scalatra" %% "scalatra-specs2" % ScalatraVersion % "test",
         "ch.qos.logback" % "logback-classic" % "1.0.12" % "runtime",
         "org.eclipse.jetty" % "jetty-webapp" % "8.1.17.v20150415" % "container",
-        "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test"
+        "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test",
+        "org.apache.directory.api" % "api-ldap-model" % "1.0.0-M30"
       )
     )
   ).dependsOn(shared)
@@ -73,7 +74,7 @@ object ScalaWUIBuild extends Build {
       version := Version,
       scalaVersion := ScalaVersion,
       (go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile) map { (ct, r, st) =>
-        copy(ct, r, new File(st,"webapp"))
+        copy(ct, r, new File(st, "webapp"))
       }
         )
     )
