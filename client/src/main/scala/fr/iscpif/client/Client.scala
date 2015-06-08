@@ -1,6 +1,6 @@
 package client
 
-import fr.iscpif.client.Connexion
+import fr.iscpif.client.Connection
 import org.scalajs.dom
 import scala.concurrent.Future
 import scalatags.JsDom.{tags ⇒ tags}
@@ -22,7 +22,7 @@ object Client {
   @JSExport
   def run(): Unit = {
     val body = dom.document.body
-    val connexion = new Connexion
+    val connexion = new Connection
 
 
     dom.document.body.appendChild(

@@ -60,7 +60,7 @@ object ScalaWUIBuild extends Build {
         "ch.qos.logback" % "logback-classic" % "1.0.12" % "runtime",
         "org.eclipse.jetty" % "jetty-webapp" % "8.1.17.v20150415" % "container",
         "org.eclipse.jetty.orbit" % "javax.servlet" % "3.0.0.v201112011016" % "container;provided;test",
-        "org.apache.directory.api" % "api-ldap-model" % "1.0.0-M30"
+        "org.apache.directory.shared" % "shared-ldap-client-api" % "1.0.0-M13"
       )
     )
   ).dependsOn(shared)

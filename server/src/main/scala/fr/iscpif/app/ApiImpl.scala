@@ -1,12 +1,7 @@
-package fr.iscpif.client
-
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import fr.iscpif.scaladget.tools.JsRxTags._
-import scalatags.JsDom.tags
-import scalatags.JsDom.all._
+package fr.iscpif.app
 
 /*
- * Copyright (C) 27/05/15 // mathieu.leclaire@openmole.org
+ * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,19 +17,15 @@ import scalatags.JsDom.all._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class Connexion {
-  val loginInput = bs.input("")(
-    placeholder := "Login",
-    autofocus
-  ).render
+import shared.Api
+import org.apache.directory.ldap.client.api.LdapNetworkConnection
 
-  val passwordInput = bs.input("")(
-    placeholder := "Password",
-    autofocus
-  ).render
+object ApiImpl extends Api {
 
-  def render = tags.div(
-    loginInput,
-    passwordInput
-  ).render
+  def connect = {
+    println("connecting to ldap ...")
+    val connection = new LdapNetworkConnection("ldap.iscpif.fr", 636, true)
+    connection.setTimeOut(60000)
+    println("connected to ldap ...")
+  }
 }

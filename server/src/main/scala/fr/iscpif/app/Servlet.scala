@@ -16,9 +16,6 @@ object AutowireServer extends autowire.Server[String, upickle.Reader, upickle.Wr
   def write[Result: upickle.Writer](r: Result) = upickle.write(r)
 }
 
-object ApiImpl extends Api {
-}
-
 class Servlet extends ScalatraServlet {
 
   val basePath = "shared"
