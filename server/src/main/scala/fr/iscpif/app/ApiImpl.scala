@@ -17,15 +17,19 @@ package fr.iscpif.app
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import shared.Api
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
+import collection.JavaConversions._
+import scala.util.{Success, Try}
 
-object ApiImpl extends Api {
+object ApiImpl extends shared.Api {
 
-  def connect = {
-    println("connecting to ldap ...")
-    val connection = new LdapNetworkConnection("ldap.iscpif.fr", 636, true)
+  def connect(login: String, pass: String) = {
+    val connection = new LdapNetworkConnection("ldap.iscpif.fr", 389)
     connection.setTimeOut(60000)
-    println("connected to ldap ...")
+
+    Try(connection.bind(s"uid=$login,ou=People,dc=iscpif,dc=fr", pass)) match {
+      case Success(_) => true
+      case _ => false
+    }
   }
 }

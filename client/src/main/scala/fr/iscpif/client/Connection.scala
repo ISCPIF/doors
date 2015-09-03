@@ -1,6 +1,7 @@
 package fr.iscpif.client
 
 import client.Post
+import rx.core.Var
 import shared.Api
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
@@ -9,6 +10,7 @@ import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
+import rx._
 
 /*
  * Copyright (C) 27/05/15 // mathieu.leclaire@openmole.org
@@ -28,32 +30,50 @@ import autowire._
  */
 
 class Connection {
+
+  val connected: Var[Option[String]] = Var(None)
+
   val loginInput = bs.input("")(
     placeholder := "Login",
+    width := "130px",
     autofocus
   ).render
 
   val passwordInput = bs.input("")(
     `type` := "password",
+    width := "130px",
     placeholder := "Password",
     autofocus
   ).render
 
   val connectButton = bs.button("Connect", btn_primary)(`type` := "submit", onclick := { () =>
-    connect
+    connect(loginInput.value, passwordInput.value)
+    false
   }).render
 
-  def render = tags.form(
-    loginInput,
-    passwordInput,
-    connectButton
-  ).render
+  def render =
+    tags.div(
+      Rx {
+        connected() match {
+          case Some(login: String) => tags.div("Hello " + login)
+          case _ => tags.div(
+            tags.form(`class` := "centerPage",
+              tags.p(`class` := "grouptop", loginInput),
+              tags.p(`class` := "groupbottom", passwordInput),
+              connectButton
+            )
+          )
+        }
+      }
+    ).render
 
-  def connect = {
+  def connect(login: String, pass: String) = {
     println("in connect method")
-    Post[Api].connect.call().foreach { c =>
-      println("Connected !")
-
+    Post[Api].connect(login, pass).call().foreach { c =>
+      connected() = {
+        if (c) Some(login)
+        else None
+      }
     }
   }
 }

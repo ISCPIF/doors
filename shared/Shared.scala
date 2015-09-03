@@ -3,5 +3,5 @@ package shared
 
 
 trait Api {
-  def connect(): Unit
+  def connect(login: String, pass: String): Boolean
 }
