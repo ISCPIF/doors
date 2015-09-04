@@ -51,3 +51,9 @@ font-size: 15px;
     top: 7px;
 	color: white;
 }
+
+.connectionFailed{
+	font-size: 18px;
+	font-weight: bold;
+    color: #CC3A36;
+}

@@ -32,6 +32,7 @@ import rx._
 class Connection {
 
   val connected: Var[Option[String]] = Var(None)
+  val connectionFailed: Var[Boolean] = Var(false)
 
   val loginInput = bs.input("", "connectInput")(
     placeholder := "Login",
@@ -65,8 +66,12 @@ class Connection {
             shutdownButton,
             tags.div("Hello " + login)
           )
-          case _ => tags.div(
-            tags.form(`class` := "centerPage",
+          case _ => bs.div("centerPage")(
+            connectionFailed() match {
+              case true => bs.div("connectionFailed")("Connection failed")
+              case _ => tags.div
+            },
+            tags.form(
               tags.p(`class` := "grouptop", loginInput),
               tags.p(`class` := "groupbottom", passwordInput),
               connectButton
@@ -83,6 +88,7 @@ class Connection {
         if (c) Some(login)
         else None
       }
+      connectionFailed() = !c
     }
   }
 }
