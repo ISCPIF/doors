@@ -10,6 +10,9 @@ body input.form-control.connectInput {
 }
 body .btn {
 font-size: 15px;
+font-weight: bold;
+background: #c83771;
+border: #c83771;
 }
 
 /* Nicely grouping input field sets */
