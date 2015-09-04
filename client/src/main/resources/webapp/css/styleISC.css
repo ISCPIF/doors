@@ -1,3 +1,17 @@
+body {
+	background-color: beige;
+}
+
+body input.form-control.connectInput {
+	font-size: 20px;
+	height: 40px;
+	padding: 11px 10px 9px;
+	border: solid #888 1px;
+}
+body .btn {
+font-size: 15px;
+}
+
 /* Nicely grouping input field sets */
 .grouptop,
 .groupbottom {
@@ -14,11 +28,11 @@
 
 #body-login .groupbottom input,
 .groupbottom input {
-	margin-top: 0;
+	margin-top: -8;
+	margin-bottom: 20px;
 	border-top: 0;
 	border-top-right-radius: 0;
 	border-top-left-radius: 0;
-	box-shadow: 0 1px 0 rgba(0,0,0,.1) inset !important;
 }
 
 .centerPage {

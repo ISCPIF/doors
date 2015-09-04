@@ -33,15 +33,13 @@ class Connection {
 
   val connected: Var[Option[String]] = Var(None)
 
-  val loginInput = bs.input("")(
+  val loginInput = bs.input("","connectInput")(
     placeholder := "Login",
-    width := "130px",
     autofocus
   ).render
 
-  val passwordInput = bs.input("")(
+  val passwordInput = bs.input("","connectInput")(
     `type` := "password",
-    width := "130px",
     placeholder := "Password",
     autofocus
   ).render
