@@ -33,12 +33,12 @@ class Connection {
 
   val connected: Var[Option[String]] = Var(None)
 
-  val loginInput = bs.input("","connectInput")(
+  val loginInput = bs.input("", "connectInput")(
     placeholder := "Login",
     autofocus
   ).render
 
-  val passwordInput = bs.input("","connectInput")(
+  val passwordInput = bs.input("", "connectInput")(
     `type` := "password",
     placeholder := "Password",
     autofocus
@@ -49,11 +49,22 @@ class Connection {
     false
   }).render
 
+  val shutdownButton =
+    a(`class` := "shutdownButton",
+      cursor := "pointer",
+      onclick := { () ⇒
+        connected() = None
+      }
+    )("Logout")
+
   def render =
     tags.div(
       Rx {
         connected() match {
-          case Some(login: String) => tags.div("Hello " + login)
+          case Some(login: String) => tags.div(
+            shutdownButton,
+            tags.div("Hello " + login)
+          )
           case _ => tags.div(
             tags.form(`class` := "centerPage",
               tags.p(`class` := "grouptop", loginInput),

@@ -42,3 +42,12 @@ font-size: 15px;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
 }
+
+.shutdownButton {
+    font-size: 22px;
+    margin-right: 10px;
+    position: absolute;
+    right: 0;
+    top: 7px;
+	color: white;
+}
