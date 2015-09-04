@@ -1,5 +1,5 @@
 body {
-	background-color: beige;
+	background: -webkit-linear-gradient(top, #35537a 0%,#1d2d44 100%);
 }
 
 body input.form-control.connectInput {
