@@ -3,6 +3,7 @@ package fr.iscpif.client
 import client.Post
 import rx.core.Var
 import shared.Api
+import ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._
@@ -31,7 +32,7 @@ import rx._
 
 class Connection {
 
-  val connected: Var[Option[String]] = Var(None)
+  val connected: Var[Option[Person]] = Var(None)
   val connectionFailed: Var[Boolean] = Var(false)
 
   val loginInput = bs.input("", "connectInput")(
@@ -62,9 +63,9 @@ class Connection {
     tags.div(
       Rx {
         connected() match {
-          case Some(login: String) => tags.div(
+          case Some(person: Person) => tags.div(
             shutdownButton,
-            tags.div("Hello " + login)
+            tags.div("Hello " + person)
           )
           case _ => bs.div("centerPage")(
             connectionFailed() match {
@@ -84,11 +85,10 @@ class Connection {
   def connect(login: String, pass: String) = {
     println("in connect method")
     Post[Api].connect(login, pass).call().foreach { c =>
-      connected() = {
-        if (c) Some(login)
-        else None
-      }
-      connectionFailed() = !c
+      connected() = c
     }
+    connectionFailed() = !connected().isDefined
   }
+
+
 }

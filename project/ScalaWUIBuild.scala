@@ -19,9 +19,19 @@ object ScalaWUIBuild extends Build {
     "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
   )
 
+  lazy val ext = Project(
+    "ext",
+    file("ext"),
+    settings = Seq(
+      version := Version,
+      scalaVersion := ScalaVersion,
+      resolvers ++= Resolvers
+    )
+  ) enablePlugins (ScalaJSPlugin)
+
   lazy val shared = project.in(file("./shared")).settings(
     scalaVersion := ScalaVersion
-  )
+  ) dependsOn (ext)
 
   lazy val client = Project(
     "client",
@@ -39,7 +49,7 @@ object ScalaWUIBuild extends Build {
         "org.scala-js" %%% "scalajs-dom" % "0.8.0"
       )
     )
-  ).dependsOn(shared) enablePlugins (ScalaJSPlugin)
+  ).dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
 
   lazy val server = Project(
     "server",
@@ -65,7 +75,7 @@ object ScalaWUIBuild extends Build {
 
       )
     )
-  ).dependsOn(shared)
+  ).dependsOn(shared, ext)
 
   lazy val go = taskKey[Unit]("go")
 

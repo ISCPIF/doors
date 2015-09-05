@@ -1,7 +1,12 @@
 package fr.iscpif.app
 
+import org.apache.directory.ldap.client.api.LdapNetworkConnection
+
+import scala.util.{Failure, Success, Try}
+
+
 /*
- * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
+ * Copyright (C) 04/09/15 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,28 +22,26 @@ package fr.iscpif.app
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.apache.directory.ldap.client.api.LdapNetworkConnection
-import org.apache.directory.shared.ldap.model.message.SearchScope
-import collection.JavaConversions._
-import ext.ldap._
-import ext.Data._
-import scala.util.{Success, Try}
 
-object ApiImpl extends shared.Api {
+trait LdapRequest {
 
-  def connect(login: String, pass: String): Option[Person] = {
+  def login: String
+
+  def password: String
+
+  def withConnection: Try[LdapNetworkConnection] = {
     val connection = new LdapNetworkConnection("ldap.iscpif.fr", 389)
     connection.setTimeOut(60000)
 
-    Try(connection.bind(s"uid=$login,ou=People,dc=iscpif,dc=fr", pass)) match {
-      case Success(_) =>
-
-        val entries = connection.search("ou=People,dc=iscpif,dc=fr", s"($uid=$login)", SearchScope.SUBTREE, uid, commonName, email)
-        entries.headOption.map { e =>
-          Person(e.get(uid).getId, e.get(commonName).getId, e.get(email).getId)
-        }
-      case _ => None
+    Try(connection.bind(s"uid=$login,ou=People,dc=iscpif,dc=fr", password)) match {
+      case Success(_) => Success(connection)
+      case _ => Failure(new Throwable("Connection failed"))
     }
+  }
+
+  def request[T](r: LdapNetworkConnection=> T): Try[T] = withConnection match {
+    case Success(connection: LdapNetworkConnection)=> Success(r(connection))
+    case Failure(t)=> Failure(t)
   }
 
 }
