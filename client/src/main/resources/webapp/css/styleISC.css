@@ -60,3 +60,10 @@ border: #c83771;
 	font-weight: bold;
     color: #CC3A36;
 }
+
+.logoISC{
+    position: fixed;
+    width: 200px;
+    bottom: 20px;
+    right: 20 ;
+}

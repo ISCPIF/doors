@@ -79,7 +79,8 @@ class Connection {
             )
           )
         }
-      }
+      },
+      tags.img(src := "img/logoISC.png", `class` := "logoISC")
     ).render
 
   def connect(login: String, pass: String) = {
