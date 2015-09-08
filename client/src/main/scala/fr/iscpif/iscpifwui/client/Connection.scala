@@ -85,9 +85,9 @@ class Connection {
   def connect(login: String, pass: String) = {
     println("in connect method")
     Post[Api].connect(login, pass).call().foreach { c =>
+      connectionFailed() = !c.isDefined
       connected() = c
     }
-    connectionFailed() = !connected().isDefined
   }
 
 
