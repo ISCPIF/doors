@@ -1,16 +1,5 @@
 package fr.iscpif.iscpifwui.client
 
-import shared.Api
-import fr.iscpif.iscpifwui.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import bs._
-import fr.iscpif.scaladget.tools.JsRxTags._
-import scalatags.JsDom.tags
-import scalatags.JsDom.all._
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
-import autowire._
-import rx._
-
 /*
  * Copyright (C) 27/05/15 // mathieu.leclaire@openmole.org
  *
@@ -27,6 +16,17 @@ import rx._
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+import shared.Api
+import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
+import bs._
+import fr.iscpif.scaladget.tools.JsRxTags._
+import scalatags.JsDom.tags
+import scalatags.JsDom.all._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import autowire._
+import rx._
 
 class Connection {
 
