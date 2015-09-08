@@ -63,7 +63,7 @@ class Connection {
         connected() match {
           case Some(person: Person) => tags.div(
             shutdownButton,
-            tags.div("Hello " + person)
+            bs.div("displayPerson")(s"Hello ${person.cn}, ${person.email}")
           )
           case _ => bs.div("centerPage")(
             connectionFailed() match {

@@ -67,3 +67,9 @@ border: #c83771;
     bottom: 15px;
     right: 15px;
 }
+
+.displayPerson{
+	font-size: 15px;
+	color: white;
+	text-align: center;
+}
