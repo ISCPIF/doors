@@ -5,8 +5,6 @@ package fr.iscpif.iscpifwui.ext
  */
 package object ldap {
 
-  implicit def ldapAttributeToString(attribute: LdapAttribute): String = attribute
-
 
   type LdapAttribute = String
 
