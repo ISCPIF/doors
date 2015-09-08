@@ -1,11 +1,10 @@
-package fr.iscpif.app
+package fr.iscpif.iscpifwui.server
 
 import org.scalatra._
 import scala.concurrent.ExecutionContext.Implicits.global
 import upickle._
 import autowire._
 import shared._
-import upickle._
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._

@@ -1,4 +1,5 @@
-import fr.iscpif.app._
+
+import fr.iscpif.iscpifwui.server.Servlet
 import org.scalatra._
 import javax.servlet.ServletContext
 import scala.concurrent.ExecutionContext.Implicits.global

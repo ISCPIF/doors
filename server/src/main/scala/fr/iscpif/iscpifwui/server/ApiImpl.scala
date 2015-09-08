@@ -1,4 +1,4 @@
-package fr.iscpif.app
+package fr.iscpif.iscpifwui.server
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
@@ -20,8 +20,8 @@ package fr.iscpif.app
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
 import org.apache.directory.shared.ldap.model.message.SearchScope
 import collection.JavaConversions._
-import ext.ldap._
-import ext.Data._
+import fr.iscpif.iscpifwui.ext.ldap._
+import fr.iscpif.iscpifwui.ext.Data._
 import scala.util.{Success, Try}
 
 object ApiImpl extends shared.Api {
@@ -34,9 +34,10 @@ object ApiImpl extends shared.Api {
       case Success(_) =>
 
         val entries = connection.search("ou=People,dc=iscpif,dc=fr", s"($uid=$login)", SearchScope.SUBTREE, uid, commonName, email)
-        entries.headOption.map { e =>
-          Person(e.get(uid).getId, e.get(commonName).getId, e.get(email).getId)
-        }
+
+        entries.map{e=>
+          Person(e.get(uid).getString, e.get(commonName).getString, e.get(email).getString)
+        }.toSeq.headOption
       case _ => None
     }
   }

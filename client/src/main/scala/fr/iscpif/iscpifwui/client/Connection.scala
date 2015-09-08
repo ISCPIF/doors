@@ -1,9 +1,7 @@
-package fr.iscpif.client
+package fr.iscpif.iscpifwui.client
 
-import client.Post
-import rx.core.Var
 import shared.Api
-import ext.Data._
+import fr.iscpif.iscpifwui.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._

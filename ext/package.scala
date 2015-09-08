@@ -1,17 +1,20 @@
-package ext
+package fr.iscpif.iscpifwui.ext
 
 /**
  * Created by mathieu on 04/09/15.
  */
 package object ldap {
 
-  type Attribute = String
+  implicit def ldapAttributeToString(attribute: LdapAttribute): String = attribute
 
-  val email: Attribute = "mail"
-  val commonName: Attribute = "cn"
-  val givenName: Attribute = "giveName"
-  val name: Attribute = "name"
-  val surname: Attribute = "sn"
-  val uid: Attribute = "uid"
+
+  type LdapAttribute = String
+
+  val email: LdapAttribute = "mail"
+  val commonName: LdapAttribute = "cn"
+  val givenName: LdapAttribute = "giveName"
+  val name: LdapAttribute = "name"
+  val surname: LdapAttribute = "sn"
+  val uid: LdapAttribute = "uid"
 
 }

@@ -1,4 +1,4 @@
-package fr.iscpif.app
+package fr.iscpif.iscpifwui.server
 
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
 

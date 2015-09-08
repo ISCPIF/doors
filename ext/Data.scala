@@ -1,4 +1,4 @@
-package ext
+package fr.iscpif.iscpifwui.ext
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
@@ -17,13 +17,13 @@ package ext
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import ldap._
+import fr.iscpif.iscpifwui.ext.ldap._
 object Data {
 
   case class Person(
-                      uid: Attribute,
-                      cn: Attribute,
-                      email: Attribute
+                      uid: LdapAttribute,
+                      cn: LdapAttribute,
+                      email: LdapAttribute
                       )
 
 }

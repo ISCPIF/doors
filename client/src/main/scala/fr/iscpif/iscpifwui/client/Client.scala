@@ -1,6 +1,5 @@
-package client
+package fr.iscpif.iscpifwui.client
 
-import fr.iscpif.client.Connection
 import org.scalajs.dom
 import scala.concurrent.Future
 import scalatags.JsDom.{tags ⇒ tags}

@@ -1,6 +1,6 @@
 package shared
 
-import ext.Data._
+import fr.iscpif.iscpifwui.ext.Data._
 
 
 trait Api {
