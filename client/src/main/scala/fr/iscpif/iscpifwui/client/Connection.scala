@@ -54,6 +54,7 @@ class Connection {
       cursor := "pointer",
       onclick := { () ⇒
         connected() = None
+        connectionFailed() = false
       }
     )("Logout")
 
