@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="297mm"
+   height="210mm"
+   viewBox="0 0 1052.3622 744.09448"
+   id="svg3503"
+   version="1.1"
+   inkscape:version="0.91 r13725"
+   sodipodi:docname="seminar.svg">
+  <defs
+     id="defs3505">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient4364">
+      <stop
+         style="stop-color:#ffcc1e;stop-opacity:1;"
+         offset="0"
+         id="stop4366" />
+      <stop
+         style="stop-color:#ffcc1e;stop-opacity:0;"
+         offset="1"
+         id="stop4368" />
+    </linearGradient>
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter3543">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood3545" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite3547" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="4"
+         result="blur"
+         id="feGaussianBlur3549" />
+      <feOffset
+         dx="0"
+         dy="3"
+         result="offset"
+         id="feOffset3551" />
+      <feComposite
+         in="offset"
+         in2="SourceGraphic"
+         operator="out"
+         result="composite2"
+         id="feComposite3553" />
+    </filter>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4364"
+       id="linearGradient4370"
+       x1="-53.383975"
+       y1="587.02173"
+       x2="365.94745"
+       y2="587.02173"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.24748737"
+     inkscape:cx="-1422.6776"
+     inkscape:cy="575.99822"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1920"
+     inkscape:window-height="1056"
+     inkscape:window-x="0"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata3508">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(0,-308.26772)">
+    <g
+       id="g4549"
+       transform="translate(-2.38645,38.309161)">
+      <flowRoot
+         transform="matrix(2.7927991,0,0,2.7927991,92.104061,-850.48345)"
+         xml:space="preserve"
+         id="flowRoot3444"
+         style="font-style:normal;font-weight:normal;font-size:78.47998047px;line-height:125%;font-family:'Bitstream Vera Sans';letter-spacing:0px;word-spacing:0px;fill:#4a5258;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;filter:url(#filter3543)"><flowRegion
+           style="fill:url(#linearGradient4370);fill-opacity:1"
+           id="flowRegion3446"><rect
+             id="rect3448"
+             width="816.5506"
+             height="491.5159"
+             x="-21.276257"
+             y="547.61993"
+             style="fill:#4a5258;fill-opacity:1;stroke:none;stroke-opacity:1" /></flowRegion><flowPara
+           id="flowPara3450"
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Bevan;-inkscape-font-specification:Bevan;fill:#4a5258;fill-opacity:1;stroke:none;stroke-opacity:1">Seminar</flowPara></flowRoot>      <g
+         style="fill:#ffd42a;fill-opacity:1"
+         transform="matrix(1.0173746,0,0,1.0173746,575.91734,706.78647)"
+         id="g4504">
+        <g
+           style="fill:#ffd42a;fill-opacity:1;stroke:none;stroke-opacity:1;filter:url(#filter3543)"
+           transform="matrix(0.48870811,0.33344671,-0.33344671,0.48870811,-39.26583,-303.71579)"
+           id="g3452" />
+        <circle
+           r="35.693634"
+           cy="14.531351"
+           cx="-0.39566684"
+           style="fill:#ffd42a;fill-opacity:1;stroke:none"
+           id="path3454-6"
+           transform="matrix(0.82604114,0.56360983,-0.56360983,0.82604114,0,0)" />
+        <path
+           style="fill:#ffd42a;fill-opacity:1;stroke:none"
+           d="m 129.22257,-176.66794 c -49.816837,-33.99015 -106.847227,-45.14692 -153.808901,-34.5232 l -1.161491,49.9528 c 37.699679,-12.89488 86.533108,-5.54083 128.627012,23.17994 38.97296,26.59135 62.9967,65.256257 67.73319,102.438141 l 45.71638,-16.980911 c -8.99184,-45.515958 -39.57476,-91.63597 -87.10619,-124.06677 z"
+           id="path3456-4"
+           inkscape:connector-curvature="0" />
+        <path
+           style="fill:#ffd42a;fill-opacity:1;stroke:none"
+           d="M 66.104274,-92.754748 C 37.768144,-112.08856 4.704375,-119.19051 -26.819432,-115.26223 l -0.989775,42.19968 c 23.3496393,-2.368913 47.647565,3.163684 68.575937,17.443162 19.646759,13.405031 33.198917,32.375693 40.010502,53.3534809 L 120.30515,-16.962088 c -8.20124,-29.80936 -26.632606,-56.982764 -54.200876,-75.79266 z"
+           id="path3458-1"
+           inkscape:connector-curvature="0" />
+        <path
+           id="path3460-4"
+           d="M 187.26749,-263.10458 C 121.79465,-307.77685 45.690801,-322.56121 -22.284864,-309.9418 l -1.092004,47.32534 c 53.576886,-14.22902 121.909469,-1.33634 181.869298,39.57439 59.49866,40.59608 96.34038,98.93414 103.05835,153.649312 l 45.53283,-16.900384 C 293.76712,-153.75618 252.34683,-218.70078 187.26749,-263.10458 Z"
+           style="fill:#ffd42a;fill-opacity:1;stroke:none"
+           inkscape:connector-curvature="0" />
+      </g>
+    </g>
+  </g>
+</svg>

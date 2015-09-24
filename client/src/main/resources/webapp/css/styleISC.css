@@ -63,7 +63,7 @@ border: #c83771;
 
 .logoISC{
     position: fixed;
-    width: 250px;
+    width: 200px;
     bottom: 15px;
     right: 15px;
 }
@@ -72,4 +72,21 @@ border: #c83771;
 	font-size: 15px;
 	color: white;
 	text-align: center;
+}
+
+.serviceBox{
+	max-width: 220px;
+	height: 116px;
+}
+
+.serviceImage{
+	max-height: 110px;
+}
+
+.wall{
+	position: relative;
+	width: 75%;
+    top: 50px;
+    right: 12.5%;
+    left: 12.5%;
 }

@@ -1,7 +1,7 @@
-package fr.iscpif.iscpifwui.ext
+package fr.iscpif.iscpifwui.client
 
 /*
- * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
+ * Copyright (C) 24/09/15 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,16 +17,11 @@ package fr.iscpif.iscpifwui.ext
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.iscpifwui.ext.ldap._
+object Resources {
 
-object Data {
-
-  type ImagePath = String
-
-  case class Person(
-                     uid: LdapAttribute,
-                     cn: LdapAttribute,
-                     email: LdapAttribute
-                     )
-
+  val isc = "img/logoISC.png"
+  val owncloud = "img/owncloud.svg"
+  val gogs = "img/gogs.jpeg"
+  val jenkins = "img/jenkins.png"
+  val seminar = "img/seminar.png"
 }

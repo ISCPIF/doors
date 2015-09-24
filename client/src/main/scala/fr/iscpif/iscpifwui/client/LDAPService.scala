@@ -28,7 +28,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import rx._
 
-class Connection {
+class LDAPService {
 
   val connected: Var[Option[Person]] = Var(None)
   val connectionFailed: Var[Boolean] = Var(false)

@@ -37,12 +37,10 @@ object Client {
   @JSExport
   def run(): Unit = {
     val body = dom.document.body
-    val connexion = new Connection
+    val serviceWall = new ServiceWall
 
 
-    dom.document.body.appendChild(
-      connexion.render
-    )
+    body.appendChild(serviceWall.render)
 
     val maindiv = dom.document.body.appendChild(tags.div.render)
     body.appendChild(maindiv)
