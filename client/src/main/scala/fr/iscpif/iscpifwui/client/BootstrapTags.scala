@@ -29,12 +29,17 @@ object BootstrapTags {
   def thumbs(services: Seq[ServiceLink]) =
     bs.div("row wall")(
       for {service <- services} yield {
-        bs.div("col-xs-6  col-md-2")(
+        bs.div("col-xs-6  col-md-2 boxHelp")(
           tags.a(
-            `class` := "thumbnail serviceBox",
+            `class` := "thumbnail serviceBox boxHelp",
             href := service.url,
-            target := "_blank"
-          )(img(src := service.logo, alt := service.serviceName, `class` := "serviceImage"))
+            target := "_blank")(
+              img(src := service.logo, alt := service.serviceName, `class` := "serviceImage"),
+              bs.span("caption full-caption")(
+                tags.h3(service.serviceName),
+                tags.p(service.description)
+              )
+            )
         )
       }.render
     )
