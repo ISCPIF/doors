@@ -35,10 +35,8 @@ class ServiceWall {
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
     ServiceLink("Jenkins", Resources.jenkins, "http://jenkins.iscpif.fr", "Continous integration"),
     ServiceLink("Seminar", Resources.seminar, "http://webcast.iscpif.fr/stream.webm", "Seminar streaming"),
-    ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "Fichiers partagés"),
-    ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Forge logicielle"),
-    ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "Fichiers partagés"),
-    ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Forge logicielle")
+    ServiceLink("EGI Certificate", Resources.egi, "https://igc.services.cnrs.fr/usercert/?CA=GRID2-FR&lang=fr", "Procedure on how to get a digital Grid certificate"),
+    ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
   def render =

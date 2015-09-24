@@ -24,4 +24,6 @@ object Resources {
   val gogs = "img/gogs.jpeg"
   val jenkins = "img/jenkins.png"
   val seminar = "img/seminar.png"
+  val egi = "img/egi.svg"
+  val vo = "img/vo.png"
 }
