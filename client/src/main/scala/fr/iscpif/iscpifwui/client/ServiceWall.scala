@@ -28,7 +28,11 @@ import rx._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class ServiceWall {
+object ServiceWall {
+  def apply(user: User) = new ServiceWall(user)
+}
+
+class ServiceWall(user: User) {
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -41,7 +45,8 @@ class ServiceWall {
 
   def render =
     tags.div(
-        BootstrapTags.thumbs(services).render,
-        tags.img(src := Resources.isc, `class` := "logoISC")
+      bs.div("displayPerson")(s"${user.cn}"),
+      BootstrapTags.thumbs(services).render,
+      tags.img(src := Resources.isc, `class` := "logoISC")
     ).render
 }

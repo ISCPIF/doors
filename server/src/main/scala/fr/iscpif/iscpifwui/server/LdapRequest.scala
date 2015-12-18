@@ -27,7 +27,7 @@ import collection.JavaConversions._
 
 case class LdapRequest(ldap: LdapConnection) {
 
-  def person(login: String): Try[Person] =
+  def person(login: String): Try[User] =
     for {
       p <- ldap.map { c =>
         val attributes = Seq(cn, email)
@@ -37,7 +37,7 @@ case class LdapRequest(ldap: LdapConnection) {
           atts = e.getAttributes.map {
             _.get.getString
           }.toSeq
-        } yield Person(e.getDn.getName, atts(0), atts(1))
+        } yield User(e.getDn.getName, atts(0), atts(1))
       }
     } yield p.head
 

@@ -29,7 +29,7 @@ import scala.util.{Failure, Success, Try}
 
 object ApiImpl extends shared.Api {
 
-  def connect(login: String, pass: String): DashboardMessage[Person] = {
+  def connect(login: String, pass: String): DashboardMessage[User] = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, login, pass)
 
     val o = for {

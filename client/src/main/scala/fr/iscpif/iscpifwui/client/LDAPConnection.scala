@@ -29,9 +29,9 @@ import autowire._
 import rx._
 import fr.iscpif.iscpifwui.ext.Data._
 
-class LDAPService {
+class LDAPConnection {
 
-  val connected: Var[Option[Person]] = Var(None)
+  val connected: Var[Option[User]] = Var(None)
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
 
@@ -64,9 +64,9 @@ class LDAPService {
     tags.div(
       Rx {
         connected() match {
-          case Some(person: Person) => tags.div(
+          case Some(user: User) => tags.div(
             shutdownButton,
-            bs.div("displayPerson")(s"Hello ${person.cn}, ${person.email}")
+            ServiceWall(user).render
           )
           case _ => bs.div("centerPage")(
             connectionFailed() match {
@@ -84,22 +84,15 @@ class LDAPService {
       tags.img(src := "img/logoISC.png", `class` := "logoISC")
     ).render
 
-  def connect(login: String, pass: String) = {
-    println("in connect method")
+  def connect(login: String, pass: String) =
     Post[Api].connect(login, pass).call().foreach { c =>
-      println("PPP")
-      println("CCC " + c)
        c match {
         case Right(DashboardError(m, st)) =>
-          println("Error : " + m + "\n"+st)
           errorMessage() = m
           connectionFailed() = true
-        case Left(t: Person) =>
-          println("T " + t)
+        case Left(t: User) =>
           connected() = Some(t)
       }
-
-    }
   }
 
 

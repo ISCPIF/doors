@@ -27,11 +27,12 @@ object Data {
 
   type ImagePath = String
 
-  case class Person(dn: LdapAttribute,
-                    cn: LdapAttribute,
-                    email: LdapAttribute)
+  case class User(dn: LdapAttribute,
+                  cn: LdapAttribute,
+                  email: LdapAttribute)
 
   class DashboardException(message: String) extends Throwable(message)
+
   case class DashboardError(message: String, stack: String)
 
   type DashboardMessage[T] = Either[T, DashboardError]
@@ -42,8 +43,8 @@ object Data {
       case Failure(ex: Throwable) =>
         val message = ex match {
           case ce: InvalidConnectionException => "Cannot connect to the server"
-          case uwe: LdapUnwillingToPerformException=> "Please, give a password"
-          case aue: LdapAuthenticationException=> "Invalid password"
+          case uwe: LdapUnwillingToPerformException => "Please, give a password"
+          case aue: LdapAuthenticationException => "Invalid password"
           case _ => "Unknown error"
         }
         Right(DashboardError(message, ex.getStackTrace.map {
