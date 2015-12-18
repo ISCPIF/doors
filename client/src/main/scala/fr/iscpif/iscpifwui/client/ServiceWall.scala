@@ -1,14 +1,11 @@
 package fr.iscpif.iscpifwui.client
 
-import shared.Api
 import fr.iscpif.iscpifwui.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
-import autowire._
 import rx._
 
 /*
@@ -33,6 +30,7 @@ object ServiceWall {
 }
 
 class ServiceWall(user: User) {
+  val ldapMode: Var[Boolean] = Var(false)
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -44,9 +42,19 @@ class ServiceWall(user: User) {
   )
 
   def render =
-    tags.div(
-      bs.div("displayPerson")(s"${user.cn}"),
-      BootstrapTags.thumbs(services).render,
-      tags.img(src := Resources.isc, `class` := "logoISC")
+    tags.div(Rx {
+      if (ldapMode()) {
+        LDAPEdition(user).render
+      } else {
+        tags.div(
+          bs.div("displayPerson")(s"${user.cn}"),
+          bs.button("LDAP", btn_default, () => {
+            ldapMode() = true
+          }),
+          BootstrapTags.thumbs(services).render,
+          tags.img(src := Resources.isc, `class` := "logoISC")
+        )
+      }
+    }
     ).render
 }

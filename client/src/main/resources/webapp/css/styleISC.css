@@ -125,3 +125,12 @@ border: #c83771;
 	opacity: 1;
 	transform: translateY(100%);
 }
+
+.ldapEdition{
+	position: fixed;
+    top: 20%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+}
