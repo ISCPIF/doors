@@ -2,8 +2,11 @@ package fr.iscpif.iscpifwui.client
 
 import fr.iscpif.iscpifwui.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
+import fr.iscpif.scaladget.tools.JsRxTags._
+import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import bs._
+import rx._
 
 /*
  * Copyright (C) 18/12/15 // mathieu.leclaire@openmole.org
@@ -27,19 +30,44 @@ object LDAPEdition {
 }
 
 
-class LDAPEdition(user: User) {
+class LDAPEdition(_user: User) {
 
-  val emailInput = bs.input(user.email)(
+  val edition = Var(true)
+  val user = Var(_user)
+
+  val emailInput = bs.input(user().email)(
     placeholder := "Email",
     width := "200px").render
 
-  val cnInput = bs.input(user.cn)(
+  val cnInput = bs.input(user().cn)(
     placeholder := "Common name",
     width := "200px").render
-  
-  def render = bs.div("ldapEdition")(
-    bs.labeledField("Common name", cnInput),
-    bs.labeledField("Email", emailInput)
+
+  val saveButton = bs.button("Save", btn_primary, () => {
+    save
+    edition() = false
+  })
+
+  val cancelButton = bs.button("Cancel", btn_default, () => {
+    edition() = false
+  })
+
+  def save = {
+    user() = ???
+  }
+
+  def render = tags.div(Rx {
+    if (edition()) {
+      bs.div("ldapEdition")(
+        bs.buttonGroup("saveCancelButtons")(
+          saveButton,
+          cancelButton
+        ),
+        bs.labeledField("Common name", cnInput),
+        bs.labeledField("Email", emailInput)
+      ).render
+    } else ServiceWall(user()).render
+  }
   )
 
 }

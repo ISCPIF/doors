@@ -48,7 +48,7 @@ object ScalaWUIBuild extends Build {
         "com.lihaoyi" %%% "upickle" % "0.3.6",
         "com.lihaoyi" %%% "scalatags" % "0.5.2",
         "com.lihaoyi" %%% "scalarx" % "0.2.8",
-        "fr.iscpif" %%% "scaladget" % "0.7.0",
+        "fr.iscpif" %%% "scaladget" % "0.8.0-SNAPSHOT",
         "org.scala-js" %%% "scalajs-dom" % "0.8.0"
       )
     )

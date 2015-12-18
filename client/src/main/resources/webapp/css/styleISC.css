@@ -8,7 +8,13 @@ body input.form-control.connectInput {
 	padding: 11px 10px 9px;
 	border: solid #888 1px;
 }
+
 body .btn {
+font-size: 15px;
+font-weight: bold;
+}
+
+body .btn.btn-primary {
 font-size: 15px;
 font-weight: bold;
 background: #c83771;
@@ -133,4 +139,13 @@ border: #c83771;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
     font-size: 16px;
+}
+
+.saveCancelButtons{
+	padding-bottom: 50px;
+	padding-top: 100px;
+}
+
+.saveCancelButtons button.btn.btn-primary{
+border: solid 1px #c83771;
 }

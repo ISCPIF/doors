@@ -4,7 +4,8 @@ import fr.iscpif.iscpifwui.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._
-import scalatags.JsDom.tags
+import org.scalajs.dom.raw.HTMLDivElement
+import scalatags.JsDom.{TypedTag, tags}
 import scalatags.JsDom.all._
 import rx._
 
@@ -41,7 +42,7 @@ class ServiceWall(user: User) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  def render =
+  def render: HTMLDivElement =
     tags.div(Rx {
       if (ldapMode()) {
         LDAPEdition(user).render
