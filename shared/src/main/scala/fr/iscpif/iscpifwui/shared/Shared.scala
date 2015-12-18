@@ -2,6 +2,8 @@ package shared
 
 import fr.iscpif.iscpifwui.ext.Data._
 
+import scala.util.Try
+
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
@@ -22,5 +24,5 @@ import fr.iscpif.iscpifwui.ext.Data._
 
 
 trait Api {
-  def connect(login: String, pass: String): Option[Person]
+  def connect(login: String, pass: String): DashboardMessage[Person]
 }

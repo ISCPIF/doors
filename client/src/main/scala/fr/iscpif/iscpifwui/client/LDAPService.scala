@@ -27,11 +27,13 @@ import scalatags.JsDom.all._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import rx._
+import fr.iscpif.iscpifwui.ext.Data._
 
 class LDAPService {
 
   val connected: Var[Option[Person]] = Var(None)
   val connectionFailed: Var[Boolean] = Var(false)
+  val errorMessage: Var[String] = Var("")
 
   val loginInput = bs.input("", "connectInput")(
     placeholder := "Login",
@@ -68,7 +70,7 @@ class LDAPService {
           )
           case _ => bs.div("centerPage")(
             connectionFailed() match {
-              case true => bs.div("connectionFailed")("Connection failed")
+              case true => bs.div("connectionFailed")(errorMessage())
               case _ => tags.div
             },
             tags.form(
@@ -85,8 +87,18 @@ class LDAPService {
   def connect(login: String, pass: String) = {
     println("in connect method")
     Post[Api].connect(login, pass).call().foreach { c =>
-      connectionFailed() = !c.isDefined
-      connected() = c
+      println("PPP")
+      println("CCC " + c)
+       c match {
+        case Right(DashboardError(m, st)) =>
+          println("Error : " + m + "\n"+st)
+          errorMessage() = m
+          connectionFailed() = true
+        case Left(t: Person) =>
+          println("T " + t)
+          connected() = Some(t)
+      }
+
     }
   }
 

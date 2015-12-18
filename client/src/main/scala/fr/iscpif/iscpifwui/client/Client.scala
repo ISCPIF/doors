@@ -38,9 +38,10 @@ object Client {
   def run(): Unit = {
     val body = dom.document.body
     val serviceWall = new ServiceWall
+    val ldpapService = new LDAPService
 
-
-    body.appendChild(serviceWall.render)
+    body.appendChild(ldpapService.render)
+   // body.appendChild(serviceWall.render)
 
     val maindiv = dom.document.body.appendChild(tags.div.render)
     body.appendChild(maindiv)

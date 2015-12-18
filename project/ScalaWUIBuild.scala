@@ -25,7 +25,10 @@ object ScalaWUIBuild extends Build {
     settings = Seq(
       version := Version,
       scalaVersion := ScalaVersion,
-      resolvers ++= Resolvers
+      resolvers ++= Resolvers,
+      libraryDependencies ++= Seq(
+        "org.apache.directory.shared" % "shared-ldap-client-api" % "1.0.0-M13"
+      )
     )
   ) enablePlugins (ScalaJSPlugin)
 

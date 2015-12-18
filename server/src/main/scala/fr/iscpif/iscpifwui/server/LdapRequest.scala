@@ -1,8 +1,10 @@
 package fr.iscpif.iscpifwui.server
 
-import org.apache.directory.ldap.client.api.LdapNetworkConnection
-
-import scala.util.{Failure, Success, Try}
+import org.apache.directory.shared.ldap.model.message.SearchScope
+import scala.util.{Failure, Try}
+import fr.iscpif.iscpifwui.ext.ldap._
+import fr.iscpif.iscpifwui.ext.Data._
+import collection.JavaConversions._
 
 
 /*
@@ -23,25 +25,21 @@ import scala.util.{Failure, Success, Try}
  */
 
 
-trait LdapRequest {
+case class LdapRequest(ldap: LdapConnection) {
 
-  def login: String
+  def person(login: String): Try[Person] =
+    for {
+      p <- ldap.map { c =>
+        val attributes = Seq(cn, email)
+        val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, attributes: _*)
+        for {
+          e <- entries
+          atts = e.getAttributes.map {
+            _.get.getString
+          }.toSeq
+        } yield Person(e.getDn.getName, atts(0), atts(1))
+      }
+    } yield p.head
 
-  def password: String
-
-  def withConnection: Try[LdapNetworkConnection] = {
-    val connection = new LdapNetworkConnection("ldap.iscpif.fr", 389)
-    connection.setTimeOut(60000)
-
-    Try(connection.bind(s"uid=$login,ou=People,dc=iscpif,dc=fr", password)) match {
-      case Success(_) => Success(connection)
-      case _ => Failure(new Throwable("Connection failed"))
-    }
-  }
-
-  def request[T](r: LdapNetworkConnection=> T): Try[T] = withConnection match {
-    case Success(connection: LdapNetworkConnection)=> Success(r(connection))
-    case Failure(t)=> Failure(t)
-  }
 
 }

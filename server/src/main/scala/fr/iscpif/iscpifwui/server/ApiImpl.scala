@@ -18,28 +18,29 @@ package fr.iscpif.iscpifwui.server
  */
 
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
+import org.apache.directory.shared.ldap.model.constants.Loggers
+import org.apache.directory.shared.ldap.model.cursor.EntryCursor
 import org.apache.directory.shared.ldap.model.message.SearchScope
+import org.ietf.jgss.GSSException
 import collection.JavaConversions._
 import fr.iscpif.iscpifwui.ext.ldap._
 import fr.iscpif.iscpifwui.ext.Data._
-import scala.util.{Success, Try}
+import scala.util.{Failure, Success, Try}
 
 object ApiImpl extends shared.Api {
 
-  def connect(login: String, pass: String): Option[Person] = {
-    val connection = new LdapNetworkConnection("ldap.iscpif.fr", 389)
-    connection.setTimeOut(60000)
+  def connect(login: String, pass: String): DashboardMessage[Person] = {
+    // val connection = new LdapNetworkConnection("ldap.iscpif.fr", 389)
+    val ldap = LdapConnection.fromLogin(LdapConstants.host, login, pass)
 
-    Try(connection.bind(s"uid=$login,ou=People,dc=iscpif,dc=fr", pass)) match {
-      case Success(_) =>
+    println("LDAP   ----------------------" + ldap)
+    val o = for {
+      l <- ldap
+      request = LdapRequest(l)
+      p <- request.person(login)
+    } yield p
 
-        val entries = connection.search("ou=People,dc=iscpif,dc=fr", s"($uid=$login)", SearchScope.SUBTREE, uid, commonName, email)
-
-        entries.map{e=>
-          Person(e.get(uid).getString, e.get(commonName).getString, e.get(email).getString)
-        }.toSeq.headOption
-      case _ => None
-    }
+    println("PPPPP " + o)
+    DashboardMessage(o)
   }
-
 }
