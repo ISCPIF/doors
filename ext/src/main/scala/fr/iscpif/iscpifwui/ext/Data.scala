@@ -19,6 +19,7 @@ package fr.iscpif.iscpifwui.ext
 
 import fr.iscpif.iscpifwui.ext.ldap._
 import org.apache.directory.ldap.client.api.exception._
+import org.apache.directory.shared.ldap.model.exception.{LdapAuthenticationException, LdapUnwillingToPerformException}
 
 import scala.util.{Failure, Success, Try}
 
@@ -41,7 +42,9 @@ object Data {
       case Failure(ex: Throwable) =>
         val message = ex match {
           case ce: InvalidConnectionException => "Cannot connect to the server"
-          case _ => "Error"
+          case uwe: LdapUnwillingToPerformException=> "Please, give a password"
+          case aue: LdapAuthenticationException=> "Invalid password"
+          case _ => "Unknown error"
         }
         Right(DashboardError(message, ex.getStackTrace.map {
           _.toString

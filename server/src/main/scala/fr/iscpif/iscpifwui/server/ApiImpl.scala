@@ -30,17 +30,14 @@ import scala.util.{Failure, Success, Try}
 object ApiImpl extends shared.Api {
 
   def connect(login: String, pass: String): DashboardMessage[Person] = {
-    // val connection = new LdapNetworkConnection("ldap.iscpif.fr", 389)
     val ldap = LdapConnection.fromLogin(LdapConstants.host, login, pass)
 
-    println("LDAP   ----------------------" + ldap)
     val o = for {
       l <- ldap
       request = LdapRequest(l)
       p <- request.person(login)
     } yield p
 
-    println("PPPPP " + o)
     DashboardMessage(o)
   }
 }
