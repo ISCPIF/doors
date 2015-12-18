@@ -1,7 +1,7 @@
 package fr.iscpif.iscpifwui.server
 
 import org.apache.directory.shared.ldap.model.message.SearchScope
-import scala.util.{Failure, Try}
+import scala.util.Try
 import fr.iscpif.iscpifwui.ext.ldap._
 import fr.iscpif.iscpifwui.ext.Data._
 import collection.JavaConversions._
@@ -30,14 +30,12 @@ case class LdapRequest(ldap: LdapConnection) {
   def person(login: String): Try[User] =
     for {
       p <- ldap.map { c =>
-        val attributes = Seq(cn, email)
-        val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, attributes: _*)
+        val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, cn, email)
         for {
           e <- entries
-          atts = e.getAttributes.map {
-            _.get.getString
-          }.toSeq
-        } yield User(e.getDn.getName, atts(0), atts(1))
+          _email = e.get(email).getString
+          _cn = e.get(cn).getString
+        } yield User(e.getDn.getName, _cn, _email)
       }
     } yield p.head
 
