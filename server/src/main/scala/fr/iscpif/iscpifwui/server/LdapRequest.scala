@@ -1,5 +1,6 @@
 package fr.iscpif.iscpifwui.server
 
+import org.apache.directory.shared.ldap.model.entry.{ModificationOperation, DefaultModification}
 import org.apache.directory.shared.ldap.model.message.SearchScope
 import scala.util.Try
 import fr.iscpif.iscpifwui.ext.ldap._
@@ -24,10 +25,19 @@ import collection.JavaConversions._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+object LdapRequest {
+  def getUser(ldap: Try[LdapConnection], login: String): Try[User] = {
+    for {
+      l <- ldap
+      request = new LdapRequest(l)
+      p <- request.getUser(login)
+    } yield p
+  }
+}
 
-case class LdapRequest(ldap: LdapConnection) {
+class LdapRequest(ldap: LdapConnection) {
 
-  def person(login: String): Try[User] =
+  def getUser(login: String): Try[User] =
     for {
       p <- ldap.map { c =>
         val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, cn, email)
@@ -39,5 +49,13 @@ case class LdapRequest(ldap: LdapConnection) {
       }
     } yield p.head
 
-
+  def modify(dn: String, modifiedUser: User): Try[User] = {
+    ldap.map { c =>
+      val modifications = new DefaultModification(ModificationOperation.REPLACE_ATTRIBUTE,
+        cn, modifiedUser.cn
+      )
+      c.modify(dn, modifications)
+      modifiedUser
+    }
+  }
 }

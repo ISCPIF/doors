@@ -3,6 +3,9 @@ package fr.iscpif.iscpifwui.client
 import fr.iscpif.iscpifwui.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import fr.iscpif.scaladget.tools.JsRxTags._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import autowire._
+import shared.Api
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import bs._
@@ -26,11 +29,11 @@ import rx._
  */
 
 object LDAPEdition {
-  def apply(user: User) = new LDAPEdition(user)
+  def apply(user: User, authentication: LoginPassword) = new LDAPEdition(user, authentication)
 }
 
 
-class LDAPEdition(_user: User) {
+class LDAPEdition(_user: User, authentication: LoginPassword) {
 
   val edition = Var(true)
   val user = Var(_user)
@@ -53,7 +56,14 @@ class LDAPEdition(_user: User) {
   })
 
   def save = {
-    user() = ???
+    Post[Api].modify(authentication, user().copy(cn = cnInput.value, email = emailInput.value)).call().foreach{ db=>
+      db match {
+        case Right(DashboardError(m, st)) =>
+          println("ERRER " + m)
+          //errorMessage() = m
+        case Left(u: User) => user() = u
+      }
+    }
   }
 
   def render = tags.div(Rx {
@@ -66,7 +76,7 @@ class LDAPEdition(_user: User) {
         bs.labeledField("Common name", cnInput),
         bs.labeledField("Email", emailInput)
       ).render
-    } else ServiceWall(user()).render
+    } else ServiceWall(user(), authentication).render
   }
   )
 

@@ -27,9 +27,17 @@ object Data {
 
   type ImagePath = String
 
-  case class User(dn: LdapAttribute,
-                  cn: LdapAttribute,
-                  email: LdapAttribute)
+  sealed trait LdapAuthentication
+
+  case class LoginPassword(login: String, password: String) extends LdapAuthentication
+
+  case class DnPassword(dn: String, password: String) extends LdapAuthentication
+
+  object Anonymous extends LdapAuthentication
+
+  case class User(dn: String,
+                  cn: String,
+                  email: String)
 
   class DashboardException(message: String) extends Throwable(message)
 
@@ -45,7 +53,7 @@ object Data {
           case ce: InvalidConnectionException => "Cannot connect to the server"
           case uwe: LdapUnwillingToPerformException => "Please, give a password"
           case aue: LdapAuthenticationException => "Invalid password"
-          case _ => "Unknown error"
+          case x: Any => "Unknown error " + x
         }
         Right(DashboardError(message, ex.getStackTrace.map {
           _.toString

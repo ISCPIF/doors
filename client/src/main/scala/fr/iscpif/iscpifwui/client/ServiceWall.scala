@@ -27,10 +27,10 @@ import rx._
  */
 
 object ServiceWall {
-  def apply(user: User) = new ServiceWall(user)
+  def apply(user: User, authentication: LoginPassword) = new ServiceWall(user, authentication)
 }
 
-class ServiceWall(user: User) {
+class ServiceWall(user: User, authentication: LoginPassword) {
   val ldapMode: Var[Boolean] = Var(false)
 
   val services = Seq(
@@ -45,7 +45,7 @@ class ServiceWall(user: User) {
   def render: HTMLDivElement =
     tags.div(Rx {
       if (ldapMode()) {
-        LDAPEdition(user).render
+        LDAPEdition(user, authentication).render
       } else {
         tags.div(
           bs.div("displayPerson")(s"${user.cn}"),

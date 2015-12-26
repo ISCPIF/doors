@@ -24,5 +24,6 @@ import scala.util.Try
 
 
 trait Api {
-  def connect(login: String, pass: String): DashboardMessage[User]
+  def connect(authentication: LoginPassword): DashboardMessage[User]
+  def modify(authentication: LoginPassword, newUser: User): DashboardMessage[User]
 }

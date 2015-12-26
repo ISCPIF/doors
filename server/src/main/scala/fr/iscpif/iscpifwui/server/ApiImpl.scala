@@ -17,27 +17,23 @@ package fr.iscpif.iscpifwui.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.apache.directory.ldap.client.api.LdapNetworkConnection
-import org.apache.directory.shared.ldap.model.constants.Loggers
-import org.apache.directory.shared.ldap.model.cursor.EntryCursor
-import org.apache.directory.shared.ldap.model.message.SearchScope
-import org.ietf.jgss.GSSException
-import collection.JavaConversions._
-import fr.iscpif.iscpifwui.ext.ldap._
 import fr.iscpif.iscpifwui.ext.Data._
-import scala.util.{Failure, Success, Try}
 
 object ApiImpl extends shared.Api {
 
-  def connect(login: String, pass: String): DashboardMessage[User] = {
-    val ldap = LdapConnection.fromLogin(LdapConstants.host, login, pass)
+  def connect(authentication: LoginPassword): DashboardMessage[User] =
+    LdapConnection.connect(authentication)
 
-    val o = for {
-      l <- ldap
-      request = LdapRequest(l)
-      p <- request.person(login)
-    } yield p
+  def modify(authentication: LoginPassword, newUser: User): DashboardMessage[User] = {
+    val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
 
-    DashboardMessage(o)
+    DashboardMessage(
+      for {
+        l <- ldap
+        u <- LdapRequest.getUser(ldap, authentication.login)
+        request = new LdapRequest(l)
+        p <- request.modify(u.dn, newUser)
+      } yield p
+    )
   }
 }

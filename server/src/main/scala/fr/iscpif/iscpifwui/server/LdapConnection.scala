@@ -1,5 +1,6 @@
 package fr.iscpif.iscpifwui.server
 
+import fr.iscpif.iscpifwui.ext.Data._
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
@@ -41,20 +42,20 @@ object LdapConnection {
 
   def fromLogin(host: String, login: String, password: String, port: Option[Int] = None, timeout: Option[Duration] = None) = {
     val anonymousLdap = LdapConnection(host, port = port, timeout = timeout)
-    val request = LdapRequest(anonymousLdap)
+    val request = new LdapRequest(anonymousLdap)
     for {
-      person <- request.person(login)
-    } yield LdapConnection(host, LoginPassword(person.dn, password), port, timeout)
+      user <- request.getUser(login)
+    } yield LdapConnection(host, DnPassword(user.dn, password), port, timeout)
+  }
+
+  def connect(authentication: LoginPassword): DashboardMessage[User] = {
+    val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
+    DashboardMessage(LdapRequest.getUser(ldap, authentication.login))
   }
 
 }
 
-sealed trait LdapAuthentication
-
-case class LoginPassword(dn: String, password: String) extends LdapAuthentication
-
-object Anonymous extends LdapAuthentication
-
+import LdapConnection._
 trait LdapConnection {
 
   def authentication: LdapAuthentication
@@ -81,7 +82,13 @@ trait LdapConnection {
   private def authenticate(connection: LdapNetworkConnection) =
     authentication match {
       case Anonymous => connection.anonymousBind()
-      case LoginPassword(dn, password) => connection.bind(dn, password)
+      case DnPassword(dn, password) => connection.bind(dn, password)
+      case lp: LoginPassword=>
+        connect(lp) match {
+          case Right(_)=>
+          case Left(user)=> connection.bind(user.dn, lp.password)
+        }
+
     }
 
 }

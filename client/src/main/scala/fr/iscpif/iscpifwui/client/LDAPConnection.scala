@@ -47,7 +47,7 @@ class LDAPConnection {
   ).render
 
   val connectButton = bs.button("Connect", btn_primary)(`type` := "submit", onclick := { () =>
-    connect(loginInput.value, passwordInput.value)
+    connect(LoginPassword(loginInput.value, passwordInput.value))
     false
   }).render
 
@@ -66,7 +66,7 @@ class LDAPConnection {
         connected() match {
           case Some(user: User) => tags.div(
             shutdownButton,
-            ServiceWall(user).render
+            ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)).render
           )
           case _ => bs.div("centerPage")(
             connectionFailed() match {
@@ -84,8 +84,8 @@ class LDAPConnection {
       tags.img(src := "img/logoISC.png", `class` := "logoISC")
     ).render
 
-  def connect(login: String, pass: String) =
-    Post[Api].connect(login, pass).call().foreach { c =>
+  def connect(authentication: LoginPassword) =
+    Post[Api].connect(authentication).call().foreach { c =>
        c match {
         case Right(DashboardError(m, st)) =>
           errorMessage() = m
