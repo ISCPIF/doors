@@ -32,6 +32,7 @@ object ServiceWall {
 
 class ServiceWall(user: User, authentication: LoginPassword) {
   val ldapMode: Var[Boolean] = Var(false)
+  val ldapEditon = LDAPEdition(user, authentication, this)
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -42,20 +43,28 @@ class ServiceWall(user: User, authentication: LoginPassword) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  def render: HTMLDivElement =
-    tags.div(Rx {
-      if (ldapMode()) {
-        LDAPEdition(user, authentication).render
-      } else {
-        tags.div(
-          bs.div("displayPerson")(s"${user.cn}"),
-          bs.button("LDAP", btn_default, () => {
-            ldapMode() = true
-          }),
+  val ldapButton = bs.button("LDAP", btn_default + "ldapButton", {() =>
+    switchLdapMode
+  })
+
+  def switchLdapMode = ldapMode() = !ldapMode()
+
+  val render: HTMLDivElement = {
+    tags.div(`class` := "fullpanel")(
+      tags.div(`class` := Rx {
+        s"leftpanel ${
+          if (ldapMode()) "open" else ""
+        }"
+      }
+      )(ldapEditon.render),
+      tags.div(`class` := Rx {
+        s"centerpanel ${if (ldapMode()) "reduce" else ""}"
+      })(bs.div("user")(s"${user.cn}"),
+          Rx{if(ldapMode()) tags.div() else ldapButton},
           BootstrapTags.thumbs(services).render,
           tags.img(src := Resources.isc, `class` := "logoISC")
         )
-      }
-    }
     ).render
+  }
+
 }

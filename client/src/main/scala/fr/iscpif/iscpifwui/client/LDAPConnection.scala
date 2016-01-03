@@ -31,9 +31,9 @@ import fr.iscpif.iscpifwui.ext.Data._
 
 class LDAPConnection {
 
-  val connected: Var[Option[User]] = Var(None)
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
+  val serviceWall: Var[Option[ServiceWall]] = Var(None)
 
   val loginInput = bs.input("", "connectInput")(
     placeholder := "Login",
@@ -55,45 +55,44 @@ class LDAPConnection {
     a(`class` := "shutdownButton",
       cursor := "pointer",
       onclick := { () ⇒
-        connected() = None
+        serviceWall() = None
         connectionFailed() = false
       }
     )("Logout")
 
-  def render =
-    tags.div(
-      Rx {
-        connected() match {
-          case Some(user: User) => tags.div(
+  val render = tags.div(
+    Rx {
+      serviceWall() match {
+        case Some(serviceWall: ServiceWall) =>
+          tags.div(
             shutdownButton,
-            ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)).render
+            serviceWall.render
           )
-          case _ => bs.div("centerPage")(
-            connectionFailed() match {
-              case true => bs.div("connectionFailed")(errorMessage())
-              case _ => tags.div
-            },
-            tags.form(
-              tags.p(`class` := "grouptop", loginInput),
-              tags.p(`class` := "groupbottom", passwordInput),
-              connectButton
-            )
+        case _ => bs.div("centerPage")(
+          connectionFailed() match {
+            case true => bs.div("connectionFailed")(errorMessage())
+            case _ => tags.div
+          },
+          tags.form(
+            tags.p(`class` := "grouptop", loginInput),
+            tags.p(`class` := "groupbottom", passwordInput),
+            connectButton
           )
-        }
-      },
-      tags.img(src := "img/logoISC.png", `class` := "logoISC")
-    ).render
+        )
+      }
+    },
+    tags.img(src := "img/logoISC.png", `class` := "logoISC")
+  ).render
 
   def connect(authentication: LoginPassword) =
     Post[Api].connect(authentication).call().foreach { c =>
-       c match {
+      c match {
         case Right(DashboardError(m, st)) =>
           errorMessage() = m
           connectionFailed() = true
-        case Left(t: User) =>
-          connected() = Some(t)
+        case Left(user: User) =>
+          serviceWall() = Some(ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
       }
-  }
-
+    }
 
 }

@@ -59,6 +59,19 @@ border: #c83771;
     right: 0;
     top: 7px;
 	color: white;
+	z-index: 1;
+}
+.user{
+	text-align: center;
+	font-size: 15px;
+	color: white;
+	position: relative;
+	padding-top: 10px;
+}
+
+.ldapButton{
+	position: relative;
+	top: -20px;
 }
 
 .connectionFailed{
@@ -93,8 +106,6 @@ border: #c83771;
 	position: relative;
 	width: 75%;
     top: 50px;
-    right: 12.5%;
-    left: 12.5%;
 }
 
 .boxHelp .caption {
@@ -133,19 +144,51 @@ border: #c83771;
 }
 
 .ldapEdition{
-	position: fixed;
-    top: 20%;
-    left: 50%;
-    -webkit-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
-    font-size: 16px;
+	font-size: 19px;
 }
 
 .saveCancelButtons{
 	padding-bottom: 50px;
-	padding-top: 100px;
+	padding-top: 20px;
+	margin-left: 17%;
 }
 
 .saveCancelButtons button.btn.btn-primary{
 border: solid 1px #c83771;
 }
+
+.fullpanel {
+    height: 100%;
+    width: 100%;
+}
+.centerpanel {
+	background: -webkit-linear-gradient(top, #35537a 0%,#1d2d44 100%);
+    height: 100%;
+    padding-left: 5%;
+    padding-right: 5%;
+    position: relative;
+    width: 100%;
+}
+.fullpanel .reduce {
+    left: 220px;
+    position: fixed;
+    transition: all 0.1s ease-out 0s;
+
+}
+.fullpanel .open {
+    left: 0;
+}
+.leftpanel {
+    background: #333333 none repeat scroll 0 0;
+    height: 100%;
+    padding-left: 7px;
+    position: absolute;
+    transition: all 0.1s ease-out 0s;
+    width: 220px;
+    z-index: 0;
+}
+
+.top100{
+ 	position: absolute;
+ 	top: 100px;
+ }

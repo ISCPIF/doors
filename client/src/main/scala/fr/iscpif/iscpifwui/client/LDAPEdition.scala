@@ -29,11 +29,12 @@ import rx._
  */
 
 object LDAPEdition {
-  def apply(user: User, authentication: LoginPassword) = new LDAPEdition(user, authentication)
+  def apply(user: User, authentication: LoginPassword, serviceWall: ServiceWall) =
+    new LDAPEdition(user, authentication, serviceWall)
 }
 
 
-class LDAPEdition(_user: User, authentication: LoginPassword) {
+class LDAPEdition(_user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
 
   val edition = Var(true)
   val user = Var(_user)
@@ -48,11 +49,13 @@ class LDAPEdition(_user: User, authentication: LoginPassword) {
 
   val saveButton = bs.button("Save", btn_primary, () => {
     save
-    edition() = false
+    serviceWall.switchLdapMode
+   // edition() = false
   })
 
   val cancelButton = bs.button("Cancel", btn_default, () => {
-    edition() = false
+    serviceWall.switchLdapMode
+   // edition() = false
   })
 
   def save = {
@@ -76,7 +79,7 @@ class LDAPEdition(_user: User, authentication: LoginPassword) {
         bs.labeledField("Common name", cnInput),
         bs.labeledField("Email", emailInput)
       ).render
-    } else ServiceWall(user(), authentication).render
+    } else serviceWall.render
   }
   )
 

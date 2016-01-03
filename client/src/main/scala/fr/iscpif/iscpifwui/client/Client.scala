@@ -39,9 +39,6 @@ object Client {
     val body = dom.document.body
     val ldpapConnection = new LDAPConnection
     body.appendChild(ldpapConnection.render)
-
-    val maindiv = dom.document.body.appendChild(tags.div.render)
-    body.appendChild(maindiv)
   }
 }
 

@@ -27,7 +27,7 @@ import scalatags.JsDom.all._
 object BootstrapTags {
 
   def thumbs(services: Seq[ServiceLink]) =
-    bs.div("row wall")(
+    bs.div("row wall top100")(
       for {service <- services} yield {
         bs.div("col-xs-6  col-md-2 boxHelp")(
           tags.a(
