@@ -37,7 +37,6 @@ object LDAPEdition {
 class LDAPEdition(user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
 
   val edition = Var(true)
- // val user = Var(_user)
 
   val emailInput = bs.input(user.email)(
     placeholder := "Email",
