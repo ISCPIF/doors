@@ -34,37 +34,46 @@ object LDAPEdition {
 }
 
 
-class LDAPEdition(_user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
+class LDAPEdition(user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
 
   val edition = Var(true)
-  val user = Var(_user)
+ // val user = Var(_user)
 
-  val emailInput = bs.input(user().email)(
+  val emailInput = bs.input(user.email)(
     placeholder := "Email",
     width := "200px").render
 
-  val cnInput = bs.input(user().cn)(
-    placeholder := "Common name",
+  val givenNameInput = bs.input(user.givenName)(
+    placeholder := "Given name",
     width := "200px").render
+
+  val descriptionInput = bs.input(user.description)(
+    placeholder := "Description",
+    width := "200px").render
+
 
   val saveButton = bs.button("Save", btn_primary, () => {
     save
     serviceWall.switchLdapMode
-   // edition() = false
   })
 
   val cancelButton = bs.button("Cancel", btn_default, () => {
     serviceWall.switchLdapMode
-   // edition() = false
   })
 
   def save = {
-    Post[Api].modify(authentication, user().copy(cn = cnInput.value, email = emailInput.value)).call().foreach{ db=>
+    val newUser = user.copy(
+      givenName = givenNameInput.value,
+      email = emailInput.value,
+      description = descriptionInput.value
+    )
+
+    Post[Api].modify(authentication, newUser).call().foreach { db =>
       db match {
         case Right(DashboardError(m, st)) =>
           println("ERRER " + m)
-          //errorMessage() = m
-        case Left(u: User) => user() = u
+        //errorMessage() = m
+        case Left(u: User) => serviceWall.user() = u
       }
     }
   }
@@ -76,8 +85,9 @@ class LDAPEdition(_user: User, authentication: LoginPassword, serviceWall: Servi
           saveButton,
           cancelButton
         ),
-        bs.labeledField("Common name", cnInput),
-        bs.labeledField("Email", emailInput)
+        bs.labeledField("Given name", givenNameInput),
+        bs.labeledField("Email", emailInput),
+        bs.labeledField("Description", descriptionInput)
       ).render
     } else serviceWall.render
   }

@@ -40,21 +40,26 @@ class LdapRequest(ldap: LdapConnection) {
   def getUser(login: String): Try[User] =
     for {
       p <- ldap.map { c =>
-        val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, cn, email)
+        val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, givenName, email, description)
         for {
           e <- entries
           _email = e.get(email).getString
-          _cn = e.get(cn).getString
-        } yield User(e.getDn.getName, _cn, _email)
+          _cn = e.get(givenName).getString
+          _description = e.get(description).getString
+        } yield User(e.getDn.getName, _cn, _email, _description)
       }
     } yield p.head
 
   def modify(dn: String, modifiedUser: User): Try[User] = {
     ldap.map { c =>
-      val modifications = new DefaultModification(ModificationOperation.REPLACE_ATTRIBUTE,
-        cn, modifiedUser.cn
-      )
-      c.modify(dn, modifications)
+      Seq(
+        (email, modifiedUser.email),
+        (givenName, modifiedUser.givenName),
+        (description, modifiedUser.description)
+      ).foreach { field =>
+        val modifications = new DefaultModification(ModificationOperation.REPLACE_ATTRIBUTE, field._1, field._2)
+        c.modify(dn, modifications)
+      }
       modifiedUser
     }
   }

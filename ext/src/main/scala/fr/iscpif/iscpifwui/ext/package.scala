@@ -23,8 +23,8 @@ package object ldap {
   type LdapAttribute = String
 
   val email: LdapAttribute = "mail"
-  val cn: LdapAttribute = "cn"
-  val givenName: LdapAttribute = "giveName"
+  val givenName: LdapAttribute = "givenName"
+  val description: LdapAttribute = "description"
   val name: LdapAttribute = "name"
   val surname: LdapAttribute = "sn"
   val uid: LdapAttribute = "uid"

@@ -30,9 +30,9 @@ object ServiceWall {
   def apply(user: User, authentication: LoginPassword) = new ServiceWall(user, authentication)
 }
 
-class ServiceWall(user: User, authentication: LoginPassword) {
+class ServiceWall(_user: User, authentication: LoginPassword) {
+  val user = Var(_user)
   val ldapMode: Var[Boolean] = Var(false)
-  val ldapEditon = LDAPEdition(user, authentication, this)
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -56,10 +56,10 @@ class ServiceWall(user: User, authentication: LoginPassword) {
           if (ldapMode()) "open" else ""
         }"
       }
-      )(ldapEditon.render),
+      )(LDAPEdition(user(), authentication, this).render),
       tags.div(`class` := Rx {
         s"centerpanel ${if (ldapMode()) "reduce" else ""}"
-      })(bs.div("user")(s"${user.cn}"),
+      })(bs.div("user")(Rx{s"${user().givenName}"}),
           Rx{if(ldapMode()) tags.div() else ldapButton},
           BootstrapTags.thumbs(services).render,
           tags.img(src := Resources.isc, `class` := "logoISC")

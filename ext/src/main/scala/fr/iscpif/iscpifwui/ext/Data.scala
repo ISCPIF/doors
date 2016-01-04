@@ -36,8 +36,9 @@ object Data {
   object Anonymous extends LdapAuthentication
 
   case class User(dn: String,
-                  cn: String,
-                  email: String)
+                  givenName: String,
+                  email: String,
+                  description: String)
 
   class DashboardException(message: String) extends Throwable(message)
 
