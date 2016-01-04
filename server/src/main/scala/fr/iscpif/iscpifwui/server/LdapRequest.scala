@@ -44,9 +44,9 @@ class LdapRequest(ldap: LdapConnection) {
         for {
           e <- entries
           _email = e.get(email).getString
-          _cn = e.get(givenName).getString
+          _gn = e.get(givenName).getString
           _description = e.get(description).getString
-        } yield User(e.getDn.getName, _cn, _email, _description)
+        } yield User(e.getDn.getName, _gn, _email, _description)
       }
     } yield p.head
 
