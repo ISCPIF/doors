@@ -192,3 +192,9 @@ border: solid 1px #c83771;
  	position: absolute;
  	top: 100px;
  }
+
+ span.label.control-label{
+   	position: relative;
+      bottom: 3px;
+      left:-5px;
+   }
