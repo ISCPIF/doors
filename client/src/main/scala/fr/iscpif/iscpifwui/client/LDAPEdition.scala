@@ -69,10 +69,10 @@ class LDAPEdition(user: User, authentication: LoginPassword, serviceWall: Servic
 
     Post[Api].modify(authentication, newUser).call().foreach { db =>
       db match {
-        case Right(DashboardError(m, st)) =>
-          println("ERRER " + m)
+        case error: ErrorData =>
+          println("ERRER " + error.className)
         //errorMessage() = m
-        case Left(u: User) => serviceWall.user() = u
+        case u: User => serviceWall.user() = u
       }
     }
   }

@@ -2,9 +2,6 @@ package shared
 
 import fr.iscpif.iscpifwui.ext.Data._
 
-import scala.util.Try
-
-
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
  *
@@ -24,6 +21,6 @@ import scala.util.Try
 
 
 trait Api {
-  def connect(authentication: LoginPassword): DashboardMessage[User]
-  def modify(authentication: LoginPassword, newUser: User): DashboardMessage[User]
+  def connect(authentication: LoginPassword): UserQuery
+  def modify(authentication: LoginPassword, newUser: User): UserQuery
 }

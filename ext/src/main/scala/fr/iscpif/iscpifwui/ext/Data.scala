@@ -19,7 +19,7 @@ package fr.iscpif.iscpifwui.ext
 
 import fr.iscpif.iscpifwui.ext.ldap._
 import org.apache.directory.ldap.client.api.exception._
-import org.apache.directory.shared.ldap.model.exception.{LdapAuthenticationException, LdapUnwillingToPerformException}
+import org.apache.directory.shared.ldap.model.exception.{LdapInvalidDnException, LdapException, LdapAuthenticationException, LdapUnwillingToPerformException}
 
 import scala.util.{Failure, Success, Try}
 
@@ -35,35 +35,84 @@ object Data {
 
   object Anonymous extends LdapAuthentication
 
+  sealed trait UserQuery
+
   case class User(dn: String,
                   givenName: String,
                   email: String,
-                  description: String)
+                  description: String) extends UserQuery
 
-  class DashboardException(message: String) extends Throwable(message)
+  case class ErrorData(className: String, code: Int, message: String) extends UserQuery
+ // case class UserQuery(query: EitherUserQuery)
 
-  case class DashboardError(message: String, stack: String)
 
-  type DashboardMessage[T] = Either[T, DashboardError]
+  //= Either[User, ErrorData]
 
-  object DashboardMessage {
-    def apply[T](o: Try[T]): DashboardMessage[T] = o match {
-      case Success(t) => Left(t)
+  object UserQuery {
+    implicit def stackTrace(st: Array[StackTraceElement]): String = st.map {
+      _.toString
+    }.mkString("\n")
+
+    implicit def tryUserToUserQuery(t: Try[User]): UserQuery = apply(t)
+
+   // implicit def eitherUserQueryToUserQuery(either: EitherUserQuery): UserQuery = UserQuery(either)
+
+    def apply(o: Try[User]): UserQuery = o match {
+      case Success(t) => t
       case Failure(ex: Throwable) =>
-        val message = ex match {
-          case ce: InvalidConnectionException => "Cannot connect to the server"
-          case uwe: LdapUnwillingToPerformException => "Please, give a password"
-          case aue: LdapAuthenticationException => "Invalid password"
-          case x: Any => "Unknown error " + x
+        ex match {
+          case lde: LdapException => lde match {
+            case e: InvalidConnectionException => HttpError(404, LDAPInvalidConnectionError("Cannot connect to the server"))
+            case e: LdapUnwillingToPerformException => HttpError(401, LDAPUnwillingToPerformError("Please, give a password"))
+            case e: LdapInvalidDnException => HttpError(401, LDAPInvalidDNError("User not found"))
+            case e: LdapAuthenticationException => HttpError(401,  LDAPAuthenticationError("Invalid login or password"))
+            case _ => HttpError(400, OtherLDAPError(lde.getClass.toString, lde.getMessage, lde.getStackTrace))
+          }
+          case e: HttpError =>
+            println("EEEEEEEEEEEEEEEEEERRPORU " + e)
+            e
+          case x: Any =>
+            println("YX *----------------- " + x)
+            HttpError(400,UnexceptedError(ex.getMessage, ex.getStackTrace))
         }
-        Right(DashboardError(message, ex.getStackTrace.map {
-          _.toString
-        }.mkString("\n"))
-        )
     }
-
-
   }
 
+  // REST API
+
+  object HttpError{
+
+    implicit def httpErrorToErrorData(e: HttpError): ErrorData = ErrorData(e.error.map{_.getClass.toString.split('$').last}.getOrElse(""), e.code, e.error.map{_.message}.getOrElse(""))
+
+    def apply(c: Int, e: Error): HttpError = HttpError(c, Some(e))
+
+    def apply(c: Int, e: Option[Error]): HttpError = new HttpError {
+      def code: Int = c
+      def error: Option[Error] = e
+    }
+  }
+
+  sealed trait Error {
+    def message: String
+  }
+
+
+  sealed trait HttpError {
+    def code: Int
+
+    def error: Option[Error]
+  }
+
+  case class LDAPInvalidConnectionError(message: String) extends Error
+
+  case class LDAPUnwillingToPerformError(message: String) extends Error
+
+  case class LDAPAuthenticationError(message: String) extends Error
+
+  case class LDAPInvalidDNError(message: String) extends Error
+
+  case class OtherLDAPError(exceptionName: String, message: String, stack: String) extends Error
+
+  case class UnexceptedError(message: String, stackTrace: String, level: Option[String] = None) extends Error
 
 }

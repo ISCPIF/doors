@@ -1,8 +1,10 @@
 package fr.iscpif.iscpifwui.server
 
+import org.apache.directory.ldap.client.api.LdapNetworkConnection
 import org.apache.directory.shared.ldap.model.entry.{ModificationOperation, DefaultModification}
+import org.apache.directory.shared.ldap.model.exception.LdapInvalidDnException
 import org.apache.directory.shared.ldap.model.message.SearchScope
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import fr.iscpif.iscpifwui.ext.ldap._
 import fr.iscpif.iscpifwui.ext.Data._
 import collection.JavaConversions._
@@ -33,22 +35,30 @@ object LdapRequest {
       p <- request.getUser(login)
     } yield p
   }
+
+  def search(connection: LdapNetworkConnection, login: String) =
+    connection.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, givenName, email, description)
 }
+
+import LdapRequest._
 
 class LdapRequest(ldap: LdapConnection) {
 
-  def getUser(login: String): Try[User] =
+  def getUser(login: String): Try[User] = Try {
     for {
       p <- ldap.map { c =>
-        val entries = c.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, givenName, email, description)
         for {
-          e <- entries
+          e <- search(c, login)
           _email = e.get(email).getString
           _gn = e.get(givenName).getString
           _description = e.get(description).getString
         } yield User(e.getDn.getName, _gn, _email, _description)
       }
-    } yield p.head
+    } yield {
+      if (p.isEmpty) throw new LdapInvalidDnException(s"Not found user ${login}")
+      else p.head
+    }
+  }.flatten
 
   def modify(dn: String, modifiedUser: User): Try[User] = {
     ldap.map { c =>

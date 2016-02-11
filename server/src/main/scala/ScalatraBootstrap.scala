@@ -1,15 +1,23 @@
-
 import fr.iscpif.iscpifwui.server.Servlet
-import org.scalatra._
+import org.scalatra.LifeCycle
 import javax.servlet.ServletContext
-import scala.concurrent.ExecutionContext.Implicits.global
-//
+
+
+object ScalatraBootstrap {
+  def arguments = "arguments"
+  case class Arguments()
+}
+
 class ScalatraBootstrap extends LifeCycle {
 
   override def init(context: ServletContext) {
-  //val serv =  new MyScalatraServlet
-   // pluginROutes.foreach{serv.addRoute}
-
-    context.mount(new Servlet, "/*")
+    val args = context.getAttribute(ScalatraBootstrap.arguments).asInstanceOf[ScalatraBootstrap.Arguments]
+    context.mount(
+      new Servlet {
+        def arguments = args
+      },
+      "/*"
+    )
   }
+
 }

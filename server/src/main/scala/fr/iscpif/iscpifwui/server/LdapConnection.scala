@@ -41,21 +41,25 @@ object LdapConnection {
 
 
   def fromLogin(host: String, login: String, password: String, port: Option[Int] = None, timeout: Option[Duration] = None) = {
-    val anonymousLdap = LdapConnection(host, port = port, timeout = timeout)
+    val anonymousLdap = anonymous(host, port = port, timeout = timeout)
     val request = new LdapRequest(anonymousLdap)
     for {
       user <- request.getUser(login)
     } yield LdapConnection(host, DnPassword(user.dn, password), port, timeout)
   }
 
-  def connect(authentication: LoginPassword): DashboardMessage[User] = {
+  def connect(authentication: LoginPassword): UserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
-    DashboardMessage(LdapRequest.getUser(ldap, authentication.login))
+    UserQuery(LdapRequest.getUser(ldap, authentication.login))
   }
+
+  def anonymous(host: String, port: Option[Int], timeout: Option[Duration] = None): LdapConnection =
+    LdapConnection(host, port = port, timeout = timeout)
 
 }
 
 import LdapConnection._
+
 trait LdapConnection {
 
   def authentication: LdapAuthentication
@@ -83,10 +87,10 @@ trait LdapConnection {
     authentication match {
       case Anonymous => connection.anonymousBind()
       case DnPassword(dn, password) => connection.bind(dn, password)
-      case lp: LoginPassword=>
+      case lp: LoginPassword =>
         connect(lp) match {
-          case Right(_)=>
-          case Left(user)=> connection.bind(user.dn, lp.password)
+          case user: User => connection.bind(user.dn, lp.password)
+          case _ =>
         }
 
     }

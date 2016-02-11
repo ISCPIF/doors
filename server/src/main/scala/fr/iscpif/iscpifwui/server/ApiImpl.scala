@@ -18,22 +18,21 @@ package fr.iscpif.iscpifwui.server
  */
 
 import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.iscpifwui.ext.Data.UserQuery._
 
 object ApiImpl extends shared.Api {
 
-  def connect(authentication: LoginPassword): DashboardMessage[User] =
+  def connect(authentication: LoginPassword): UserQuery =
     LdapConnection.connect(authentication)
 
-  def modify(authentication: LoginPassword, newUser: User): DashboardMessage[User] = {
+  def modify(authentication: LoginPassword, newUser: User): UserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
 
-    DashboardMessage(
       for {
         l <- ldap
         u <- LdapRequest.getUser(ldap, authentication.login)
         request = new LdapRequest(l)
         p <- request.modify(u.dn, newUser)
       } yield p
-    )
   }
 }

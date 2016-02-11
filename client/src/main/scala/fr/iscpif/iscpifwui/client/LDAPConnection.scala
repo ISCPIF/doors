@@ -18,7 +18,6 @@ package fr.iscpif.iscpifwui.client
  */
 
 import shared.Api
-import fr.iscpif.iscpifwui.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._
@@ -87,10 +86,10 @@ class LDAPConnection {
   def connect(authentication: LoginPassword) =
     Post[Api].connect(authentication).call().foreach { c =>
       c match {
-        case Right(DashboardError(m, st)) =>
-          errorMessage() = m
+        case error: ErrorData =>
+          errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
-        case Left(user: User) =>
+        case user: User =>
           serviceWall() = Some(ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
       }
     }
