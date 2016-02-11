@@ -1,7 +1,7 @@
-package fr.iscpif.iscpifwui.server
+package fr.iscpif.doors.server
 
-import fr.iscpif.iscpifwui.ext.Data._
-import fr.iscpif.iscpifwui.ext.Data.UserQuery._
+import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.ext.Data.UserQuery._
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._

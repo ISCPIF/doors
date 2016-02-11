@@ -1,4 +1,4 @@
-import fr.iscpif.iscpifwui.server.Servlet
+import fr.iscpif.doors.server.Servlet
 import org.scalatra.LifeCycle
 import javax.servlet.ServletContext
 

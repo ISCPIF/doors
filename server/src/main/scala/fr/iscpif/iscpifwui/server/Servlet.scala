@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.server
+package fr.iscpif.doors.server
 
 
 /*
@@ -19,7 +19,7 @@ package fr.iscpif.iscpifwui.server
  */
 
 
-import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.doors.ext.Data._
 import org.json4s.{DefaultFormats, Formats, Extraction}
 import org.scalatra._
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.server
+package fr.iscpif.doors.server
 
 /*
  * Copyright (C) 16/12/15 // mathieu.leclaire@openmole.org

@@ -1,6 +1,6 @@
 package shared
 
-import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.doors.ext.Data._
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org

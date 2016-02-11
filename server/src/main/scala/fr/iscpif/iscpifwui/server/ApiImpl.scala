@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.server
+package fr.iscpif.doors.server
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
@@ -17,8 +17,8 @@ package fr.iscpif.iscpifwui.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.iscpifwui.ext.Data._
-import fr.iscpif.iscpifwui.ext.Data.UserQuery._
+import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.ext.Data.UserQuery._
 
 object ApiImpl extends shared.Api {
 

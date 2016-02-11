@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.client
+package fr.iscpif.doors.client
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org

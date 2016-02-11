@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.client
+package fr.iscpif.doors.client
 
 /*
  * Copyright (C) 27/05/15 // mathieu.leclaire@openmole.org
@@ -26,7 +26,7 @@ import scalatags.JsDom.all._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import rx._
-import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.doors.ext.Data._
 
 class LDAPConnection {
 

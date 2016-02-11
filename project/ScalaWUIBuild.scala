@@ -7,7 +7,7 @@ import com.earldouglas.xwp._
 
 object ScalaWUIBuild extends Build {
   val Organization = "fr.iscpif"
-  val Name = "iscpifWUI"
+  val Name = "doors"
   val Version = "0.1.0-SNAPSHOT"
   val ScalaVersion = "2.11.7"
   val scalatraVersion = "2.4.0"

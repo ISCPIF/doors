@@ -1,6 +1,6 @@
-package fr.iscpif.iscpifwui.client
+package fr.iscpif.doors.client
 
-import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.doors.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._

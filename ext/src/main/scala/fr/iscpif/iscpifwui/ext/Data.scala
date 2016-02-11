@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.ext
+package fr.iscpif.doors.ext
 
 /*
  * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org

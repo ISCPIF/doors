@@ -1,12 +1,12 @@
-package fr.iscpif.iscpifwui.server
+package fr.iscpif.doors.server
 
 import org.apache.directory.api.ldap.model.entry.{DefaultModification, ModificationOperation}
 import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException
 import org.apache.directory.api.ldap.model.message.SearchScope
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
 import scala.util.Try
-import fr.iscpif.iscpifwui.ext.ldap._
-import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.doors.ext.ldap._
+import fr.iscpif.doors.ext.Data._
 import collection.JavaConversions._
 
 

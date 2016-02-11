@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.iscpif.iscpifwui.client
+package fr.iscpif.doors.client
 
 import scala.collection.{SortedMap, mutable}
 import scalatags.JsDom._

@@ -1,4 +1,4 @@
-package fr.iscpif.iscpifwui.rest
+package fr.iscpif.doors.rest
 
 import javax.net.ssl.SSLSocket
 import org.apache.http.client.methods.{HttpPost, CloseableHttpResponse, HttpRequestBase}
@@ -8,7 +8,7 @@ import org.apache.http.impl.client.{HttpClients, CloseableHttpClient}
 import org.json4s._
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
-import fr.iscpif.iscpifwui.ext.Data._
+import fr.iscpif.doors.ext.Data._
 import org.json4s.jackson.JsonMethods._
 import scala.io.Source
 
