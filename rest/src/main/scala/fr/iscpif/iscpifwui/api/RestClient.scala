@@ -58,14 +58,7 @@ trait Client {
     val uri = new URIBuilder(address + "/api/user").setParameter("login", login).setParameter("password", password).build
     val post = new HttpPost(uri)
     execute(post) { response ⇒
-      //  println("CONTENT " +  response.content)
-      println("UUU")
-      val ct = response.content
-      println("CT " + ct)
-      val json = parse(ct)
-      println("JSON " + json)
-      json.extract[User]
-      //.extract[User]
+      parse(response.content).extract[User]
     }
   }
 
@@ -84,7 +77,6 @@ trait Client {
 
   def execute[User](request: HttpRequestBase)(f: CloseableHttpResponse ⇒ User): Either[User, ErrorData] = withClient { client ⇒
     val response = client.execute(request)
-    println("Response " + response)
     try {
       response.getStatusLine.getStatusCode match {
         case c if c < 400 ⇒  Left(f(response))

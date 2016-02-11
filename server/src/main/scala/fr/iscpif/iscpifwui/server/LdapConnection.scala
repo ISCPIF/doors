@@ -89,7 +89,7 @@ trait LdapConnection {
       case DnPassword(dn, password) => connection.bind(dn, password)
       case lp: LoginPassword =>
         connect(lp) match {
-          case user: User => connection.bind(user.dn, lp.password)
+          case Left(user: User) => connection.bind(user.dn, lp.password)
           case _ =>
         }
 

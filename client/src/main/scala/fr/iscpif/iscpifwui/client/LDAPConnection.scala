@@ -86,10 +86,10 @@ class LDAPConnection {
   def connect(authentication: LoginPassword) =
     Post[Api].connect(authentication).call().foreach { c =>
       c match {
-        case error: ErrorData =>
+        case Right(error: ErrorData) =>
           errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
-        case user: User =>
+        case Left(user: User) =>
           serviceWall() = Some(ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
       }
     }

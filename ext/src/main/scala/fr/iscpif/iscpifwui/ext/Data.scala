@@ -35,18 +35,14 @@ object Data {
 
   object Anonymous extends LdapAuthentication
 
-  sealed trait UserQuery
+  type UserQuery = Either[User, ErrorData]
 
   case class User(dn: String,
                   givenName: String,
                   email: String,
-                  description: String) extends UserQuery
+                  description: String)
 
-  case class ErrorData(className: String, code: Int, message: String) extends UserQuery
- // case class UserQuery(query: EitherUserQuery)
-
-
-  //= Either[User, ErrorData]
+  case class ErrorData(className: String, code: Int, message: String)
 
   object UserQuery {
     implicit def stackTrace(st: Array[StackTraceElement]): String = st.map {
@@ -55,39 +51,41 @@ object Data {
 
     implicit def tryUserToUserQuery(t: Try[User]): UserQuery = apply(t)
 
-   // implicit def eitherUserQueryToUserQuery(either: EitherUserQuery): UserQuery = UserQuery(either)
+    // implicit def eitherUserQueryToUserQuery(either: EitherUserQuery): UserQuery = UserQuery(either)
 
     def apply(o: Try[User]): UserQuery = o match {
-      case Success(t) => t
+      case Success(t) => Left(t)
       case Failure(ex: Throwable) =>
-        ex match {
+        Right(ex match {
           case lde: LdapException => lde match {
             case e: InvalidConnectionException => HttpError(404, LDAPInvalidConnectionError("Cannot connect to the server"))
             case e: LdapUnwillingToPerformException => HttpError(401, LDAPUnwillingToPerformError("Please, give a password"))
             case e: LdapInvalidDnException => HttpError(401, LDAPInvalidDNError("User not found"))
-            case e: LdapAuthenticationException => HttpError(401,  LDAPAuthenticationError("Invalid login or password"))
+            case e: LdapAuthenticationException => HttpError(401, LDAPAuthenticationError("Invalid login or password"))
             case _ => HttpError(400, OtherLDAPError(lde.getClass.toString, lde.getMessage, lde.getStackTrace))
           }
-          case e: HttpError =>
-            println("EEEEEEEEEEEEEEEEEERRPORU " + e)
-            e
-          case x: Any =>
-            println("YX *----------------- " + x)
-            HttpError(400,UnexceptedError(ex.getMessage, ex.getStackTrace))
+          case e: HttpError => e
+          case x: Any => HttpError(400, UnexceptedError(ex.getMessage, ex.getStackTrace))
         }
+        )
     }
   }
 
   // REST API
 
-  object HttpError{
+  object HttpError {
 
-    implicit def httpErrorToErrorData(e: HttpError): ErrorData = ErrorData(e.error.map{_.getClass.toString.split('$').last}.getOrElse(""), e.code, e.error.map{_.message}.getOrElse(""))
+    implicit def httpErrorToErrorData(e: HttpError): ErrorData = ErrorData(e.error.map {
+      _.getClass.toString.split('$').last
+    }.getOrElse(""), e.code, e.error.map {
+      _.message
+    }.getOrElse(""))
 
     def apply(c: Int, e: Error): HttpError = HttpError(c, Some(e))
 
     def apply(c: Int, e: Option[Error]): HttpError = new HttpError {
       def code: Int = c
+
       def error: Option[Error] = e
     }
   }

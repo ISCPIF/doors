@@ -34,6 +34,7 @@ import org.json4s.jackson.JsonMethods._
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
+
   def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 }
 
@@ -67,8 +68,11 @@ class Servlet extends ScalatraServlet {
   post("/api/user") {
     val login = params get "login" getOrElse ("")
     val pass = params get "password" getOrElse ("")
-    println("In user !" + login)
-    LdapConnection.connect(LoginPassword(login, pass)).toJson
+    val connectRequest = LdapConnection.connect(LoginPassword(login, pass))
+    connectRequest match {
+      case Left(u: User) => Ok(u.toJson)
+      case Right(e: ErrorData) => halt(e.code, e.toJson)
+    }
   }
 
   post(s"/$basePath/*") {

@@ -93,7 +93,8 @@ object ScalaWUIBuild extends Build {
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container",
         "org.json4s" %% "json4s-jackson" % json4sVersion,
-        "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
+        "org.apache.directory.shared" % "shared-ldap-client-api" % "1.0.0-M13",
+        "org.apache.directory.shared" % "shared-ldap-codec-standalone" % "1.0.0-M13"
       )
     )
   ).dependsOn(shared, ext) enablePlugins (JettyPlugin)
