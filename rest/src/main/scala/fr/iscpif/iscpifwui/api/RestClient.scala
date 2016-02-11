@@ -33,6 +33,7 @@ import scala.io.Source
 object RESTClient extends App {
 
   val url = args(0)
+  val loginFilePath = args(1)
 
   val client =
     new Client {
@@ -41,7 +42,9 @@ object RESTClient extends App {
       override def timeout: Duration = 5 minutes
     }
 
-  println(client.user("leclaire", "auixuie"))
+  val auth = scala.io.Source.fromFile(loginFilePath).getLines.toSeq
+
+  println(client.user(auth(0), auth(1)))
 
 }
 
@@ -79,7 +82,7 @@ trait Client {
     val response = client.execute(request)
     try {
       response.getStatusLine.getStatusCode match {
-        case c if c < 400 ⇒  Left(f(response))
+        case c if c < 400 ⇒ Left(f(response))
         case c => Right(parse(response.content).extract[ErrorData])
       }
     }

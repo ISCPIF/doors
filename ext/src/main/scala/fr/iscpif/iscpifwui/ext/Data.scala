@@ -17,7 +17,6 @@ package fr.iscpif.iscpifwui.ext
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.iscpifwui.ext.ldap._
 import org.apache.directory.ldap.client.api.exception._
 import org.apache.directory.shared.ldap.model.exception.{LdapInvalidDnException, LdapException, LdapAuthenticationException, LdapUnwillingToPerformException}
 
@@ -50,8 +49,6 @@ object Data {
     }.mkString("\n")
 
     implicit def tryUserToUserQuery(t: Try[User]): UserQuery = apply(t)
-
-    // implicit def eitherUserQueryToUserQuery(either: EitherUserQuery): UserQuery = UserQuery(either)
 
     def apply(o: Try[User]): UserQuery = o match {
       case Success(t) => Left(t)
