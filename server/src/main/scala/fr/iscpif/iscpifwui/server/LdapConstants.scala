@@ -20,6 +20,6 @@ package fr.iscpif.iscpifwui.server
 object LdapConstants {
 
   //val host = "localhost"
-  val host = "192.168.1.1"
+  val host = "ldap.iscpif.fr"
   val baseDN = "ou=People,dc=iscpif,dc=fr"
 }

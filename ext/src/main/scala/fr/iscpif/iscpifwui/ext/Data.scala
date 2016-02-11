@@ -17,8 +17,8 @@ package fr.iscpif.iscpifwui.ext
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.apache.directory.ldap.client.api.exception._
-import org.apache.directory.shared.ldap.model.exception.{LdapInvalidDnException, LdapException, LdapAuthenticationException, LdapUnwillingToPerformException}
+import org.apache.directory.api.ldap.model.exception.{LdapException, LdapAuthenticationException, LdapInvalidDnException, LdapUnwillingToPerformException}
+import org.apache.directory.ldap.client.api.exception.InvalidConnectionException
 
 import scala.util.{Failure, Success, Try}
 
@@ -50,23 +50,25 @@ object Data {
 
     implicit def tryUserToUserQuery(t: Try[User]): UserQuery = apply(t)
 
-    def apply(o: Try[User]): UserQuery = o match {
-      case Success(t) => Left(t)
-      case Failure(ex: Throwable) =>
-        Right(ex match {
-          case lde: LdapException => lde match {
-            case e: InvalidConnectionException => HttpError(404, LDAPInvalidConnectionError("Cannot connect to the server"))
-            case e: LdapUnwillingToPerformException => HttpError(401, LDAPUnwillingToPerformError("Please, give a password"))
-            case e: LdapInvalidDnException => HttpError(401, LDAPInvalidDNError("User not found"))
-            case e: LdapAuthenticationException => HttpError(401, LDAPAuthenticationError("Invalid login or password"))
-            case _ => HttpError(400, OtherLDAPError(lde.getClass.toString, lde.getMessage, lde.getStackTrace))
+
+    def apply(o: Try[User]): UserQuery =
+      o match {
+        case Success(t) => Left(t)
+        case Failure(ex: Throwable) =>
+          Right(ex match {
+            case lde: LdapException => lde match {
+              case e: InvalidConnectionException => HttpError(404, LDAPInvalidConnectionError("Cannot connect to the server"))
+              case e: LdapUnwillingToPerformException => HttpError(401, LDAPUnwillingToPerformError("Please, give a password"))
+              case e: LdapInvalidDnException => HttpError(401, LDAPInvalidDNError("User not found"))
+              case e: LdapAuthenticationException => HttpError(401, LDAPAuthenticationError("Invalid login or password"))
+              case _ => HttpError(400, OtherLDAPError(lde.getClass.toString, lde.getMessage, lde.getStackTrace))
+            }
+            case e: HttpError => e
+            case x: Any => HttpError(400, UnexceptedError(ex.getMessage, ex.getStackTrace))
           }
-          case e: HttpError => e
-          case x: Any => HttpError(400, UnexceptedError(ex.getMessage, ex.getStackTrace))
-        }
-        )
+          )
+      }
     }
-  }
 
   // REST API
 

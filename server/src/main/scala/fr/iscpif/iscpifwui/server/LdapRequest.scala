@@ -1,10 +1,10 @@
 package fr.iscpif.iscpifwui.server
 
+import org.apache.directory.api.ldap.model.entry.{DefaultModification, ModificationOperation}
+import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException
+import org.apache.directory.api.ldap.model.message.SearchScope
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
-import org.apache.directory.shared.ldap.model.entry.{ModificationOperation, DefaultModification}
-import org.apache.directory.shared.ldap.model.exception.LdapInvalidDnException
-import org.apache.directory.shared.ldap.model.message.SearchScope
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import fr.iscpif.iscpifwui.ext.ldap._
 import fr.iscpif.iscpifwui.ext.Data._
 import collection.JavaConversions._
