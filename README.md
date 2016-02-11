@@ -1,18 +1,18 @@
-# iscpifWUI (iscpif Web UI)#
+# Doors #
 
 The project aims at providing services around an LDAP authentication.
 
 ## Build & Run##
 First, build the javascript:
 ```sh
-$ cd iscpifWUI
+$ cd doors
 $ sbt
 > go // Build the client JS files and move them to the right place
 ```
 
 Then, start the server:
 ```sh
-> container:restart // Start the server
+> jetty:start // Start the server
 ```
 
 ## Run it ! ##
