@@ -1,9 +1,11 @@
 import sbt._
 import Keys._
+import sbtassembly.AssemblyKeys._
 import org.scalatra.sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import com.earldouglas.xwp._
+import sbtassembly.{PathList, MergeStrategy, AssemblyPlugin}
 
 object ScalaWUIBuild extends Build {
   val Organization = "fr.iscpif"
@@ -82,6 +84,15 @@ object ScalaWUIBuild extends Build {
       version := Version,
       scalaVersion := ScalaVersion,
       resolvers ++= Resolvers,
+      unmanagedResourceDirectories in Compile <+= target( _ / "webapp" ),
+      assemblyMergeStrategy in assembly := {
+        case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
+        case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
+        case x =>
+          if (x.contains("boostrap")) println("XXX " + x)
+          val oldStrategy = (assemblyMergeStrategy in assembly).value
+          oldStrategy(x)
+      },
       libraryDependencies ++= Seq(
         "com.lihaoyi" %% "autowire" % "0.2.5",
         "com.lihaoyi" %% "upickle" % "0.3.8",
@@ -91,7 +102,7 @@ object ScalaWUIBuild extends Build {
         "org.scalatra" %% "scalatra" % scalatraVersion,
         "ch.qos.logback" % "logback-classic" % "1.1.3" % "runtime",
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
-        "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container",
+        "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container;compile",
         "org.json4s" %% "json4s-jackson" % json4sVersion,
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
       )
