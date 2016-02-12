@@ -7,7 +7,7 @@ import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
 import com.earldouglas.xwp._
 import sbtassembly.{PathList, MergeStrategy, AssemblyPlugin}
 
-object ScalaWUIBuild extends Build {
+object DoorsBuild extends Build {
   val Organization = "fr.iscpif"
   val Name = "doors"
   val Version = "0.1.0-SNAPSHOT"
