@@ -16,5 +16,23 @@ Then, start the server:
 ```
 
 ## Run it ! ##
-
 Open [http://localhost:8080/](http://localhost:8080/) in your browser.
+
+## Standalone version ##
+To generate the jar and the script controling it, just run:
+```sh
+$ sbt toJar
+```
+
+The jar and the script are generated in server/target/scala_2.11. Just run:
+
+
+```sh
+$ ./doors <port>
+```
+
+Then, open http://<host>:<port> in your browser.
+
+
+
+
