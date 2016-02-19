@@ -20,6 +20,7 @@ object DoorsBuild extends Build {
   val autowireVersion = "0.2.5"
   val upickleVersion = "0.3.8"
   val apacheDirectoryVersion = "1.0.0-M33"
+  val jarName = s"doors$Version.jar"
   val Resolvers = Seq(Resolver.sonatypeRepo("snapshots"),
     "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
   )
@@ -86,8 +87,8 @@ object DoorsBuild extends Build {
       version := Version,
       scalaVersion := ScalaVersion,
       resolvers ++= Resolvers,
-      unmanagedResourceDirectories in Compile <+= target( _ / "webapp" ),
-      assemblyJarName in assembly := s"doors$Version.jar",
+      unmanagedResourceDirectories in Compile <+= target(_ / "webapp"),
+      assemblyJarName in assembly := jarName,
       assemblyMergeStrategy in assembly := {
         case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
         case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
@@ -113,16 +114,25 @@ object DoorsBuild extends Build {
 
   lazy val go = taskKey[Unit]("go")
 
+  lazy val toJar = taskKey[Unit]("toJar")
+
   lazy val bootstrap = Project(
     "bootstrap",
     file("target/bootstrap"),
     settings = Seq(
       version := Version,
       scalaVersion := ScalaVersion,
-      (go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
+      go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
         copy(ct, r, new File(st, s"scala-$version/webapp"))
+      },
+      toJar <<= (go, assembly in server in Compile, target in server in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
+        val shFile = new File(st, s"scala-$version/doors")
+        shFile.createNewFile
+        IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName +" \"$@\"")
+        s.log.info(s"doors has been generated in ${shFile.getParent}")
+        s.log.info(s"Now launch ./doors <port>")
       }
-        )
+
     )
   ) dependsOn(client, server)
 
