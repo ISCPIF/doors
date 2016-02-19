@@ -17,6 +17,8 @@ object DoorsBuild extends Build {
   val json4sVersion = "3.3.0"
   val httpComponentsVersion = "4.5.1"
   val scalatagsVersion = "0.5.4"
+  val autowireVersion = "0.2.5"
+  val upickleVersion = "0.3.8"
   val apacheDirectoryVersion = "1.0.0-M33"
   val Resolvers = Seq(Resolver.sonatypeRepo("snapshots"),
     "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
@@ -64,8 +66,8 @@ object DoorsBuild extends Build {
       scalaVersion := ScalaVersion,
       resolvers ++= Resolvers,
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %%% "autowire" % "0.2.5",
-        "com.lihaoyi" %%% "upickle" % "0.3.8",
+        "com.lihaoyi" %%% "autowire" % autowireVersion,
+        "com.lihaoyi" %%% "upickle" % upickleVersion,
         "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
         "com.lihaoyi" %%% "scalarx" % "0.2.9",
         "fr.iscpif" %%% "scaladget" % "0.8.0-SNAPSHOT",
@@ -85,17 +87,17 @@ object DoorsBuild extends Build {
       scalaVersion := ScalaVersion,
       resolvers ++= Resolvers,
       unmanagedResourceDirectories in Compile <+= target( _ / "webapp" ),
+      assemblyJarName in assembly := s"doors$Version.jar",
       assemblyMergeStrategy in assembly := {
         case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
         case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
         case x =>
-          if (x.contains("boostrap")) println("XXX " + x)
           val oldStrategy = (assemblyMergeStrategy in assembly).value
           oldStrategy(x)
       },
       libraryDependencies ++= Seq(
-        "com.lihaoyi" %% "autowire" % "0.2.5",
-        "com.lihaoyi" %% "upickle" % "0.3.8",
+        "com.lihaoyi" %% "autowire" % autowireVersion,
+        "com.lihaoyi" %% "upickle" % upickleVersion,
         "com.lihaoyi" %% "scalatags" % scalatagsVersion,
         "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
         "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
@@ -117,8 +119,8 @@ object DoorsBuild extends Build {
     settings = Seq(
       version := Version,
       scalaVersion := ScalaVersion,
-      (go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile) map { (ct, r, st) =>
-        copy(ct, r, new File(st, "webapp"))
+      (go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
+        copy(ct, r, new File(st, s"scala-$version/webapp"))
       }
         )
     )

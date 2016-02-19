@@ -17,11 +17,10 @@ package fr.iscpif.doors.client
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.scalajs
 import org.scalajs.dom
+import org.scalajs.dom._
 import scala.concurrent.Future
-import scalatags.JsDom.{tags ⇒ tags}
-import fr.iscpif.scaladget.tools.JsRxTags._
-import scalatags.JsDom.all._
 import rx._
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
@@ -46,8 +45,10 @@ object Post extends autowire.Client[String, upickle.default.Reader, upickle.defa
 
   override def doCall(req: Request): Future[String] = {
     val url = req.path.mkString("/")
-    dom.ext.Ajax.post(
-      url = "http://localhost:8080/" + url,
+    val host = window.document.location.host
+
+    ext.Ajax.post(
+      url = s"http://$host/$url",
       data = upickle.default.write(req.args)
     ).map {
       _.responseText
