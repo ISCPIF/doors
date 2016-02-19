@@ -31,7 +31,7 @@ The jar and the script are generated in server/target/scala_2.11. Just run:
 $ ./doors <port>
 ```
 
-Then, open http://<host>:<port> in your browser.
+Then, open ```http://<host>:<port>``` in your browser.
 
 
 
