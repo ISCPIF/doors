@@ -36,7 +36,7 @@ class ServiceWall(_user: LDAPUser, authentication: LoginPassword) {
   val userEdition = Var(UserEdition(user(), authentication, this))
 
   val services = Seq(
-   // ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
+    ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
     ServiceLink("Jenkins", Resources.jenkins, "http://jenkins.iscpif.fr", "Continous integration"),
     ServiceLink("Seminar", Resources.seminar, "http://webcast.iscpif.fr/stream.webm", "Seminar streaming"),
