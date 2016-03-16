@@ -11,7 +11,7 @@ object DoorsBuild extends Build {
   val Organization = "fr.iscpif"
   val Name = "doors"
   val Version = "0.1.0-SNAPSHOT"
-  val ScalaVersion = "2.11.7"
+  val ScalaVersion = "2.11.8"
   val scalatraVersion = "2.4.0"
   val jettyVersion = "9.3.7.v20160115"
   val json4sVersion = "3.3.0"
