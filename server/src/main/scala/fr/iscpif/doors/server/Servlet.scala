@@ -69,7 +69,7 @@ class Servlet extends ScalatraServlet {
     val pass = params get "password" getOrElse ("")
     val connectRequest = LdapConnection.connect(LoginPassword(login, pass))
     connectRequest match {
-      case Left(u: User) => Ok(u.toJson)
+      case Left(u: LDAPUser) => Ok(u.toJson)
       case Right(e: ErrorData) => halt(e.code, e.toJson)
     }
   }

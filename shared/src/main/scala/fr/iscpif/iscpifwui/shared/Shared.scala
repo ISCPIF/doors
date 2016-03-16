@@ -22,5 +22,5 @@ import fr.iscpif.doors.ext.Data._
 
 trait Api {
   def connect(authentication: LoginPassword): UserQuery
-  def modify(authentication: LoginPassword, newUser: User): UserQuery
+  def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery
 }

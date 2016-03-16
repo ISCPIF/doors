@@ -57,11 +57,11 @@ trait Client {
 
   def timeout: Duration
 
-  def user(login: String, password: String): Either[User, ErrorData] = {
+  def user(login: String, password: String): Either[LDAPUser, ErrorData] = {
     val uri = new URIBuilder(address + "/api/user").setParameter("login", login).setParameter("password", password).build
     val post = new HttpPost(uri)
     execute(post) { response ⇒
-      parse(response.content).extract[User]
+      parse(response.content).extract[LDAPUser]
     }
   }
 

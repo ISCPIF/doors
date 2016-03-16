@@ -34,12 +34,14 @@ object Data {
 
   object Anonymous extends LdapAuthentication
 
-  type UserQuery = Either[User, ErrorData]
+  type UserQuery = Either[LDAPUser, ErrorData]
 
-  case class User(dn: String,
-                  givenName: String,
-                  email: String,
-                  description: String)
+  case class LDAPUser(dn: String,
+                      givenName: String,
+                      email: String,
+                      description: String)
+
+  case class User(id: Long, name: String, email: String)
 
   case class ErrorData(className: String, code: Int, message: String)
 
@@ -48,10 +50,10 @@ object Data {
       _.toString
     }.mkString("\n")
 
-    implicit def tryUserToUserQuery(t: Try[User]): UserQuery = apply(t)
+    implicit def tryUserToUserQuery(t: Try[LDAPUser]): UserQuery = apply(t)
 
 
-    def apply(o: Try[User]): UserQuery =
+    def apply(o: Try[LDAPUser]): UserQuery =
       o match {
         case Success(t) => Left(t)
         case Failure(ex: Throwable) =>
@@ -68,7 +70,7 @@ object Data {
           }
           )
       }
-    }
+  }
 
   // REST API
 

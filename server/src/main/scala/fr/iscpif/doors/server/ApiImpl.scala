@@ -25,7 +25,7 @@ object ApiImpl extends shared.Api {
   def connect(authentication: LoginPassword): UserQuery =
     LdapConnection.connect(authentication)
 
-  def modify(authentication: LoginPassword, newUser: User): UserQuery = {
+  def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
 
       for {
