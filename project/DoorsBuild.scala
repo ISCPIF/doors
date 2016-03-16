@@ -21,9 +21,6 @@ object DoorsBuild extends Build {
   val upickleVersion = "0.3.8"
   val apacheDirectoryVersion = "1.0.0-M33"
   val jarName = s"doors$Version.jar"
-  val Resolvers = Seq(Resolver.sonatypeRepo("snapshots"),
-    "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
-  )
 
   lazy val ext = Project(
     "ext",
@@ -31,7 +28,6 @@ object DoorsBuild extends Build {
     settings = Seq(
       version := Version,
       scalaVersion := ScalaVersion,
-      resolvers ++= Resolvers,
       libraryDependencies ++= Seq(
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
       )
@@ -45,7 +41,6 @@ object DoorsBuild extends Build {
       version := Version,
       organization := "fr.iscpif",
       scalaVersion := ScalaVersion,
-      resolvers ++= Resolvers,
       libraryDependencies ++= Seq(
         "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
         "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
@@ -65,7 +60,6 @@ object DoorsBuild extends Build {
     settings = Seq(
       version := Version,
       scalaVersion := ScalaVersion,
-      resolvers ++= Resolvers,
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "autowire" % autowireVersion,
         "com.lihaoyi" %%% "upickle" % upickleVersion,
@@ -86,7 +80,6 @@ object DoorsBuild extends Build {
       name := Name,
       version := Version,
       scalaVersion := ScalaVersion,
-      resolvers ++= Resolvers,
       unmanagedResourceDirectories in Compile <+= target(_ / "webapp"),
       assemblyJarName in assembly := jarName,
       assemblyMergeStrategy in assembly := {
