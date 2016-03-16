@@ -33,7 +33,7 @@ object ServiceWall {
 class ServiceWall(_user: User, authentication: LoginPassword) {
   val user = Var(_user)
   val ldapMode: Var[Boolean] = Var(false)
-  val ldapEdition = Var(LDAPEdition(user(), authentication, this))
+  val userEdition = Var(UserEdition(user(), authentication, this))
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -53,7 +53,7 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
     ldapMode() = !ldapMode()
   }
 
-  private def setLDAPEdition = ldapEdition() = LDAPEdition(user(), authentication, this)
+  private def setLDAPEdition = userEdition() = UserEdition(user(), authentication, this)
 
   val render: HTMLDivElement = {
     tags.div(`class` := "fullpanel")(
@@ -63,7 +63,7 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
         }"
       }
       )(Rx {
-        ldapEdition().render
+        userEdition().render
       }),
       tags.div(`class` := Rx {
         s"centerpanel ${if (ldapMode()) "reduce" else ""}"

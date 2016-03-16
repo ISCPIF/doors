@@ -30,7 +30,7 @@ import scala.io.Source
  */
 
 
-object RESTClient extends App {
+object  RESTClient extends App {
 
   val url = args(0)
   val loginFilePath = args(1)

@@ -28,13 +28,13 @@ import rx._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object LDAPEdition {
+object UserEdition {
   def apply(user: User, authentication: LoginPassword, serviceWall: ServiceWall) =
-    new LDAPEdition(user, authentication, serviceWall)
+    new UserEdition(user, authentication, serviceWall)
 }
 
 
-class LDAPEdition(user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
+class UserEdition(user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
 
   val edition = Var(true)
 
