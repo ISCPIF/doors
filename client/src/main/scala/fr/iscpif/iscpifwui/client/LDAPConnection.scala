@@ -89,7 +89,7 @@ class LDAPConnection {
         case Right(error: ErrorData) =>
           errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
-        case Left(user: User) =>
+        case Left(user: LDAPUser) =>
           serviceWall() = Some(ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
       }
     }

@@ -1,12 +1,14 @@
 package fr.iscpif.doors.server
 
-import org.eclipse.jetty.server.{Server}
-import org.eclipse.jetty.webapp.WebAppContext
-import org.scalatra.servlet.ScalatraListener
+import java.io.File
+import slick.driver.H2Driver.api._
+import database._
 
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /*
- * Copyright (C) 18/02/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,26 +24,26 @@ import org.scalatra.servlet.ScalatraListener
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+object Settings {
 
-object Launcher {
-  // this is my entry object as specified in sbt project definition
-  def main(args: Array[String]) {
-    val port = scala.util.Try(args(0).toInt).getOrElse(8080)
-
-    val server = new Server(port)
-
-    val context = new WebAppContext()
-    context setContextPath "/"
-
-    context.setResourceBase("webapp")
-
-    context.addEventListener(new ScalatraListener)
-    context.addServlet(classOf[Servlet], "/")
-
-    server.setHandler(context)
-    Settings.initDB
-
-    server.start
-    server.join
+  val defaultLocation = {
+    val dir = new File(System.getProperty("user.home"), ".doors")
+    dir.mkdirs
+    dir
   }
+
+  val dbName = "h2"
+  val dbLocation = new File(defaultLocation, dbName)
+
+  lazy val database = Database.forDriver(
+    driver = new org.h2.Driver,
+    url = s"jdbc:h2:/$dbLocation"
+  )
+
+  def initDB = {
+    if (!new File(defaultLocation, s"$dbName.mv.db").exists) {
+      database.run((users.schema ++ states.schema).create)
+    }
+  }
+
 }

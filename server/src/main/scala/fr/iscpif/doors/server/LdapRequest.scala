@@ -28,7 +28,7 @@ import collection.JavaConversions._
  */
 
 object LdapRequest {
-  def getUser(ldap: Try[LdapConnection], login: String): Try[User] = {
+  def getUser(ldap: Try[LdapConnection], login: String): Try[LDAPUser] = {
     for {
       l <- ldap
       request = new LdapRequest(l)
@@ -37,14 +37,14 @@ object LdapRequest {
   }
 
   def search(connection: LdapNetworkConnection, login: String) =
-    connection.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, givenName, email, description)
+    connection.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, name, email, description)
 }
 
 import LdapRequest._
 
 class LdapRequest(ldap: LdapConnection) {
 
-  def getUser(login: String): Try[User] = Try {
+  def getUser(login: String): Try[LDAPUser] = Try {
     for {
       p <- ldap.map { c =>
         for {
@@ -52,7 +52,7 @@ class LdapRequest(ldap: LdapConnection) {
           _email = e.get(email).getString
           _gn = e.get(givenName).getString
           _description = e.get(description).getString
-        } yield User(e.getDn.getName, _gn, _email, _description)
+        } yield LDAPUser(e.getDn.getName, _gn, _email, _description)
       }
     } yield {
       if (p.isEmpty) throw new LdapInvalidDnException(s"Not found user ${login}")
@@ -60,7 +60,7 @@ class LdapRequest(ldap: LdapConnection) {
     }
   }.flatten
 
-  def modify(dn: String, modifiedUser: User): Try[User] = {
+  def modify(dn: String, modifiedUser: LDAPUser): Try[LDAPUser] = {
     ldap.map { c =>
       Seq(
         (email, modifiedUser.email),

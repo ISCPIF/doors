@@ -93,6 +93,8 @@ object DoorsBuild extends Build {
         "com.lihaoyi" %% "autowire" % autowireVersion,
         "com.lihaoyi" %% "upickle" % upickleVersion,
         "com.lihaoyi" %% "scalatags" % scalatagsVersion,
+        "com.typesafe.slick" %% "slick" % "3.1.1",
+        "com.h2database" % "h2" % "1.4.190",
         "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
         "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
         "org.scalatra" %% "scalatra" % scalatraVersion,
@@ -121,7 +123,7 @@ object DoorsBuild extends Build {
       toJar <<= (go, assembly in server in Compile, target in server in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
         val shFile = new File(st, s"scala-$version/doors")
         shFile.createNewFile
-        IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName +" \"$@\"")
+        IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName + " \"$@\"")
         s.log.info(s"doors has been generated in ${shFile.getParent}")
         s.log.info(s"Now launch ./doors <port>")
       }

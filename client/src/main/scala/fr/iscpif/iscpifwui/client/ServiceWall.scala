@@ -5,8 +5,12 @@ import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._
 import org.scalajs.dom.raw.HTMLDivElement
-import scalatags.JsDom.{TypedTag, tags}
+import shared.Api
+import scalatags.JsDom.tags
 import scalatags.JsDom.all._
+import autowire._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+
 import rx._
 
 /*
@@ -27,10 +31,10 @@ import rx._
  */
 
 object ServiceWall {
-  def apply(user: User, authentication: LoginPassword) = new ServiceWall(user, authentication)
+  def apply(user: LDAPUser, authentication: LoginPassword) = new ServiceWall(user, authentication)
 }
 
-class ServiceWall(_user: User, authentication: LoginPassword) {
+class ServiceWall(_user: LDAPUser, authentication: LoginPassword) {
   val user = Var(_user)
   val userEdition = UserEdition(user(), authentication, this)
   val services = Seq(

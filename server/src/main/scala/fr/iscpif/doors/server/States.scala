@@ -1,9 +1,9 @@
-package shared
+package fr.iscpif.doors.server
 
-import fr.iscpif.doors.ext.Data._
-
+import database._
+import slick.driver.H2Driver.api._
 /*
- * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
+ * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,11 +20,11 @@ import fr.iscpif.doors.ext.Data._
  */
 
 
-trait Api {
-  def connect(authentication: LoginPassword): UserQuery
-  def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery
+class States(tag: Tag) extends Table[(Long, String, String)](tag, "STATES") {
+  def userID = column[Long]("USER_ID")
+  def lock = column[String]("LOCK")
+  def state = column[String]("STATE")
 
-  //Database
-  def addUser(user: User): Unit
-  def modifyUser(id: Long, newUser: User): Unit
+  def * = (userID, lock, state)
+  def user = foreignKey("USER_FK", userID, users)(_.id)
 }

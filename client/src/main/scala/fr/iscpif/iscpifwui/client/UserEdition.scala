@@ -29,12 +29,12 @@ import rx._
  */
 
 object UserEdition {
-  def apply(user: User, authentication: LoginPassword, serviceWall: ServiceWall) =
+  def apply(user: LDAPUser, authentication: LoginPassword, serviceWall: ServiceWall) =
     new UserEdition(user, authentication, serviceWall)
 }
 
 
-class UserEdition(user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
+class UserEdition(user: LDAPUser, authentication: LoginPassword, serviceWall: ServiceWall) {
 
   val emailInput = bs.input(user.email)(
     placeholder := "Email",
@@ -65,7 +65,7 @@ class UserEdition(user: User, authentication: LoginPassword, serviceWall: Servic
         case Right(error: ErrorData) =>
           println("ERRER " + error.className)
         //errorMessage() = m
-        case Left(u: User) => serviceWall.user() = u
+        case Left(u: LDAPUser) => serviceWall.user() = u
         // todo show a sign that it was saved (ex glyphicon-saved)
       }
     }
@@ -83,13 +83,3 @@ class UserEdition(user: User, authentication: LoginPassword, serviceWall: Servic
   }
   )
 }
-
-
-
-
-
-
-
-
-
-
