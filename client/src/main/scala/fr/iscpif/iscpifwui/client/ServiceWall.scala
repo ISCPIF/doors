@@ -32,9 +32,7 @@ object ServiceWall {
 
 class ServiceWall(_user: User, authentication: LoginPassword) {
   val user = Var(_user)
-  val ldapMode: Var[Boolean] = Var(false)
-  val userEdition = Var(UserEdition(user(), authentication, this))
-
+  val userEdition = UserEdition(user(), authentication, this)
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
@@ -44,39 +42,30 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  val ldapButton = bs.button("LDAP", btn_default + "ldapButton", { () =>
-    switchLdapMode
-  })
+  val userPanel = new UserEditionPanel("testpanel", userEdition)
 
-  def switchLdapMode = {
-    setLDAPEdition
-    ldapMode() = !ldapMode()
-  }
+  val userInfoButton = bs.glyphButton(
+      "Edit your info",
+      btn_default + btn_small + btn_right,
+      glyph_settings,
+      { () =>  bs.showModal(userPanel.modalID) }
+  )
+  // private def setLDAPEdition = userEdition() = UserEdition(user(), authentication, this)
 
-  private def setLDAPEdition = userEdition() = UserEdition(user(), authentication, this)
-
-  val render: HTMLDivElement = {
-    tags.div(`class` := "fullpanel")(
-      tags.div(`class` := Rx {
-        s"leftpanel ${
-          if (ldapMode()) "open" else ""
-        }"
-      }
-      )(Rx {
-        userEdition().render
-      }),
-      tags.div(`class` := Rx {
-        s"centerpanel ${if (ldapMode()) "reduce" else ""}"
-      })(bs.div("user")(Rx {
+  val render: HTMLDivElement = tags.div(`class` := "fullpanel")(
+    tags.div(`class` := Rx {
+      s"centerpanel"
+    })(
+      bs.div("user")(Rx {
         s"${user().givenName}"
-      }),
-          Rx {
-            if (ldapMode()) tags.div() else ldapButton
-          },
-          BootstrapTags.thumbs(services).render,
-          tags.img(src := Resources.isc, `class` := "logoISC")
-        )
-    ).render
-  }
+      },
+        userInfoButton
+      ),
+        BootstrapTags.thumbs(services).render,
+        tags.img(src := Resources.isc, `class` := "logoISC")
+          ,
+      userPanel.dialog
+      )
+  ).render
 
 }

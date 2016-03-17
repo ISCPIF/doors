@@ -36,8 +36,6 @@ object UserEdition {
 
 class UserEdition(user: User, authentication: LoginPassword, serviceWall: ServiceWall) {
 
-  val edition = Var(true)
-
   val emailInput = bs.input(user.email)(
     placeholder := "Email",
     width := "200px").render
@@ -53,11 +51,6 @@ class UserEdition(user: User, authentication: LoginPassword, serviceWall: Servic
 
   val saveButton = bs.button("Save", btn_primary, () => {
     save
-    serviceWall.switchLdapMode
-  })
-
-  val cancelButton = bs.button("Cancel", btn_default, () => {
-    serviceWall.switchLdapMode
   })
 
   def save = {
@@ -73,23 +66,30 @@ class UserEdition(user: User, authentication: LoginPassword, serviceWall: Servic
           println("ERRER " + error.className)
         //errorMessage() = m
         case Left(u: User) => serviceWall.user() = u
+        // todo show a sign that it was saved (ex glyphicon-saved)
       }
     }
   }
 
   def render = tags.div(Rx {
-    if (edition()) {
-      bs.div("ldapEdition")(
-        bs.buttonGroup("saveCancelButtons")(
-          saveButton,
-          cancelButton
-        ),
-        bs.labeledField("Given name", givenNameInput),
-        bs.labeledField("Email", emailInput),
-        bs.labeledField("Description", descriptionInput)
-      ).render
-    } else serviceWall.render
+    bs.div("userinfoEdition")(
+      bs.buttonGroup("saveCancelButtons")(
+        saveButton
+      ),
+      bs.labeledField("Given name", givenNameInput),
+      bs.labeledField("Email", emailInput),
+      bs.labeledField("Description", descriptionInput)
+    ).render
   }
   )
-
 }
+
+
+
+
+
+
+
+
+
+
