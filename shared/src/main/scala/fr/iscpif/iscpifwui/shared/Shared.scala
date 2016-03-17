@@ -26,4 +26,5 @@ trait Api {
 
   //Database
   def addUser(user: User): Unit
+  def modifyUser(id: Long, newUser: User): Unit
 }

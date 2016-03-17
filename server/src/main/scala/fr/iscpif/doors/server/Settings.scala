@@ -32,7 +32,8 @@ object Settings {
     dir
   }
 
-  val dbLocation = new File(defaultLocation, "h2")
+  val dbName = "h2"
+  val dbLocation = new File(defaultLocation, dbName)
 
   lazy val database = Database.forDriver(
     driver = new org.h2.Driver,
@@ -40,7 +41,7 @@ object Settings {
   )
 
   def initDB = {
-    if (!dbLocation.exists) {
+    if (!new File(defaultLocation, s"$dbName.mv.db").exists) {
       database.run((users.schema ++ states.schema).create)
     }
   }

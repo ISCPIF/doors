@@ -24,6 +24,8 @@ import database._
 
 object ApiImpl extends shared.Api {
 
+
+  //LDAP
   def connect(authentication: LoginPassword): UserQuery =
     LdapConnection.connect(authentication)
 
@@ -38,6 +40,15 @@ object ApiImpl extends shared.Api {
     } yield p
   }
 
+
   //DataBase
   def addUser(user: User) = Settings.database.run( users += user )
+  def modifyUser(userID: Long, newUser: User) = {
+    println(s"updated : with  ${newUser.copy(id = userID)} : ${users.exists}")
+
+    Settings.database.run(users.insertOrUpdate(newUser.copy(id = userID)))
+  }
+
+
+
 }
