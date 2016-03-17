@@ -19,6 +19,8 @@ package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.ext.Data.UserQuery._
+import slick.driver.H2Driver.api._
+import database._
 
 object ApiImpl extends shared.Api {
 
@@ -28,11 +30,14 @@ object ApiImpl extends shared.Api {
   def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
 
-      for {
-        l <- ldap
-        u <- LdapRequest.getUser(ldap, authentication.login)
-        request = new LdapRequest(l)
-        p <- request.modify(u.dn, newUser)
-      } yield p
+    for {
+      l <- ldap
+      u <- LdapRequest.getUser(ldap, authentication.login)
+      request = new LdapRequest(l)
+      p <- request.modify(u.dn, newUser)
+    } yield p
   }
+
+  //DataBase
+  def addUser(user: User) = Settings.database.run( users += user )
 }

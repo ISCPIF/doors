@@ -1,9 +1,14 @@
-package shared
+package fr.iscpif.doors.server
 
-import fr.iscpif.doors.ext.Data._
+import java.io.File
+import slick.driver.H2Driver.api._
+import database._
+
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /*
- * Copyright (C) 08/06/15 // mathieu.leclaire@openmole.org
+ * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,11 +24,25 @@ import fr.iscpif.doors.ext.Data._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+object Settings {
 
-trait Api {
-  def connect(authentication: LoginPassword): UserQuery
-  def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery
+  val defaultLocation = {
+    val dir = new File(System.getProperty("user.home"), ".doors")
+    dir.mkdirs
+    dir
+  }
 
-  //Database
-  def addUser(user: User): Unit
+  val dbLocation = new File(defaultLocation, "h2")
+
+  lazy val database = Database.forDriver(
+    driver = new org.h2.Driver,
+    url = s"jdbc:h2:/$dbLocation"
+  )
+
+  def initDB = {
+    if (!dbLocation.exists) {
+      database.run((users.schema ++ states.schema).create)
+    }
+  }
+
 }

@@ -1,5 +1,6 @@
 package fr.iscpif.doors.server
 
+import database._
 import slick.driver.H2Driver.api._
 /*
  * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
@@ -25,5 +26,5 @@ class States(tag: Tag) extends Table[(Long, String, String)](tag, "STATES") {
   def state = column[String]("STATE")
 
   def * = (userID, lock, state)
-  def user = foreignKey("USER_FK", userID, Users.users)(_.id)
+  def user = foreignKey("USER_FK", userID, users)(_.id)
 }

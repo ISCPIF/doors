@@ -20,10 +20,6 @@ import slick.driver.H2Driver.api._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object Users {
-  def users = TableQuery[Users]
-}
-
 class Users(tag: Tag) extends Table[User](tag, "USERS") {
   def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
   def name = column[String]("NAME")

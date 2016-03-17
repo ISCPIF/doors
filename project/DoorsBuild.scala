@@ -94,6 +94,7 @@ object DoorsBuild extends Build {
         "com.lihaoyi" %% "upickle" % upickleVersion,
         "com.lihaoyi" %% "scalatags" % scalatagsVersion,
         "com.typesafe.slick" %% "slick" % "3.1.1",
+        "com.h2database" % "h2" % "1.4.190",
         "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
         "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
         "org.scalatra" %% "scalatra" % scalatraVersion,

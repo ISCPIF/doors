@@ -39,6 +39,7 @@ object Launcher {
     context.addServlet(classOf[Servlet], "/")
 
     server.setHandler(context)
+    Settings.initDB
 
     server.start
     server.join

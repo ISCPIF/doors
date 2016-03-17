@@ -41,7 +41,7 @@ object Data {
                       email: String,
                       description: String)
 
-  case class User(id: Long, name: String, email: String)
+  case class User(id: Long = 0, name: String, email: String)
 
   case class ErrorData(className: String, code: Int, message: String)
 

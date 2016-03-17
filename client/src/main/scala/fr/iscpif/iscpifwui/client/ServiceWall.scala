@@ -5,8 +5,12 @@ import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import bs._
 import fr.iscpif.scaladget.tools.JsRxTags._
 import org.scalajs.dom.raw.HTMLDivElement
-import scalatags.JsDom.{TypedTag, tags}
+import shared.Api
+import scalatags.JsDom.tags
 import scalatags.JsDom.all._
+import autowire._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+
 import rx._
 
 /*
