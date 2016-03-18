@@ -30,13 +30,13 @@ import rx._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object ServiceWall {
-  def apply(user: LDAPUser, authentication: LoginPassword) = new ServiceWall(user, authentication)
+object LDAPServiceWall {
+  def apply(user: LDAPUser, authentication: LoginPassword) = new LDAPServiceWall(user, authentication)
 }
 
-class ServiceWall(_user: LDAPUser, authentication: LoginPassword) {
+class LDAPServiceWall(_user: LDAPUser, authentication: LoginPassword) {
   val user = Var(_user)
-  val userEdition = UserEdition(user(), authentication, this)
+  val ldapUserEdition = new LDAPUserEdition(user(), authentication, this)
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
@@ -46,7 +46,7 @@ class ServiceWall(_user: LDAPUser, authentication: LoginPassword) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  val userPanel = new UserEditionPanel("testpanel", userEdition)
+  val userPanel = new LDAPUserEditionPanel("testpanel", ldapUserEdition)
 
   val userInfoButton = bs.glyphButton(
       "Edit your info",

@@ -36,8 +36,14 @@ object Client {
   @JSExport
   def run(): Unit = {
     val body = dom.document.body
-    val ldpapConnection = new LDAPConnection
-    body.appendChild(ldpapConnection.render)
+
+    // <=== ANCIEN COMPORTEMENT LDAPUSER ===>
+    //val ldpapConnection = new LDAPConnection
+    // body.appendChild(ldpapConnection.render)
+
+    // <=== NOUVEAU COMPORTEMENT USER ===>
+    val userConnection = new UserConnection
+    body.appendChild(userConnection.render)
   }
 }
 

@@ -1,7 +1,7 @@
 package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.doors.ext.Data.UserQuery._
+import fr.iscpif.doors.ext.Data.LDAPUserQuery
 import org.apache.directory.ldap.client.api.LdapNetworkConnection
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
@@ -49,9 +49,9 @@ object LdapConnection {
     } yield LdapConnection(host, DnPassword(user.dn, password), port, timeout)
   }
 
-  def connect(authentication: LoginPassword): UserQuery = {
+  def connect(authentication: LoginPassword): LDAPUserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
-    UserQuery(LdapRequest.getUser(ldap, authentication.login))
+    LDAPUserQuery(LdapRequest.getUser(ldap, authentication.login))
   }
 
   def anonymous(host: String, port: Option[Int], timeout: Option[Duration] = None): LdapConnection =

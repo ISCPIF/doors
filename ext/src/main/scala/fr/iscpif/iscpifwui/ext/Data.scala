@@ -34,7 +34,8 @@ object Data {
 
   object Anonymous extends LdapAuthentication
 
-  type UserQuery = Either[LDAPUser, ErrorData]
+  type UserQuery = Either[User, ErrorData]
+  type LDAPUserQuery = Either[LDAPUser, ErrorData]
 
   case class LDAPUser(dn: String,
                       givenName: String,
@@ -45,15 +46,19 @@ object Data {
 
   case class ErrorData(className: String, code: Int, message: String)
 
-  object UserQuery {
+  // new UserQuery ------------------------------------------------------
+
+
+  // old UserQuery renamed to LDAPUserQuery
+  object LDAPUserQuery {
     implicit def stackTrace(st: Array[StackTraceElement]): String = st.map {
       _.toString
     }.mkString("\n")
 
-    implicit def tryUserToUserQuery(t: Try[LDAPUser]): UserQuery = apply(t)
+    implicit def tryUserToUserQuery(t: Try[LDAPUser]): LDAPUserQuery = apply(t)
 
 
-    def apply(o: Try[LDAPUser]): UserQuery =
+    def apply(o: Try[LDAPUser]): LDAPUserQuery =
       o match {
         case Success(t) => Left(t)
         case Failure(ex: Throwable) =>

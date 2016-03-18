@@ -1,85 +1,99 @@
 package fr.iscpif.doors.client
 
-import fr.iscpif.doors.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import fr.iscpif.scaladget.tools.JsRxTags._
+import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import shared.Api
+import scalatags.JsDom.all._
+import scalatags.JsDom.{TypedTag, tags}
+import fr.iscpif.doors.ext.Data.{ErrorData, LoginPassword, LDAPUser, User}
+
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
-import shared.Api
-import scalatags.JsDom.tags
-import scalatags.JsDom.all._
-import bs._
-import rx._
-
-/*
- * Copyright (C) 18/12/15 // mathieu.leclaire@openmole.org
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-object UserEdition {
-  def apply(user: LDAPUser, authentication: LoginPassword, serviceWall: ServiceWall) =
-    new UserEdition(user, authentication, serviceWall)
-}
+// import rx._
 
 
-class UserEdition(user: LDAPUser, authentication: LoginPassword, serviceWall: ServiceWall) {
+// user => form + gui
+case class UserEditionPanel(_modalID: bs.ModalID,
+                            user : User,
+                            serviceWall : UserServiceWall  // for update after save
+                           ) extends ModalPanel {
 
-  val emailInput = bs.input(user.email)(
-    placeholder := "Email",
-    width := "200px").render
+  lazy val modalID = _modalID
 
-  val givenNameInput = bs.input(user.givenName)(
-    placeholder := "Given name",
-    width := "200px").render
+  val htmlForm = Map(
+    "name" -> bs.input(user.name)(
+        placeholder := "Given name",
+        width := "200px").render ,
+    "email" -> bs.input(user.email)(
+      placeholder := "Email",
+      width := "200px").render
+//    "login" -> bs.input(user.login)(
+//      placeholder := "Login",
+//      width := "200px").render
+//    "pass" -> bs.input(user.password)(
+//      placeholder := "Password",
+//      `type` := "password",
+//      width := "200px").render
+  )
 
-  val descriptionInput = bs.input(user.description)(
-    placeholder := "Description",
-    width := "200px").render
-
-
-  val saveButton = bs.button("Save", btn_primary, () => {
+  val saveButton = bs.button("Save", bs.btn_primary, () => {
     save
   })
 
   def save = {
     val newUser = user.copy(
-      givenName = givenNameInput.value,
-      email = emailInput.value,
-      description = descriptionInput.value
+      // new values for each slot
+      name = htmlForm("name").value,
+      email = htmlForm("email").value
+      // login = htmlForm("login").value,
+      // password = htmlForm("pass").value
     )
 
-    Post[Api].modify(authentication, newUser).call().foreach { db =>
-      db match {
-        case Right(error: ErrorData) =>
-          println("ERRER " + error.className)
-        //errorMessage() = m
-        case Left(u: LDAPUser) => serviceWall.user() = u
-        // todo show a sign that it was saved (ex glyphicon-saved)
-      }
-    }
+    // modifyUser : Unit
+    Post[Api].modifyUser(user.id, newUser).call()
+
+
+
+//    Post[Api].modifyUser(user.id, newUser).call().foreach { db =>
+//      db match {
+//        case Right(error: ErrorData) =>
+//          println("ERROR " + error.className)
+//        //errorMessage() = m
+//        case Left(u: LDAPUser) => serviceWall.user() = u
+//        // todo show a sign that it was saved (ex glyphicon-saved)
+//      }
+//    }
   }
 
-  def render = tags.div(Rx {
-    bs.div("userinfoEdition")(
-      bs.buttonGroup("saveCancelButtons")(
-        saveButton
-      ),
-      bs.labeledField("Given name", givenNameInput),
-      bs.labeledField("Email", emailInput),
-      bs.labeledField("Description", descriptionInput)
-    ).render
-  }
+  // a custom-made panel type for our user forms
+  val dialog = bs.modalDialog(
+    _modalID,
+    bs.headerDialog(
+      h3("Change your user data")
+    ),
+    bs.bodyDialog(
+      bs.labeledField("Given name", htmlForm("name")),
+      bs.labeledField("Email", htmlForm("email"))
+      // bs.labeledField("Password", htmlForm("pass"))
+    ),
+    bs.footerDialog(
+      bs.buttonGroup(bs.btn_group_small)(
+        saveButton,
+        closeButton
+      )
+    )
   )
+
+  val render = this.dialog
+}
+
+trait ModalPanel {
+  def modalID: bs.ModalID
+
+  def dialog: bs.Dialog
+
+  val closeButton = bs.button("Close", bs.btn_default)(data("dismiss") := "modal", onclick := { () ⇒ close })
+
+  def close: Unit = bs.hideModal(modalID)
+
+  def isVisible: Boolean = bs.isModalVisible(modalID)
 }

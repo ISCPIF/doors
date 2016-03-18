@@ -28,11 +28,11 @@ import autowire._
 import rx._
 import fr.iscpif.doors.ext.Data._
 
-class LDAPConnection {
+class UserConnection {
 
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
-  val serviceWall: Var[Option[LDAPServiceWall]] = Var(None)
+  val userServiceWall: Var[Option[UserServiceWall]] = Var(None)
 
   val loginInput = bs.input("", "connectInput")(
     placeholder := "Login",
@@ -54,15 +54,15 @@ class LDAPConnection {
     a(`class` := "shutdownButton",
       cursor := "pointer",
       onclick := { () ⇒
-        serviceWall() = None
+        userServiceWall() = None
         connectionFailed() = false
       }
     )("Logout")
 
   val render = tags.div(
     Rx {
-      serviceWall() match {
-        case Some(serviceWall: LDAPServiceWall) =>
+      userServiceWall() match {
+        case Some(serviceWall: UserServiceWall) =>
           tags.div(
             shutdownButton,
             serviceWall.render
@@ -83,14 +83,15 @@ class LDAPConnection {
     tags.img(src := "img/logoISC.png", `class` := "logoISC")
   ).render
 
+
   def connect(authentication: LoginPassword) =
     Post[Api].connect(authentication).call().foreach { c =>
       c match {
         case Right(error: ErrorData) =>
           errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
-        case Left(user: LDAPUser) =>
-          serviceWall() = Some(LDAPServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
+        case Left(user: User) =>
+          userServiceWall() = Some(UserServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
       }
     }
 
