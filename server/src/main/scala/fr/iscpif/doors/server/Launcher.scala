@@ -1,9 +1,11 @@
 package fr.iscpif.doors.server
 
+import fr.iscpif.doors.ext.Data.User
 import org.eclipse.jetty.server.{Server}
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
-
+import fr.iscpif.doors.server.Hashing.currentJson
+import org.eclipse.jetty.util.log._
 
 /*
  * Copyright (C) 18/02/16 // mathieu.leclaire@openmole.org
@@ -26,6 +28,7 @@ import org.scalatra.servlet.ScalatraListener
 object Launcher {
   // this is my entry object as specified in sbt project definition
   def main(args: Array[String]) {
+    Log.setLog(null)
     val port = scala.util.Try(args(0).toInt).getOrElse(8080)
 
     val server = new Server(port)
@@ -40,6 +43,12 @@ object Launcher {
 
     server.setHandler(context)
     Settings.initDB
+    Settings.checkConfFile
+
+    //Stub for tests
+    ApiImpl.addUser(database.newUser(name = "Peter Corser", login = "corser", password = "doors",email = "peter@corser.co"))
+    ApiImpl.addUser(database.newUser(name = "Mike Horn", login = "horn", password = "doors", email = "mike@horn.ca"))
+    ///
 
     server.start
     server.join

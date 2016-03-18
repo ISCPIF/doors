@@ -1,10 +1,10 @@
 package fr.iscpif.doors.server
 
-import fr.iscpif.doors.ext.Data.User
-import slick.lifted.TableQuery
+import org.json4s.jackson.JsonMethods._
+import org.json4s.{DefaultFormats, Formats, Extraction}
 
 /*
- * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,11 +20,11 @@ import slick.lifted.TableQuery
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package object database {
-  lazy val users = TableQuery[Users]
-  lazy val states = TableQuery[States]
+object Utils {
+  protected implicit val jsonFormats: Formats = DefaultFormats.withBigDecimal
 
+  implicit class ToJsonDecorator(x: Any) {
+    def toJson = pretty(Extraction.decompose(x))
+  }
 
-  def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = 0L, login, Hashing(password), name, email, hashAlgo)
 }

@@ -16,10 +16,8 @@ package fr.iscpif.doors.ext
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 import org.apache.directory.api.ldap.model.exception.{LdapException, LdapAuthenticationException, LdapInvalidDnException, LdapUnwillingToPerformException}
 import org.apache.directory.ldap.client.api.exception.InvalidConnectionException
-
 import scala.util.{Failure, Success, Try}
 
 object Data {
@@ -41,7 +39,7 @@ object Data {
                       email: String,
                       description: String)
 
-  case class User(id: Long = 0, name: String, email: String)
+  case class User(id: Long = 0, login: String, password: String, name: String, email: String, hashAlgorithm: String)
 
   case class ErrorData(className: String, code: Int, message: String)
 

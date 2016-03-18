@@ -22,8 +22,11 @@ import slick.driver.H2Driver.api._
 
 class Users(tag: Tag) extends Table[User](tag, "USERS") {
   def id = column[Long]("ID", O.PrimaryKey, O.AutoInc)
+  def login = column[String]("LOGIN")
+  def password = column[String]("PASSWORD")
+  def hashAlgorithm = column[String]("HASH_ALGORITHM")
   def name = column[String]("NAME")
   def email = column[String]("EMAIL")
 
-  def * = (id, name, email) <> (User.tupled, User.unapply)
+  def * = (id, login, password, hashAlgorithm, name, email) <> (User.tupled, User.unapply)
 }

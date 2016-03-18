@@ -1,11 +1,10 @@
 package fr.iscpif.doors.server
 
 import java.io.File
+import com.typesafe.config.ConfigFactory
 import slick.driver.H2Driver.api._
 import database._
-
-
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Try
 
 /*
  * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
@@ -40,10 +39,25 @@ object Settings {
     url = s"jdbc:h2:/$dbLocation"
   )
 
+  lazy val config = ConfigFactory.parseFile(new File(defaultLocation, "doors.conf"))
+
+
+  def get(confKey: String) = fromConf(confKey).getOrElse("")
+
+  def fromConf(confKey: String): Try[String] = Try {
+    config.getString(confKey)
+  }
+
   def initDB = {
     if (!new File(defaultLocation, s"$dbName.mv.db").exists) {
       database.run((users.schema ++ states.schema).create)
     }
   }
 
+  def checkConfFile = {
+    Seq("salt").foreach { e =>
+      //FIXME: LOGGER
+      if (fromConf(e).isFailure) println(s"$e is not defined in doors.conf")
+    }
+  }
 }

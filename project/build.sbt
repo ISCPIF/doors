@@ -1,4 +1,7 @@
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers ++= Seq(
+  "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/",
+  "RoundEights" at "http://maven.spikemark.net/roundeights"
+)
 
 addSbtPlugin("org.scala-js" % "sbt-scalajs" % "0.6.7")
 

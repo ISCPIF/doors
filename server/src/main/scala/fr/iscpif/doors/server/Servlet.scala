@@ -20,7 +20,6 @@ package fr.iscpif.doors.server
 
 
 import fr.iscpif.doors.ext.Data._
-import org.json4s.{DefaultFormats, Formats, Extraction}
 import org.scalatra._
 import scala.concurrent.ExecutionContext.Implicits.global
 import upickle._
@@ -30,7 +29,7 @@ import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
-import org.json4s.jackson.JsonMethods._
+import Utils._
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
@@ -41,12 +40,6 @@ object AutowireServer extends autowire.Server[String, upickle.default.Reader, up
 class Servlet extends ScalatraServlet {
 
   val basePath = "shared"
-
-  protected implicit val jsonFormats: Formats = DefaultFormats.withBigDecimal
-
-  implicit class ToJsonDecorator(x: Any) {
-    def toJson = pretty(Extraction.decompose(x))
-  }
 
   get("/") {
     contentType = "text/html"

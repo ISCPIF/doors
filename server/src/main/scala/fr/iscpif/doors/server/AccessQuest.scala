@@ -1,10 +1,7 @@
 package fr.iscpif.doors.server
 
-import fr.iscpif.doors.ext.Data.User
-import slick.lifted.TableQuery
-
 /*
- * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -20,11 +17,20 @@ import slick.lifted.TableQuery
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package object database {
-  lazy val users = TableQuery[Users]
-  lazy val states = TableQuery[States]
 
+object Test{
+  def test[T](t: T)(implicit aq: AccessQuest[T]) = {
+    aq.meth(t)
+  }
 
-  def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = 0L, login, Hashing(password), name, email, hashAlgo)
+  //test(EmailConfirmation())
 }
+
+
+trait AccessQuest[T] {
+
+  def meth(t: T): Int
+
+}
+
+case class EmailConfirmation()

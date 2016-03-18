@@ -43,12 +43,8 @@ object ApiImpl extends shared.Api {
 
   //DataBase
   def addUser(user: User) = Settings.database.run( users += user )
-  def modifyUser(userID: Long, newUser: User) = {
-    println(s"updated : with  ${newUser.copy(id = userID)} : ${users.exists}")
-
-    Settings.database.run(users.insertOrUpdate(newUser.copy(id = userID)))
-  }
-
+  def modifyUser(userID: Long, newUser: User) = Settings.database.run(users.insertOrUpdate(newUser.copy(id = userID)))
+  def canUserLogIn(login: String, password: String): Boolean = true//Settings.database.run()
 
 
 }

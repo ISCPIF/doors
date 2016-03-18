@@ -27,4 +27,5 @@ trait Api {
   //Database
   def addUser(user: User): Unit
   def modifyUser(id: Long, newUser: User): Unit
+  def canUserLogIn(login: String, password: String): Boolean
 }
