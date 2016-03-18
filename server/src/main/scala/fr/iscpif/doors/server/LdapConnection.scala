@@ -49,7 +49,7 @@ object LdapConnection {
     } yield LdapConnection(host, DnPassword(user.dn, password), port, timeout)
   }
 
-  def connect(authentication: LoginPassword): UserQuery = {
+  def connect(authentication: LoginPassword): LDAPUserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
     UserQuery(LdapRequest.getUser(ldap, authentication.login))
   }

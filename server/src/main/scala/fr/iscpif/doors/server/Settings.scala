@@ -31,16 +31,11 @@ object Settings {
     dir
   }
 
-  val dbName = "h2"
-  val dbLocation = new File(defaultLocation, dbName)
+  lazy val dbName = "h2"
+  lazy val dbLocation = new File(defaultLocation, dbName)
 
-  lazy val database = Database.forDriver(
-    driver = new org.h2.Driver,
-    url = s"jdbc:h2:/$dbLocation"
-  )
 
   lazy val config = ConfigFactory.parseFile(new File(defaultLocation, "doors.conf"))
-
 
   def get(confKey: String) = fromConf(confKey).getOrElse("")
 
@@ -50,7 +45,7 @@ object Settings {
 
   def initDB = {
     if (!new File(defaultLocation, s"$dbName.mv.db").exists) {
-      database.run((users.schema ++ states.schema).create)
+      query((users.schema ++ states.schema).create)
     }
   }
 

@@ -26,10 +26,10 @@ object ApiImpl extends shared.Api {
 
 
   //LDAP
-  def connect(authentication: LoginPassword): UserQuery =
+  def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
     LdapConnection.connect(authentication)
 
-  def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery = {
+  def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
 
     for {
@@ -42,9 +42,15 @@ object ApiImpl extends shared.Api {
 
 
   //DataBase
-  def addUser(user: User) = Settings.database.run( users += user )
-  def modifyUser(userID: Long, newUser: User) = Settings.database.run(users.insertOrUpdate(newUser.copy(id = userID)))
-  def canUserLogIn(login: String, password: String): Boolean = true//Settings.database.run()
+  def addUser(user: User) = query(users += user)
 
+  def modifyUser(userID: Long, newUser: User) = query(users.insertOrUpdate(newUser.copy(id = userID)))
+
+  def connect(login: String, password: String): UserQuery = {
+    val result = query(users.filter{ u=> u.login === login && u.password === Hashing(password) }.result)
+
+    if(result.isEmpty) Right(ErrorData(s"not found $login", 100, ""))
+    else Left(result.head)
+  }
 
 }

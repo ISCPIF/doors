@@ -83,8 +83,8 @@ class LDAPConnection {
     tags.img(src := "img/logoISC.png", `class` := "logoISC")
   ).render
 
-  def connect(authentication: LoginPassword) =
-    Post[Api].connect(authentication).call().foreach { c =>
+  def connect(authentication: LoginPassword) = 
+    Post[Api].connectToLDAP(authentication).call().foreach { c =>
       c match {
         case Right(error: ErrorData) =>
           errorMessage() = error.message + s"(${error.code})"

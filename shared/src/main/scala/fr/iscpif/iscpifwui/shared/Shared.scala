@@ -21,11 +21,12 @@ import fr.iscpif.doors.ext.Data._
 
 
 trait Api {
-  def connect(authentication: LoginPassword): UserQuery
-  def modify(authentication: LoginPassword, newUser: LDAPUser): UserQuery
+  //LDAP
+  def connectToLDAP(authentication: LoginPassword): LDAPUserQuery
+  def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
   //Database
   def addUser(user: User): Unit
   def modifyUser(id: Long, newUser: User): Unit
-  def canUserLogIn(login: String, password: String): Boolean
+  def connect(login: String, password: String): UserQuery
 }
