@@ -53,17 +53,16 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
   val settingsStyle: ModifierSeq = Seq(
     absolutePosition,
     fontSize := 25,
-    pointer,
-    top := 20
+    pointer
   )
 
   val userSettingsButton = span(
-    glyph_settings +++ settingsStyle +++ Seq(left := -50),
+    glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30),
     onclick := { () => bs.showModal(userEditionPanel.modalID) }
   )
 
   val adminSettingsButton = span(
-    btn_primary +++ settingsStyle +++ Seq(left := -10),
+    btn_primary +++ settingsStyle +++ Seq(left := 50, top := 20),
     onclick := { ()=> bs.showModal(adminEditionPanel.modalID)}
   )("Admin")
 
