@@ -24,7 +24,7 @@ import sheet._
 
 class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
 
-  val modalID = _modalID
+  lazy val modalID = _modalID
 
   val saveButton = bs.button("Save", () => {
     save
@@ -49,4 +49,6 @@ class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
   def save = {
 
   }
+
+  val render = this.dialog
 }

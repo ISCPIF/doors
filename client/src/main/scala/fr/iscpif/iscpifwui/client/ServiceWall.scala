@@ -80,7 +80,8 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
       BootstrapTags.thumbs(services).render,
       tags.img(src := Resources.isc, logoISC)
       ,
-      userEditionPanel.render
+      userEditionPanel.render,
+      adminEditionPanel.render
     )
   ).render
 
