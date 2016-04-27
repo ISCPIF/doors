@@ -19,7 +19,10 @@ package fr.iscpif.doors.client
 
 import shared.Api
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import bs._
+import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.doors.client.{stylesheet => doorsheet}
+import doorsheet._
+import sheet._
 import fr.iscpif.scaladget.tools.JsRxTags._
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
@@ -32,27 +35,28 @@ class UserConnection {
 
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
-  val userServiceWall: Var[Option[UserServiceWall]] = Var(None)
+  val userServiceWall: Var[Option[ServiceWall]] = Var(None)
 
-  val loginInput = bs.input("", "connectInput")(
-    placeholder := "Login",
-    autofocus
+  val loginInput = bs.input("")(
+    ms("connectInput") +++ Seq(
+      placeholder := "Login",
+      autofocus
+    )
   ).render
 
-  val passwordInput = bs.input("", "connectInput")(
-    `type` := "password",
-    placeholder := "Password",
-    autofocus
+  val passwordInput = bs.input("")(
+    ms("connectInput") +++ Seq(
+      `type` := "password",
+      placeholder := "Password",
+      autofocus
+    )
   ).render
 
-  val connectButton = bs.button("Connect", btn_primary)(`type` := "submit", onclick := { () =>
-    connect(LoginPassword(loginInput.value, passwordInput.value))
-    false
-  }).render
+  val connectButton = bs.button("Connect", connectCall)(
+    btn_primary, `type` := "submit").render
 
   val shutdownButton =
-    a(`class` := "shutdownButton",
-      cursor := "pointer",
+    a(shutdown +++ pointer,
       onclick := { () ⇒
         userServiceWall() = None
         connectionFailed() = false
@@ -62,36 +66,42 @@ class UserConnection {
   val render = tags.div(
     Rx {
       userServiceWall() match {
-        case Some(serviceWall: UserServiceWall) =>
+        case Some(serviceWall: ServiceWall) =>
           tags.div(
             shutdownButton,
             serviceWall.render
           )
-        case _ => bs.div("centerPage")(
+        case _ => div(ms("centerPage"))(
           connectionFailed() match {
-            case true => bs.div("connectionFailed")(errorMessage())
+            case true => div(doorsheet.connectionFailed)(errorMessage())
             case _ => tags.div
           },
           tags.form(
-            tags.p(`class` := "grouptop", loginInput),
-            tags.p(`class` := "groupbottom", passwordInput),
-            connectButton
+            tags.p(ms("grouptop"), loginInput),
+            tags.p(ms("groupbottom"), passwordInput),
+            connectButton,
+            onsubmit := { () =>
+              connectCall()
+              false
+            }
           )
         )
       }
     },
-    tags.img(src := "img/logoISC.png", `class` := "logoISC")
+    tags.img(src := "img/logoISC.png", logoISC)
   ).render
 
 
+  def connectCall = () => connect(LoginPassword(loginInput.value, passwordInput.value))
+
   def connect(authentication: LoginPassword) =
-    Post[Api].connect(authentication).call().foreach { c =>
+    Post[Api].connect(authentication.login, authentication.password).call().foreach { c =>
       c match {
         case Right(error: ErrorData) =>
           errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
         case Left(user: User) =>
-          userServiceWall() = Some(UserServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
+          userServiceWall() = Some(ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
       }
     }
 

@@ -1,11 +1,11 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import bs._
-import fr.iscpif.scaladget.tools.JsRxTags._
 import scalatags.JsDom.tags
+import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.doors.client.stylesheet._
 import scalatags.JsDom.all._
+import sheet._
 
 /*
  * Copyright (C) 24/09/15 // mathieu.leclaire@openmole.org
@@ -27,15 +27,15 @@ import scalatags.JsDom.all._
 object BootstrapTags {
 
   def thumbs(services: Seq[ServiceLink]) =
-    bs.div("row wall top100")(
+    div(row +++ wall +++ top100)(
       for {service <- services} yield {
-        bs.div("col-xs-6  col-md-2 boxHelp")(
+        div(colMD(2) +++ "boxHelp")(
           tags.a(
             `class` := "thumbnail serviceBox boxHelp",
             href := service.url,
             target := "_blank")(
-              img(src := service.logo, alt := service.serviceName, `class` := "serviceImage"),
-              bs.span("caption full-caption")(
+              img(src := service.logo, alt := service.serviceName, serviceImage),
+              span(ms("caption full-caption"))(
                 tags.h3(service.serviceName),
                 tags.p(service.description)
               )

@@ -2,14 +2,14 @@ package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import bs._
+import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.doors.client.{stylesheet=> doorsheet}
+import doorsheet._
+import sheet._
 import fr.iscpif.scaladget.tools.JsRxTags._
 import org.scalajs.dom.raw.HTMLDivElement
-import shared.Api
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
-import autowire._
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 
 import rx._
 
@@ -30,13 +30,12 @@ import rx._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object LDAPServiceWall {
-  def apply(user: LDAPUser, authentication: LoginPassword) = new LDAPServiceWall(user, authentication)
+object ServiceWall {
+  def apply(user: User, authentication: LoginPassword) = new ServiceWall(user, authentication)
 }
 
-class LDAPServiceWall(_user: LDAPUser, authentication: LoginPassword) {
+class ServiceWall(_user: User, authentication: LoginPassword) {
   val user = Var(_user)
-  val ldapUserEdition = new LDAPUserEdition(user(), authentication, this)
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
@@ -46,29 +45,27 @@ class LDAPServiceWall(_user: LDAPUser, authentication: LoginPassword) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  val userPanel = new LDAPUserEditionPanel("testpanel", ldapUserEdition)
+  val userEditionPanel = new UserEditionPanel("testpanel", _user, this)
 
-  val userInfoButton = bs.glyphButton(
-      "Edit your info",
-      btn_default + btn_small + btn_right,
-      glyph_settings,
-      { () =>  bs.showModal(userPanel.modalID) }
+  val userInfoButton = span(
+      btn_default +++ btn_right +++ glyph_settings,
+      onclick := { () =>  bs.showModal(userEditionPanel.modalID) }
   )
   // private def setLDAPEdition = userEdition() = UserEdition(user(), authentication, this)
 
-  val render: HTMLDivElement = tags.div(`class` := "fullpanel")(
+  val render: HTMLDivElement = tags.div(ms("fullpanel"))(
     tags.div(`class` := Rx {
       s"centerpanel"
     })(
-      bs.div("user")(Rx {
-        s"${user().givenName}"
+      div(doorsheet.user)(Rx {
+        s"${user().name}"
       },
         userInfoButton
       ),
         BootstrapTags.thumbs(services).render,
-        tags.img(src := Resources.isc, `class` := "logoISC")
+        tags.img(src := Resources.isc, logoISC)
           ,
-      userPanel.dialog
+      userEditionPanel.render
       )
   ).render
 
