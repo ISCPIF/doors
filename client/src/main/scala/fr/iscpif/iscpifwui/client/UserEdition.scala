@@ -54,7 +54,7 @@ case class UserEditionPanel(_modalID: bs.ModalID,
     )
 
     // modifyUser : Unit
-    Post[Api].modifyUser(user.id, newUser).call()
+    Post[Api].modifyUser(user.id, newUser).call().foreach(x=> close)
 
 
 
