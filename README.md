@@ -7,7 +7,7 @@ First, build the javascript:
 ```sh
 $ cd doors
 $ sbt
-> go // Build the client JS files and move them to the right place
+> toJar // Build the client JS files and move them in server/target/scala-2.11/doorsX.X.X-SNAPSHOT.jar
 ```
 
 Then, start the server:
@@ -32,7 +32,3 @@ $ ./doors <port>
 ```
 
 Then, open ```http://<host>:<port>``` in your browser.
-
-
-
-

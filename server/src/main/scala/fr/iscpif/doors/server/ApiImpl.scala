@@ -18,7 +18,7 @@ package fr.iscpif.doors.server
  */
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.doors.ext.Data.UserQuery._
+import fr.iscpif.doors.ext.Data.LDAPUserQuery._
 import slick.driver.H2Driver.api._
 import database._
 

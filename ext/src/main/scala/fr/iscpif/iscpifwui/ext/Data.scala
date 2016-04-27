@@ -45,7 +45,11 @@ object Data {
 
   case class ErrorData(className: String, code: Int, message: String)
 
-  object UserQuery {
+  // new UserQuery ------------------------------------------------------
+
+
+  // old UserQuery renamed to LDAPUserQuery
+  object LDAPUserQuery {
     implicit def stackTrace(st: Array[StackTraceElement]): String = st.map {
       _.toString
     }.mkString("\n")
