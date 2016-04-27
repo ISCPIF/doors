@@ -1,25 +1,17 @@
 package fr.iscpif.doors.client
 
+import fr.iscpif.iscpifwui.client.ModalPanel
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import shared.Api
 import scalatags.JsDom.all._
-import scalatags.JsDom.{TypedTag, tags}
-import fr.iscpif.doors.ext.Data.{ErrorData, LoginPassword, LDAPUser, User}
+import fr.iscpif.doors.ext.Data. User
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
-import fr.iscpif.doors.client.stylesheet._
 import sheet._
-
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 
-// import rx._
-
-
-// user => form + gui
 case class UserEditionPanel(_modalID: bs.ModalID,
-                            user: User,
-                            serviceWall: ServiceWall // for update after save
-                           ) extends ModalPanel {
+                            user: User) extends ModalPanel {
 
   lazy val modalID = _modalID
 
@@ -90,16 +82,4 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   )
 
   val render = this.dialog
-}
-
-trait ModalPanel {
-  def modalID: bs.ModalID
-
-  def dialog: bs.Dialog
-
-  val closeButton = bs.button("Close", () ⇒ close)(btn_default, data("dismiss") := "modal")
-
-  def close: Unit = bs.hideModal(modalID)
-
-  def isVisible: Boolean = bs.isModalVisible(modalID)
 }

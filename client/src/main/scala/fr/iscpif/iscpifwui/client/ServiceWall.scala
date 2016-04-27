@@ -1,6 +1,7 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
+import fr.iscpif.iscpifwui.client.AdminEditionPanel
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
@@ -45,20 +46,26 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  val userEditionPanel = new UserEditionPanel("testpanel", _user, this)
+  val userEditionPanel = new UserEditionPanel("userEditionPanel", _user)
+
+  val adminEditionPanel = new AdminEditionPanel("adminEditionPanel")
 
   val settingsStyle: ModifierSeq = Seq(
     absolutePosition,
     fontSize := 25,
     pointer,
-    top := 20,
-    left := -50
+    top := 20
   )
 
-  val userInfoButton = span(
-    glyph_settings +++ settingsStyle,
+  val userSettingsButton = span(
+    glyph_settings +++ settingsStyle +++ Seq(left := -50),
     onclick := { () => bs.showModal(userEditionPanel.modalID) }
   )
+
+  val adminSettingsButton = span(
+    btn_primary +++ settingsStyle +++ Seq(left := -10),
+    onclick := { ()=> bs.showModal(adminEditionPanel.modalID)}
+  )("Admin")
 
   val render: HTMLDivElement = tags.div(ms("fullpanel"))(
     tags.div(`class` := Rx {
@@ -67,7 +74,8 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
       div(doorsheet.user)(Rx {
         s"${user().name}"
       },
-        userInfoButton
+        userSettingsButton,
+        adminSettingsButton
       ),
       BootstrapTags.thumbs(services).render,
       tags.img(src := Resources.isc, logoISC)
