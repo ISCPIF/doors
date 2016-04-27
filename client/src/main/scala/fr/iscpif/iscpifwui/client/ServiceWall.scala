@@ -3,7 +3,7 @@ package fr.iscpif.doors.client
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
-import fr.iscpif.doors.client.{stylesheet=> doorsheet}
+import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
 import fr.iscpif.scaladget.tools.JsRxTags._
@@ -47,11 +47,18 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
 
   val userEditionPanel = new UserEditionPanel("testpanel", _user, this)
 
-  val userInfoButton = span(
-      btn_default +++ btn_right +++ glyph_settings,
-      onclick := { () =>  bs.showModal(userEditionPanel.modalID) }
+  val settingsStyle: ModifierSeq = Seq(
+    absolutePosition,
+    fontSize := 25,
+    pointer,
+    top := 20,
+    left := -50
   )
-  // private def setLDAPEdition = userEdition() = UserEdition(user(), authentication, this)
+
+  val userInfoButton = span(
+    glyph_settings +++ settingsStyle,
+    onclick := { () => bs.showModal(userEditionPanel.modalID) }
+  )
 
   val render: HTMLDivElement = tags.div(ms("fullpanel"))(
     tags.div(`class` := Rx {
@@ -62,11 +69,11 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
       },
         userInfoButton
       ),
-        BootstrapTags.thumbs(services).render,
-        tags.img(src := Resources.isc, logoISC)
-          ,
+      BootstrapTags.thumbs(services).render,
+      tags.img(src := Resources.isc, logoISC)
+      ,
       userEditionPanel.render
-      )
+    )
   ).render
 
 }
