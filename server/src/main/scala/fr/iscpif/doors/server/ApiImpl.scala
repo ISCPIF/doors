@@ -43,16 +43,24 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   //DataBase
   def allUsers: Seq[User] = query(users.result)
 
-  def addUser(user: User) = query(users += user)
+  private def addUser(user: User): Unit = query(users += user)
 
-  def removeUser(user: User) = query(users.filter{_.id === user.id}.delete)
+  def addUser(_name: String, _login: String, _password: String, _email: String): Unit =
+    addUser(newUser(name = _name, login = _login, password = _password, email = _email))
 
-  def modifyUser(userID: String, newUser: User) = query(users.insertOrUpdate(newUser.copy(id = userID)))
+  def removeUser(user: User) = query(users.filter {
+    _.id === user.id
+  }.delete)
+
+  private def modifyUser(userID: String, newUser: User): Unit = query(users.insertOrUpdate(newUser.copy(id = userID)))
+
+  def modifyUser(userID: String, _name: String, _login: String, _password: String, _email: String): Unit =
+    modifyUser(userID, newUser(name = _name, login = _login, password = _password, email = _email))
 
   def connect(login: String, password: String): UserQuery = {
-    val result = query(users.filter{ u=> u.login === login && u.password === Hashing(password) }.result)
+    val result = query(users.filter { u => u.login === login && u.password === Hashing(password) }.result)
 
-    if(result.isEmpty) Right(ErrorData(s"not found $login", 100, ""))
+    if (result.isEmpty) Right(ErrorData(s"not found $login", 100, ""))
     else Left(result.head)
   }
 

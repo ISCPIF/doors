@@ -133,13 +133,14 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
   def save = {
     // updates passStatus
     if (validatePasswords) {
+      Post[Api].modifyUser(
+        user.id,
+        nameInput.value,
+        user.login,
+        if (passStatus() == PassMatchOk()) passInput1.value else user.password,
+        emailInput.value
+      ).call().foreach(x => onsaved())
 
-      val newUser = user.copy(
-        name = nameInput.value,
-        email = emailInput.value,
-        password = if (passStatus() == PassMatchOk()) passInput1.value else user.password
-      )
-      Post[Api].modifyUser(user.id, newUser).call().foreach(x => onsaved())
     }
   }
 
