@@ -4,7 +4,7 @@ import fr.iscpif.iscpifwui.client.ModalPanel
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import shared.Api
 import scalatags.JsDom.all._
-import fr.iscpif.doors.ext.Data. User
+import fr.iscpif.doors.ext.Data.User
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
@@ -41,18 +41,20 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   //  }
 
   val editPassButton = bs.button(
-    content =  span(
-      Rx{
+    content = span(
+      Rx {
         if (!editPass()) glyph_edit
-        else             glyph_exclamation
+        else glyph_exclamation
       },
       " Change password"
     ),
     buttonStyle = editPassButtonStyle,
-    todo = () => {editPass() = !editPass()}
+    todo = () => {
+      editPass() = !editPass()
+    }
   ).render
 
-  val passInputTemplate = bs.input() (
+  val passInputTemplate = bs.input()(
     width := "200px",
     `type` := "password"
   )
@@ -63,14 +65,19 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   // for password forms validation
   sealed trait PassStatus
 
-  object PassUndefined   extends PassStatus
-  object PassNoMatch     extends PassStatus
-  object PassMissing1    extends PassStatus
-  object PassMissing2    extends PassStatus
-  object PassMissingBoth extends PassStatus
-  object PassMatchOk     extends PassStatus
+  object PassUndefined extends PassStatus
 
-  val passStatus:Var[PassStatus] = Var(PassUndefined)
+  object PassNoMatch extends PassStatus
+
+  object PassMissing1 extends PassStatus
+
+  object PassMissing2 extends PassStatus
+
+  object PassMissingBoth extends PassStatus
+
+  object PassMatchOk extends PassStatus
+
+  val passStatus: Var[PassStatus] = Var(PassUndefined)
 
   val passwordEditionBox = div(
     span(span("Enter new password"), passInput1),
@@ -78,16 +85,16 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   )
 
   // response message
-  val passResponse = Rx {
-      passStatus() match {
-        case PassUndefined => ""
-        case PassNoMatch   => "the passwords don't match !"
-        case PassMatchOk   => "saving...(todo)"
-        case PassMissing1  => "you didn't fill the first password ?"
-        case PassMissing2  => "you didn't fill the second password ?"
-        case PassMissingBoth  => "you didn't fill the passwords ?"
-      }
+  def passResponse =
+    passStatus() match {
+      case PassUndefined => ""
+      case PassNoMatch => "the passwords don't match !"
+      case PassMatchOk => "saving...(todo)"
+      case PassMissing1 => "you didn't fill the first password ?"
+      case PassMissing2 => "you didn't fill the second password ?"
+      case PassMissingBoth => "you didn't fill the passwords ?"
     }
+
 
   def validatePasswords() = {
     val p1 = passInput1.value
@@ -95,12 +102,12 @@ case class UserEditionPanel(_modalID: bs.ModalID,
 
     if (p1 == "" && p2 == "") passStatus() = PassMissingBoth
     else {
-      if (p1 == "")           passStatus() = PassMissing1
+      if (p1 == "") passStatus() = PassMissing1
       else {
-        if (p2 == "")         passStatus() = PassMissing2
+        if (p2 == "") passStatus() = PassMissing2
         else {
           if (p1 == p2) passStatus() = PassMatchOk
-          else          passStatus() = PassNoMatch
+          else passStatus() = PassNoMatch
         }
       }
     }
@@ -135,37 +142,38 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   // a custom-made panel type for our user forms
   val dialog =
     bs.modalDialog(
-    _modalID,
-    bs.headerDialog(
-      h3("Change your user data")
-    ),
-    bs.bodyDialog(
-      // debug
-      p("User ID: ", user.id),
+      _modalID,
+      bs.headerDialog(
+        h3("Change your user data")
+      ),
+      bs.bodyDialog(
+        // debug
+        p("User ID: ", user.id),
 
-      // form
-      span(span("Given name"), nameInput),
-      span(span("Email"), emailInput),
-
-      editPassButton,
-      Rx{
-        if (editPass()) {
-          passwordEditionBox
+        // form
+        span(span("Given name"), nameInput),
+        span(span("Email"), emailInput),
+        editPassButton,
+        Rx {
+          if (editPass()) {
+            div(
+              passwordEditionBox,
+                passStatus() match {
+                case PassMatchOk | PassUndefined => span()
+                case _ => div(`class` := "alert alert-danger")(passResponse)
+              }
+            )
+          }
+          else span()
         }
-        else {
-          span()
-        }
-      },
-      p(passResponse)(`class` := "alert alert-danger")
-    )  ,
-
+      ),
       bs.footerDialog(
         bs.buttonGroup(btnGroup)(
           saveButton,
           closeButton
         )
       )
-  )
+    )
 
   val render = this.dialog
 }
