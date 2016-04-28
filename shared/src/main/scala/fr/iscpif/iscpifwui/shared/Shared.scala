@@ -27,8 +27,8 @@ trait Api {
 
   //Database
   def allUsers(): Seq[User]
-  def addUser(user: User): Unit
+  def addUser(_name: String, _login: String, _password: String, _email: String): Unit
+  def modifyUser(id: String, _name: String, _login: String, _password: String, _email: String): Unit
   def removeUser(user: User): Unit
-  def modifyUser(id: String, newUser: User): Unit
   def connect(login: String, password: String): UserQuery
 }

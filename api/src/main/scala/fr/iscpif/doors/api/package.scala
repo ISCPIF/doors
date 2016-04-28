@@ -17,10 +17,33 @@
   */
 package fr.iscpif.doors
 
+import fr.iscpif.doors.ext.Data
 import fr.iscpif.doors.ext.Data.User
+import slick.dbio.DBIOAction
+import slick.lifted.TableQuery
 
-package object server {
-  def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = java.util.UUID.randomUUID.toString, login, Hashing(password), name, email, hashAlgo)
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
+import slick.driver.H2Driver.api._
+
+import scala.util.Failure
+
+package object api {
+
+  lazy val users = TableQuery[Users]
+  lazy val states = TableQuery[States]
+
+  lazy val db = Database.forDriver(
+    driver = new org.h2.Driver,
+    url = s"jdbc:h2:/${Settings.dbLocation}"
+  )
+
+  type DbQuery[T] = DBIOAction[T, slick.dbio.NoStream, scala.Nothing]
+
+  def query[T](f: DbQuery[T]) = Await.result(db.run(f), Duration.Inf)
+
+  def failure(s: String) = Failure(new RuntimeException(s))
+
+
 
 }

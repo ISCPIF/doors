@@ -21,23 +21,25 @@ package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data._
 import org.scalatra._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import upickle._
 import autowire._
 import shared._
+
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
+import fr.iscpif.doors.api.AccessQuest
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
-
   def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 }
 
-class Servlet extends ScalatraServlet {
+class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet {
 
   val basePath = "shared"
 
@@ -68,7 +70,7 @@ class Servlet extends ScalatraServlet {
   }
 
   post(s"/$basePath/*") {
-    Await.result(AutowireServer.route[shared.Api](ApiImpl)(
+    Await.result(AutowireServer.route[shared.Api](new ApiImpl(quests))(
       autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
         upickle.default.read[Map[String, String]](request.body))
     ), Duration.Inf)

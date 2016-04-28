@@ -41,11 +41,23 @@ object Data {
                       email: String,
                       description: String)
 
-  case class User(id: String, login: String, password: String, name: String, email: String, hashAlgorithm: String)
-
-  object UserOrdering extends Ordering[User]{
-    def compare(u1: User, u2: User) = u1.name compare u2.name
+  object User {
+    type Id = String
+    implicit def ordering = new Ordering[User]{
+      def compare(u1: User, u2: User) = u1.name compare u2.name
+    }
   }
+
+  object Lock {
+    type Id = String
+  }
+
+  object State {
+    type Id = Int
+  }
+
+  case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
+  case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
 
   case class ErrorData(className: String, code: Int, message: String)
 

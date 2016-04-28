@@ -45,14 +45,11 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
 
   val addUserButton = bs.button("Add", () => {
     Post[Api].addUser(
-      User(
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString
-      )).call().foreach { u =>
+      java.util.UUID.randomUUID().toString,
+      java.util.UUID.randomUUID().toString,
+      java.util.UUID.randomUUID().toString,
+      java.util.UUID.randomUUID().toString
+    ).call().foreach { u =>
       getUsers
     }
   })(sheet.btn_primary +++ btn_right)
@@ -63,14 +60,6 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
       users() = u
     }
 
-  val userEditionDiv = div(
-    Rx {
-      userEdition() match {
-        case Some(u: User) => UserEditionPanel.userPanel(u, () => save).panel
-        case _ => span()
-      }
-    }
-  )
 
   val userTable = tags.table(sheet.table +++ sheet.striped)(
     tbody(
@@ -113,7 +102,14 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
       addUserButton
     ),
     bs.bodyDialog(
-      userEditionDiv,
+      Rx {
+        userEdition() match {
+          case Some(u: User) =>
+            val userpanel = UserEditionPanel.userPanel(u, () => save)
+            div(userpanel.panel, userpanel.saveButton)
+          case _ => span()
+        }
+      },
       userTable),
     bs.footerDialog(
       closeButton

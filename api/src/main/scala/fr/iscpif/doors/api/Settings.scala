@@ -1,10 +1,12 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors.api
 
 import java.io.File
+import java.util.UUID
+
 import com.typesafe.config.ConfigFactory
 import slick.driver.H2Driver.api._
-import database._
-import scala.util.Try
+
+import scala.util._
 
 /*
  * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
@@ -22,20 +24,24 @@ import scala.util.Try
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+import slick.driver.H2Driver.api._
+import better.files._
 
 object Settings {
 
   val defaultLocation = {
-    val dir = new File(System.getProperty("user.home"), ".doors")
-    dir.mkdirs
+    val dir = System.getProperty("user.home") / ".doors"
+    dir.toJava.mkdirs
     dir
   }
 
   lazy val dbName = "h2"
-  lazy val dbLocation = new File(defaultLocation, dbName)
+  lazy val dbLocation = defaultLocation / dbName
 
+  def configFile = defaultLocation / "doors.conf"
+  def saltConfig = "salt"
 
-  lazy val config = ConfigFactory.parseFile(new File(defaultLocation, "doors.conf"))
+  lazy val config = ConfigFactory.parseFile(configFile.toJava)
 
   def get(confKey: String) = fromConf(confKey).getOrElse("")
 
@@ -44,15 +50,18 @@ object Settings {
   }
 
   def initDB = {
-    if (!new File(defaultLocation, s"$dbName.mv.db").exists) {
+    if (!(defaultLocation / s"$dbName.mv.db").exists) {
       query((users.schema ++ states.schema).create)
     }
   }
 
-  def checkConfFile = {
-    Seq("salt").foreach { e =>
-      //FIXME: LOGGER
-      if (fromConf(e).isFailure) println(s"$e is not defined in doors.conf")
+  def salt: String = {
+    Try(get(saltConfig)) match {
+      case Success(s) => s
+      case Failure(_) =>
+        val s = UUID.randomUUID().toString
+        configFile << s"$saltConfig = $s"
+        s
     }
   }
 }

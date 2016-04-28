@@ -1,7 +1,8 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors.api
 
-import database._
-import slick.driver.H2Driver.api._
+
+
+
 /*
  * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
  *
@@ -19,12 +20,16 @@ import slick.driver.H2Driver.api._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import fr.iscpif.doors.ext.Data.User
+import slick.driver.H2Driver.api._
 
-class States(tag: Tag) extends Table[(String, String, String)](tag, "STATES") {
-  def userID = column[String]("USER_ID")
-  def lock = column[String]("LOCK")
-  def state = column[String]("STATE")
+class Users(tag: Tag) extends Table[User](tag, "USERS") {
+  def id = column[User.Id]("ID", O.PrimaryKey)
+  def login = column[String]("LOGIN")
+  def password = column[String]("PASSWORD")
+  def hashAlgorithm = column[String]("HASH_ALGORITHM")
+  def name = column[String]("NAME")
+  def email = column[String]("EMAIL")
 
-  def * = (userID, lock, state)
-  def user = foreignKey("USER_FK", userID, users)(_.id)
+  def * = (id, login, password, hashAlgorithm, name, email) <> ((User.apply _).tupled, User.unapply)
 }

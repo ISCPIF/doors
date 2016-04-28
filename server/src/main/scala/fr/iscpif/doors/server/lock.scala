@@ -15,12 +15,16 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   *
   */
-package fr.iscpif.doors
+package fr.iscpif.doors.server
 
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.api._
+import slick.driver.H2Driver.api._
 
-package object server {
-  def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = java.util.UUID.randomUUID.toString, login, Hashing(password), name, email, hashAlgo)
+object lock {
+
+  def create(user: User.Id, lock: Lock.Id, date: Long = System.currentTimeMillis()) = {
+    query(states += State(user, lock, States.locked, date))
+  }
 
 }
