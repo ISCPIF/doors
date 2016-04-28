@@ -12,6 +12,14 @@ object DoorsBuild extends Build {
   val Name = "doors"
   val Version = "0.1.0-SNAPSHOT"
   val ScalaVersion = "2.11.8"
+
+  def projectSettings = Seq(
+    organization := Organization,
+      version := Version,
+      scalaVersion := ScalaVersion
+  )
+
+
   val scalatraVersion = "2.4.0"
   val jettyVersion = "9.3.7.v20160115"
   val json4sVersion = "3.3.0"
@@ -22,6 +30,7 @@ object DoorsBuild extends Build {
   val apacheDirectoryVersion = "1.0.0-M33"
   val jarName = s"doors$Version.jar"
   val monocleVersion = "1.2.1"
+
   lazy val hasher = ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
 
   val monocle = Seq(
@@ -35,42 +44,29 @@ object DoorsBuild extends Build {
 
   lazy val ext = Project(
     "ext",
-    file("ext"),
-    settings = Seq(
-      version := Version,
-      scalaVersion := ScalaVersion,
+    file("ext")) settings(projectSettings: _*) settings (
       libraryDependencies ++= Seq(
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
       )
-    )
   ) enablePlugins (ScalaJSPlugin)
 
   lazy val rest = Project(
     "rest",
-    file("rest"),
-    settings = Seq(
-      version := Version,
-      organization := "fr.iscpif",
+    file("rest"))  settings(projectSettings: _*) settings (
       scalaVersion := ScalaVersion,
       libraryDependencies ++= Seq(
         "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
         "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
         "org.json4s" %% "json4s-jackson" % json4sVersion
       )
-    )
-  ).dependsOn(ext)
+  ) dependsOn(ext)
 
 
-  lazy val shared = project.in(file("./shared")).settings(
-    scalaVersion := ScalaVersion
-  ) dependsOn (ext)
+  lazy val shared = project.in(file("./shared")) settings(projectSettings: _*) dependsOn (ext)
 
   lazy val client = Project(
     "client",
-    file("client"),
-    settings = Seq(
-      version := Version,
-      scalaVersion := ScalaVersion,
+    file("client")) settings (projectSettings: _*) settings (
       libraryDependencies ++= Seq(
         "com.lihaoyi" %%% "autowire" % autowireVersion,
         "com.lihaoyi" %%% "upickle" % upickleVersion,
@@ -80,17 +76,12 @@ object DoorsBuild extends Build {
         "org.scala-js" %%% "scalajs-dom" % "0.8.2",
         "org.json4s" %% "json4s-jackson" % json4sVersion
       ) ++ monocle
-    )
-  ).dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
+  ) dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
 
   lazy val server = Project(
     "server",
-    file("server"),
-    settings = ScalatraPlugin.scalatraWithJRebel ++ Seq(
-      organization := Organization,
-      name := Name,
-      version := Version,
-      scalaVersion := ScalaVersion,
+    file("server")) settings(projectSettings: _*) settings (
+    ScalatraPlugin.scalatraWithJRebel ++ Seq(
       unmanagedResourceDirectories in Compile <+= target(_ / "webapp"),
       assemblyJarName in assembly := jarName,
       assemblyMergeStrategy in assembly := {
@@ -116,7 +107,13 @@ object DoorsBuild extends Build {
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
       ) ++ monocle
     )
-  ).dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
+  ) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
+
+
+  val lab = Project(
+    "lab",
+    file("lab")
+  ) settings(projectSettings: _*) dependsOn(server)
 
   lazy val go = taskKey[Unit]("go")
 
@@ -124,10 +121,7 @@ object DoorsBuild extends Build {
 
   lazy val bootstrap = Project(
     "bootstrap",
-    file("target/bootstrap"),
-    settings = Seq(
-      version := Version,
-      scalaVersion := ScalaVersion,
+    file("target/bootstrap")) settings(projectSettings: _*) settings(
       go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
         copy(ct, r, new File(st, s"scala-$version/webapp"))
       },
@@ -138,7 +132,6 @@ object DoorsBuild extends Build {
         s.log.info(s"doors has been generated in ${shFile.getParent}")
         s.log.info(s"Now launch ./doors <port>")
       }
-    )
   ) dependsOn(client, server)
 
 
