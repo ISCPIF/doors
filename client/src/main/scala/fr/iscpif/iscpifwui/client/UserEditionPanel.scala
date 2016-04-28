@@ -12,10 +12,35 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import rx._
 
-case class UserEditionPanel(_modalID: bs.ModalID,
-                            user: User) extends ModalPanel {
 
-  lazy val modalID = _modalID
+object UserEditionPanel {
+  def userPanel(user: User, onsaved: () => Unit) = new UserEditionPanel(user, onsaved)
+
+  def userDialog(mID: bs.ModalID, user: User) = new ModalPanel {
+
+    val modalID = mID
+
+    val panel = userPanel(user, () => close)
+
+    // a custom-made panel type for our user forms
+    val dialog =
+      bs.modalDialog(
+        mID,
+        bs.headerDialog(
+          h3("Change your user data")
+        ),
+        bs.bodyDialog(panel.panel),
+        bs.footerDialog(
+          bs.buttonGroup(btnGroup)(
+            panel.saveButton,
+            closeButton
+          )
+        )
+      )
+  }
+}
+
+class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
 
   val nameInput = bs.input(user.name)(
     placeholder := "Given name",
@@ -41,15 +66,15 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   //  }
 
   val editPassButton = bs.button(
-    content = span(
+    span(
       Rx {
         if (!editPass()) glyph_edit
         else glyph_exclamation
       },
       " Change password"
     ),
-    buttonStyle = editPassButtonStyle,
-    todo = () => {
+    editPassButtonStyle,
+    () => {
       editPass() = !editPass()
     }
   ).render
@@ -86,7 +111,7 @@ case class UserEditionPanel(_modalID: bs.ModalID,
     span(span("Repeat new password"), passInput2)
   )
 
-  def validatePasswords() = {
+  def validatePasswords: Boolean = {
     val p1 = passInput1.value
     val p2 = passInput2.value
 
@@ -101,65 +126,40 @@ case class UserEditionPanel(_modalID: bs.ModalID,
         }
       }
     }
+
+    passStatus() == PassMatchOk()
   }
 
   def save = {
     // updates passStatus
-    validatePasswords()
-
-    if (passStatus() == PassMatchOk()) {
+    if (validatePasswords) {
 
       val newUser = user.copy(
         name = nameInput.value,
         email = emailInput.value,
-        password = passInput1.value
+        password = if (passStatus() == PassMatchOk()) passInput1.value else user.password
       )
-      Post[Api].modifyUser(user.id, newUser).call().foreach(x => close)
-    }
-    else if (passStatus() == PassUndefined() || passStatus() == PassMissingBoth()) {
-      val newUser = user.copy(
-        name = nameInput.value,
-        email = emailInput.value
-      )
-      Post[Api].modifyUser(user.id, newUser).call().foreach(x => close)
+      Post[Api].modifyUser(user.id, newUser).call().foreach(x => onsaved())
     }
   }
 
-  // a custom-made panel type for our user forms
-  val dialog =
-    bs.modalDialog(
-      _modalID,
-      bs.headerDialog(
-        h3("Change your user data")
-      ),
-      bs.bodyDialog(
-        // debug
-        p("User ID: ", user.id),
-
-        // form
-        span(span("Given name"), nameInput),
-        span(span("Email"), emailInput),
-        editPassButton,
-        Rx {
-          if (editPass()) {
-            div(
-              passwordEditionBox,
-              passStatus() match {
-                case ok: PassMatchOk => span()
-                case x: PassStatus => div(alertDanger)(x.message)
-              }
-            )
+  val panel = div(
+    span(span("Given name"), nameInput),
+    span(span("Email"), emailInput),
+    editPassButton,
+    Rx {
+      if (editPass()) {
+        div(
+          passwordEditionBox,
+          passStatus() match {
+            case ok: PassMatchOk => span()
+            case x: PassStatus => div(alertDanger)(x.message)
           }
-          else span()
-        }
-      ),
-      bs.footerDialog(
-        bs.buttonGroup(btnGroup)(
-          saveButton,
-          closeButton
         )
-      )
-    )
+      }
+      else span()
+    }
+  )
 
-  val render = this.dialog
 }
+

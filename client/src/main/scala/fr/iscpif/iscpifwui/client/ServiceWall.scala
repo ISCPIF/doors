@@ -11,6 +11,7 @@ import fr.iscpif.scaladget.tools.JsRxTags._
 import org.scalajs.dom.raw.HTMLDivElement
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
+import UserEditionPanel._
 
 import rx._
 
@@ -46,7 +47,7 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  val userEditionPanel = new UserEditionPanel("userEditionPanel", _user)
+  val userEditionDialog = userDialog("userEditionPanel", _user)
 
   val adminEditionPanel = new AdminEditionPanel("adminEditionPanel")
 
@@ -58,7 +59,7 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
 
   val userSettingsButton = span(
     glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30),
-    onclick := { () => bs.showModal(userEditionPanel.modalID) }
+    onclick := { () => bs.showModal(userEditionDialog.modalID) }
   )
 
   val adminSettingsButton = span(
@@ -79,7 +80,7 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
       BootstrapTags.thumbs(services).render,
       tags.img(src := Resources.isc, logoISC)
       ,
-      userEditionPanel.render,
+      userEditionDialog.dialog,
       adminEditionPanel.render
     )
   ).render
