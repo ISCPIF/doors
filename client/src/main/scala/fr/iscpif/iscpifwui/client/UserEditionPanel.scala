@@ -65,19 +65,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
   //    else             btn_danger
   //  }
 
-  val editPassButton = bs.button(
-    span(
-      Rx {
-        if (!editPass()) glyph_edit
-        else glyph_exclamation
-      },
-      " Change password"
-    ),
-    editPassButtonStyle,
-    () => {
-      editPass() = !editPass()
-    }
-  ).render
 
   val passInputTemplate = bs.input()(
     width := "200px",
@@ -92,7 +79,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
     def message: String
   }
 
-  case class PassUndefined(message: String = "") extends PassStatus
+  case class PassUndefined(message: String = "undef______") extends PassStatus
 
   case class PassNoMatch(message: String = "The passwords don't match !") extends PassStatus
 
@@ -130,6 +117,26 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
     passStatus() == PassMatchOk()
   }
 
+  val editPassButton = bs.button(
+    span(
+      Rx {
+        if (!editPass()) glyph_edit
+        else glyph_exclamation
+      },
+      " Change password"
+    ),
+    editPassButtonStyle,
+    () => {
+      editPass() = !editPass()
+      // restore pass contents when closing subwindow
+      if (!editPass()) {
+        passInput1.value = ""
+        passInput2.value = ""
+        passStatus() = PassUndefined()
+      }
+    }
+  ).render
+
   def save = {
     // updates passStatus
     if (validatePasswords) {
@@ -152,7 +159,8 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
         div(
           passwordEditionBox,
           passStatus() match {
-            case ok: PassMatchOk => span()
+            case none: PassUndefined => div(span(" "))
+            case ok: PassMatchOk => div(span(" "))
             case x: PassStatus => div(alertDanger)(x.message)
           }
         )
