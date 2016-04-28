@@ -17,7 +17,26 @@ package fr.iscpif.doors.api
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.Data._
+import util._
 
-trait AccessQuest
-case class DoorsValidation(validator: Option[Data.User]) extends AccessQuest
+trait AccessQuest {
+  def promote(requester: User.Id, currentState: State.Id): Try[State.Id]
+  def status(currentState: State.Id):  Try[String]
+}
+
+case class DoorsValidation(validators: DbQuery[Seq[User]]) extends AccessQuest {
+
+  def promote(requester: User.Id, state: State.Id): Try[State.Id] = {
+    val vs = query(validators).map(_.id).toSet
+    if(vs.isEmpty) failure("validator not set")
+    else if(!vs.contains(requester)) failure("you are not a validator")
+    else Success(States.opened)
+  }
+
+  def status(state: State.Id): Try[String] = state match {
+    case States.locked => Try(s"Validation waiting approval of one of the users: ${query(validators).map(_.name).mkString(",")}.")
+    case States.opened => Success("Approved")
+    case x => failure(s"Invalid state $x")
+  }
+}

@@ -24,7 +24,7 @@ import slick.driver.H2Driver.api._
 object ISCPIFDoors extends App {
 
   def quests = {
-    val peter = query(users.filter(_.login === "corser").result).headOption
+    val peter = users.filter(_.login === "corser").result
 
     Map(
       "subscription" -> DoorsValidation(peter)

@@ -17,21 +17,20 @@ package fr.iscpif.doors.api
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.ext.Data
 import slick.driver.H2Driver.api._
 object States {
-  sealed trait State { def id: State.Id }
-  object Locked extends State { def id = 0 }
-  object Opened extends State { def id = 1 }
+  val locked = 0
+  val opened = 1
 }
 
 
-class States(tag: Tag) extends Table[State](tag, "STATES") {
-  def userID = column[User.Id]("USER_ID")
-  def lock = column[Lock.Id]("LOCK")
-  def state = column[State.Id]("STATE")
+class States(tag: Tag) extends Table[Data.State](tag, "STATES") {
+  def userID = column[Data.User.Id]("USER_ID")
+  def lock = column[Data.Lock.Id]("LOCK")
+  def state = column[Data.State.Id]("STATE")
   def time = column[Long]("TIME")
 
-  def * = (userID, lock, state, time) <> ((State.apply _).tupled, State.unapply)
+  def * = (userID, lock, state, time) <> ((Data.State.apply _).tupled, Data.State.unapply)
   def user = foreignKey("USER_FK", userID, users)(_.id)
 }

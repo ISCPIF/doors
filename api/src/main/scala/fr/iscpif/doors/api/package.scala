@@ -26,6 +26,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import slick.driver.H2Driver.api._
 
+import scala.util.Failure
+
 package object api {
 
   lazy val users = TableQuery[Users]
@@ -36,5 +38,12 @@ package object api {
     url = s"jdbc:h2:/${Settings.dbLocation}"
   )
 
-  def query[T](f: DBIOAction[T, slick.dbio.NoStream, scala.Nothing]) = Await.result(db.run(f), Duration.Inf)
+  type DbQuery[T] = DBIOAction[T, slick.dbio.NoStream, scala.Nothing]
+
+  def query[T](f: DbQuery[T]) = Await.result(db.run(f), Duration.Inf)
+
+  def failure(s: String) = Failure(new RuntimeException(s))
+
+
+
 }
