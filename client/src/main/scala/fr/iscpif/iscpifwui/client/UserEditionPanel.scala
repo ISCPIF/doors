@@ -146,7 +146,7 @@ case class UserEditionPanel(_modalID: bs.ModalID,
               passwordEditionBox,
               passStatus() match {
                 case ok: PassMatchOk => span()
-                case x: PassStatus => div(`class` := "alert alert-danger")(x.message)
+                case x: PassStatus => div(alertDanger)(x.message)
               }
             )
           }
