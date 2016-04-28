@@ -26,7 +26,9 @@ trait Api {
   def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
   //Database
+  def allUsers(): Seq[User]
   def addUser(user: User): Unit
-  def modifyUser(id: Long, newUser: User): Unit
+  def removeUser(user: User): Unit
+  def modifyUser(id: String, newUser: User): Unit
   def connect(login: String, password: String): UserQuery
 }

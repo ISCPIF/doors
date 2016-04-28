@@ -42,9 +42,13 @@ object ApiImpl extends shared.Api {
 
 
   //DataBase
+  def allUsers: Seq[User] = query(users.result)
+
   def addUser(user: User) = query(users += user)
 
-  def modifyUser(userID: Long, newUser: User) = query(users.insertOrUpdate(newUser.copy(id = userID)))
+  def removeUser(user: User) = query(users.filter{_.id === user.id}.delete)
+
+  def modifyUser(userID: String, newUser: User) = query(users.insertOrUpdate(newUser.copy(id = userID)))
 
   def connect(login: String, password: String): UserQuery = {
     val result = query(users.filter{ u=> u.login === login && u.password === Hashing(password) }.result)

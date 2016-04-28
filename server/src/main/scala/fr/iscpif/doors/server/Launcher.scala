@@ -46,13 +46,9 @@ object Launcher {
     Settings.checkConfFile
 
     //Stub for tests
-    ApiImpl.addUser(database.newUser(name = "Peter Corser", login = "corser", password = "doors",email = "peter@corser.co"))
-    ApiImpl.addUser(database.newUser(name = "Mike Horn", login = "horn", password = "doors", email = "mike@horn.ca"))
+    //ApiImpl.addUser(database.newUser(name = "Peter Corser", login = "corser", password = "doors",email = "peter@corser.co"))
+    //ApiImpl.addUser(database.newUser(name = "Mike Horn", login = "horn", password = "doors", email = "mike@horn.ca"))
     ///
-
-    println("Connect with Peter ? " + ApiImpl.connect("corser", "doors"))
-    println("Connect with Mark ? " + ApiImpl.connect("mark", "mark"))
-
 
     server.start
     server.join

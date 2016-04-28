@@ -1,9 +1,17 @@
 package fr.iscpif.iscpifwui.client
 
+import fr.iscpif.doors.client.Post
+import fr.iscpif.doors.ext.Data.User
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
-import scalatags.JsDom.all._
+import autowire._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import shared.Api
+import fr.iscpif.scaladget.tools.JsRxTags._
+import scalatags.JsDom.{all => tags}
+import tags._
 import sheet._
+import rx._
 
 /*
  * Copyright (C) 27/04/16 // mathieu.leclaire@openmole.org
@@ -26,25 +34,77 @@ class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
 
   lazy val modalID = _modalID
 
-  val saveButton = bs.button("Save", () => {
-    save
-  })(btn_primary)
+  val users: Var[Seq[User]] = Var(Seq())
 
+
+  val addUserButton = bs.button("Add", () => {
+    Post[Api].addUser(
+      User(
+        java.util.UUID.randomUUID().toString,
+        java.util.UUID.randomUUID().toString,
+        java.util.UUID.randomUUID().toString,
+        java.util.UUID.randomUUID().toString,
+        java.util.UUID.randomUUID().toString,
+        java.util.UUID.randomUUID().toString
+      )).call().foreach { u =>
+      getUsers
+    }
+  })(sheet.btn_primary +++ btn_right)
+
+
+  def getUsers =
+    Post[Api].allUsers.call().foreach { u =>
+      users() = u
+    }
+
+
+  val userTable = tags.table(sheet.table +++ sheet.striped)(
+    tbody(
+      Rx {
+        for {u <- users()} yield {
+          ReactiveLine(u).render
+        }
+      }
+    )
+  )
+
+    val lineHovered: Var[Option[User]] = Var(None)
+
+  case class ReactiveLine(user: User) {
+
+    val render = tr(row)(
+      onmouseover := { () ⇒ lineHovered() = Some(user) },
+      onmouseout := { () ⇒ lineHovered() = None },
+      td(colMD(4), user.name),
+      td(colMD(7), "States ..."),
+      td(colMD(1),
+        tags.span(Rx {
+          glyph_trash +++ pointer +++(lineHovered() == Some(user), opaque, transparent)
+        },
+          onclick := { () ⇒
+            Post[Api].removeUser(user).call().foreach { u =>
+              getUsers
+            }
+          }
+        )
+      )
+    )
+
+  }
 
   val dialog = bs.modalDialog(
     modalID,
     bs.headerDialog(
-      h3("Admin panel")
+      h3("Admin panel"),
+      addUserButton
     ),
-    bs.bodyDialog(),
+    bs.bodyDialog(userTable),
     bs.footerDialog(
-      bs.buttonGroup(btnGroup)(
-        saveButton,
-        closeButton
-      )
+      closeButton
     )
   )
 
+  getUsers
 
   def save = {
 

@@ -134,6 +134,18 @@ border: solid 1px #c83771;
 
  span.label.control-label{
    	position: relative;
-      bottom: 3px;
-      left:-5px;
+    bottom: 3px;
+    left:-5px;
+   }
+
+ .removeExecution{
+   opacity: 0;
+ }
+
+ .removeExecution:hover {
+    color: #CC3A36;
+    display: inline-block;
+    transform: scale(1.2);
+    cursor: pointer;
+    opacity: 1;
    }

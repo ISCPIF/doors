@@ -37,5 +37,5 @@ package object database {
   def query[T](f: DBIOAction[T, slick.dbio.NoStream, scala.Nothing]) = Await.result(db.run(f), Duration.Inf)
 
   def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = 0L, login, Hashing(password), name, email, hashAlgo)
+    User(id = java.util.UUID.randomUUID.toString, login, Hashing(password), name, email, hashAlgo)
 }

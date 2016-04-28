@@ -20,8 +20,8 @@ import slick.driver.H2Driver.api._
  */
 
 
-class States(tag: Tag) extends Table[(Long, String, String)](tag, "STATES") {
-  def userID = column[Long]("USER_ID")
+class States(tag: Tag) extends Table[(String, String, String)](tag, "STATES") {
+  def userID = column[String]("USER_ID")
   def lock = column[String]("LOCK")
   def state = column[String]("STATE")
 

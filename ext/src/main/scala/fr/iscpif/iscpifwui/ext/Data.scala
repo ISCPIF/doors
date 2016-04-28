@@ -41,11 +41,13 @@ object Data {
                       email: String,
                       description: String)
 
-  case class User(id: Long = 0, login: String, password: String, name: String, email: String, hashAlgorithm: String)
+  case class User(id: String, login: String, password: String, name: String, email: String, hashAlgorithm: String)
+
+  object UserOrdering extends Ordering[User]{
+    def compare(u1: User, u2: User) = u1.name compare u2.name
+  }
 
   case class ErrorData(className: String, code: Int, message: String)
-
-  // new UserQuery ------------------------------------------------------
 
 
   // old UserQuery renamed to LDAPUserQuery
