@@ -63,51 +63,41 @@ case class UserEditionPanel(_modalID: bs.ModalID,
   val passInput2 = passInputTemplate.render
 
   // for password forms validation
-  sealed trait PassStatus
+  sealed trait PassStatus {
+    def message: String
+  }
 
-  object PassUndefined extends PassStatus
+  case class PassUndefined(message: String = "") extends PassStatus
 
-  object PassNoMatch extends PassStatus
+  case class PassNoMatch(message: String = "The passwords don't match !") extends PassStatus
 
-  object PassMissing1 extends PassStatus
+  case class PassMissing1(message: String = "You did not fill the first password") extends PassStatus
 
-  object PassMissing2 extends PassStatus
+  case class PassMissing2(message: String = "You did not fill the second password") extends PassStatus
 
-  object PassMissingBoth extends PassStatus
+  case class PassMatchOk(message: String = "saving...(todo)") extends PassStatus
 
-  object PassMatchOk extends PassStatus
+  case class PassMissingBoth(message: String = "Provide twice with your password") extends PassStatus
 
-  val passStatus: Var[PassStatus] = Var(PassUndefined)
+  val passStatus: Var[PassStatus] = Var(PassMatchOk())
 
   val passwordEditionBox = div(
     span(span("Enter new password"), passInput1),
     span(span("Repeat new password"), passInput2)
   )
 
-  // response message
-  def passResponse =
-    passStatus() match {
-      case PassUndefined => ""
-      case PassNoMatch => "the passwords don't match !"
-      case PassMatchOk => "saving...(todo)"
-      case PassMissing1 => "you didn't fill the first password ?"
-      case PassMissing2 => "you didn't fill the second password ?"
-      case PassMissingBoth => "you didn't fill the passwords ?"
-    }
-
-
   def validatePasswords() = {
     val p1 = passInput1.value
     val p2 = passInput2.value
 
-    if (p1 == "" && p2 == "") passStatus() = PassMissingBoth
+    if (p1 == "" && p2 == "") passStatus() = PassMissingBoth()
     else {
-      if (p1 == "") passStatus() = PassMissing1
+      if (p1 == "") passStatus() = PassMissing1()
       else {
-        if (p2 == "") passStatus() = PassMissing2
+        if (p2 == "") passStatus() = PassMissing2()
         else {
-          if (p1 == p2) passStatus() = PassMatchOk
-          else passStatus() = PassNoMatch
+          if (p1 == p2) passStatus() = PassMatchOk()
+          else passStatus() = PassNoMatch()
         }
       }
     }
@@ -117,24 +107,20 @@ case class UserEditionPanel(_modalID: bs.ModalID,
     // updates passStatus
     validatePasswords()
 
-    if (passStatus() == PassMatchOk) {
+    if (passStatus() == PassMatchOk()) {
 
       val newUser = user.copy(
-        // new values for each slot
         name = nameInput.value,
         email = emailInput.value,
         password = passInput1.value
       )
-      // modifyUser : Unit
       Post[Api].modifyUser(user.id, newUser).call().foreach(x => close)
     }
-    else if (passStatus() == PassUndefined || passStatus() == PassMissingBoth) {
+    else if (passStatus() == PassUndefined() || passStatus() == PassMissingBoth()) {
       val newUser = user.copy(
-        // new values for each slot
         name = nameInput.value,
         email = emailInput.value
       )
-      // modifyUser : Unit
       Post[Api].modifyUser(user.id, newUser).call().foreach(x => close)
     }
   }
@@ -158,9 +144,9 @@ case class UserEditionPanel(_modalID: bs.ModalID,
           if (editPass()) {
             div(
               passwordEditionBox,
-                passStatus() match {
-                case PassMatchOk | PassUndefined => span()
-                case _ => div(`class` := "alert alert-danger")(passResponse)
+              passStatus() match {
+                case ok: PassMatchOk => span()
+                case x: PassStatus => div(`class` := "alert alert-danger")(x.message)
               }
             )
           }
