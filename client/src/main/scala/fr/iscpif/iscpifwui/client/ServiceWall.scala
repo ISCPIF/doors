@@ -1,7 +1,7 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.iscpifwui.client.AdminEditionPanel
+import fr.iscpif.iscpifwui.client.AdminEditionDialog
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
@@ -49,7 +49,7 @@ class ServiceWall(_user: User, authentication: LoginPassword) {
 
   val userEditionDialog = userDialog("userEditionPanel", _user)
 
-  val adminEditionPanel = new AdminEditionPanel("adminEditionPanel")
+  val adminEditionPanel = new AdminEditionDialog("adminEditionPanel")
 
   val settingsStyle: ModifierSeq = Seq(
     absolutePosition,

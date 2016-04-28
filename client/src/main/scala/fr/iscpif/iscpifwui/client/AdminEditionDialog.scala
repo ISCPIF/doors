@@ -1,14 +1,15 @@
 package fr.iscpif.iscpifwui.client
 
-import fr.iscpif.doors.client.Post
+import fr.iscpif.doors.client.{UserEditionPanel, Post}
 import fr.iscpif.doors.ext.Data.User
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import autowire._
+import org.scalajs.dom.raw.HTMLDivElement
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import shared.Api
 import fr.iscpif.scaladget.tools.JsRxTags._
-import scalatags.JsDom.{all => tags}
+import scalatags.JsDom.{all => tags, TypedTag}
 import tags._
 import sheet._
 import rx._
@@ -30,11 +31,16 @@ import rx._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
+object AdminEditionDialog {
+  def apply(id: bs.ModalID) = new AdminEditionDialog(id)
+}
+
+class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
 
   lazy val modalID = _modalID
 
   val users: Var[Seq[User]] = Var(Seq())
+  val userEdition: Var[Option[User]] = Var(None)
 
 
   val addUserButton = bs.button("Add", () => {
@@ -57,6 +63,14 @@ class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
       users() = u
     }
 
+  val userEditionDiv = div(
+    Rx {
+      userEdition() match {
+        case Some(u: User) => UserEditionPanel.userPanel(u, () => save).panel
+        case _ => span()
+      }
+    }
+  )
 
   val userTable = tags.table(sheet.table +++ sheet.striped)(
     tbody(
@@ -68,14 +82,14 @@ class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
     )
   )
 
-    val lineHovered: Var[Option[User]] = Var(None)
+  val lineHovered: Var[Option[User]] = Var(None)
 
   case class ReactiveLine(user: User) {
 
     val render = tr(row)(
       onmouseover := { () ⇒ lineHovered() = Some(user) },
       onmouseout := { () ⇒ lineHovered() = None },
-      td(colMD(4), user.name),
+      td(colMD(4), a(user.name, pointer, onclick := { () => userEdition() = Some(user) })),
       td(colMD(7), "States ..."),
       td(colMD(1),
         tags.span(Rx {
@@ -98,7 +112,9 @@ class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
       h3("Admin panel"),
       addUserButton
     ),
-    bs.bodyDialog(userTable),
+    bs.bodyDialog(
+      userEditionDiv,
+      userTable),
     bs.footerDialog(
       closeButton
     )
@@ -107,6 +123,8 @@ class AdminEditionPanel(_modalID: bs.ModalID) extends ModalPanel {
   getUsers
 
   def save = {
+    println("save User")
+    userEdition() = None
 
   }
 
