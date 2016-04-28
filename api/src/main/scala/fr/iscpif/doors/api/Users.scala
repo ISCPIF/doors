@@ -1,7 +1,10 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors.api
+
+
+
 
 /*
- * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,20 +20,16 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import fr.iscpif.doors.ext.Data.User
+import slick.driver.H2Driver.api._
 
-object Test{
-  def test[T](t: T)(implicit aq: AccessQuest[T]) = {
-    aq.meth(t)
-  }
+class Users(tag: Tag) extends Table[User](tag, "USERS") {
+  def id = column[User.Id]("ID", O.PrimaryKey)
+  def login = column[String]("LOGIN")
+  def password = column[String]("PASSWORD")
+  def hashAlgorithm = column[String]("HASH_ALGORITHM")
+  def name = column[String]("NAME")
+  def email = column[String]("EMAIL")
 
-  //test(EmailConfirmation())
+  def * = (id, login, password, hashAlgorithm, name, email) <> ((User.apply _).tupled, User.unapply)
 }
-
-
-trait AccessQuest[T] {
-
-  def meth(t: T): Int
-
-}
-
-case class EmailConfirmation()

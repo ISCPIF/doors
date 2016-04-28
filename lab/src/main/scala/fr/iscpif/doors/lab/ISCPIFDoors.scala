@@ -15,12 +15,22 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   *
   */
-package fr.iscpif.doors
+package fr.iscpif.doors.lab
 
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.api._
+import fr.iscpif.doors.server.Launcher
+import slick.driver.H2Driver.api._
 
-package object server {
-  def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = java.util.UUID.randomUUID.toString, login, Hashing(password), name, email, hashAlgo)
+object ISCPIFDoors extends App {
+
+  def quests = {
+    val peter = query(users.filter(_.login === "corser").result).headOption
+
+    Map(
+      "subscription" -> DoorsValidation(peter)
+    )
+  }
+
+  Launcher.run(quests, 8989)
 
 }

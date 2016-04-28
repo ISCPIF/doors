@@ -30,8 +30,10 @@ object DoorsBuild extends Build {
   val apacheDirectoryVersion = "1.0.0-M33"
   val jarName = s"doors$Version.jar"
   val monocleVersion = "1.2.1"
+  val betterFileVersion = "2.15.0"
 
-  lazy val hasher = ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
+  lazy val hasher =
+    ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
 
   val monocle = Seq(
     "com.github.julien-truffaut"  %%  "monocle-core"    % monocleVersion,
@@ -83,20 +85,10 @@ object DoorsBuild extends Build {
     file("server")) settings(projectSettings: _*) settings (
     ScalatraPlugin.scalatraWithJRebel ++ Seq(
       unmanagedResourceDirectories in Compile <+= target(_ / "webapp"),
-      assemblyJarName in assembly := jarName,
-      assemblyMergeStrategy in assembly := {
-        case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
-        case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
-        case x =>
-          val oldStrategy = (assemblyMergeStrategy in assembly).value
-          oldStrategy(x)
-      },
       libraryDependencies ++= Seq(
         "com.lihaoyi" %% "autowire" % autowireVersion,
         "com.lihaoyi" %% "upickle" % upickleVersion,
         "com.lihaoyi" %% "scalatags" % scalatagsVersion,
-        "com.typesafe.slick" %% "slick" % "3.1.1",
-        "com.h2database" % "h2" % "1.4.190",
         "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
         "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
         "org.scalatra" %% "scalatra" % scalatraVersion,
@@ -107,13 +99,34 @@ object DoorsBuild extends Build {
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
       ) ++ monocle
     )
-  ) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
+  ) dependsOn(shared, ext, hasher, api) enablePlugins (JettyPlugin)
 
+  val api = Project(
+    "api",
+    file("api")) settings(projectSettings: _*) settings (
+    libraryDependencies ++=
+      Seq(
+        "com.typesafe.slick" %% "slick" % "3.1.1",
+        "com.h2database" % "h2" % "1.4.190",
+        "com.github.pathikrit" %% "better-files" % betterFileVersion
+      )
+    ) dependsOn(ext)
 
   val lab = Project(
     "lab",
     file("lab")
-  ) settings(projectSettings: _*) dependsOn(server)
+  ) settings(projectSettings: _*) settings(
+    assemblyJarName in assembly := jarName,
+    assemblyMergeStrategy in assembly := {
+      //case _ => MergeStrategy.rename
+              case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
+              case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
+              case x =>
+                val oldStrategy = (assemblyMergeStrategy in assembly).value
+                oldStrategy(x)
+    }
+
+    )dependsOn(server)
 
   lazy val go = taskKey[Unit]("go")
 
@@ -122,17 +135,17 @@ object DoorsBuild extends Build {
   lazy val bootstrap = Project(
     "bootstrap",
     file("target/bootstrap")) settings(projectSettings: _*) settings(
-      go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in server in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
+      go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in lab in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
         copy(ct, r, new File(st, s"scala-$version/webapp"))
       },
-      toJar <<= (go, assembly in server in Compile, target in server in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
+      toJar <<= (go, assembly in lab in Compile, target in lab in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
         val shFile = new File(st, s"scala-$version/doors")
         shFile.createNewFile
         IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName + " \"$@\"")
         s.log.info(s"doors has been generated in ${shFile.getParent}")
         s.log.info(s"Now launch ./doors <port>")
       }
-  ) dependsOn(client, server)
+  ) dependsOn(client, server, lab)
 
 
   private def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) = {

@@ -19,11 +19,10 @@ package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.ext.Data.LDAPUserQuery._
+import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
-import database._
 
-object ApiImpl extends shared.Api {
-
+class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   //LDAP
   def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
@@ -56,5 +55,6 @@ object ApiImpl extends shared.Api {
     if(result.isEmpty) Right(ErrorData(s"not found $login", 100, ""))
     else Left(result.head)
   }
+
 
 }

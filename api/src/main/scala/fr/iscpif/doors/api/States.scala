@@ -1,7 +1,5 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors.api
 
-import database._
-import slick.driver.H2Driver.api._
 /*
  * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
  *
@@ -19,12 +17,21 @@ import slick.driver.H2Driver.api._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import fr.iscpif.doors.ext.Data._
+import slick.driver.H2Driver.api._
+object States {
+  sealed trait State { def id: State.Id }
+  object Locked extends State { def id = 0 }
+  object Opened extends State { def id = 1 }
+}
 
-class States(tag: Tag) extends Table[(String, String, String)](tag, "STATES") {
-  def userID = column[String]("USER_ID")
-  def lock = column[String]("LOCK")
-  def state = column[String]("STATE")
 
-  def * = (userID, lock, state)
+class States(tag: Tag) extends Table[State](tag, "STATES") {
+  def userID = column[User.Id]("USER_ID")
+  def lock = column[Lock.Id]("LOCK")
+  def state = column[State.Id]("STATE")
+  def time = column[Long]("TIME")
+
+  def * = (userID, lock, state, time) <> ((State.apply _).tupled, State.unapply)
   def user = foreignKey("USER_FK", userID, users)(_.id)
 }
