@@ -65,6 +65,11 @@ package object stylesheet {
     zIndex := 1
   )
 
+  lazy val loginPasswordInput: ModifierSeq = Seq(
+    height := 40,
+    fontSize := 20
+  )
+
   lazy val connectionFailed: ModifierSeq = Seq(
     fontSize := 18,
     fontWeight := "bold",

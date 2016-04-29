@@ -40,18 +40,16 @@ class UserConnection {
   val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser, true)
 
   val emailInput = bs.input("")(
-    ms("connectInput") +++ Seq(
-      placeholder := "Email",
-      autofocus
-    )
+    loginPasswordInput,
+    placeholder := "Email",
+    autofocus
   ).render
 
   val passwordInput = bs.input("")(
-    ms("connectInput") +++ Seq(
-      `type` := "password",
-      placeholder := "Password",
-      autofocus
-    )
+    loginPasswordInput,
+    `type` := "password",
+    placeholder := "Password",
+    autofocus
   ).render
 
   val connectButton = bs.button("Connect", connectCall)(
