@@ -166,14 +166,15 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
       passSatusBox
     )
     else Rx {
-      if (editPass()) {
-        div(
-          editPassButton,
-          passwordEditionBox,
-          passSatusBox
-        )
-      }
-      else span()
+      div(
+        editPassButton,
+        if (editPass()) {
+          div(
+            passwordEditionBox,
+            passSatusBox
+          )
+        } else span()
+      )
     }
   )
 
