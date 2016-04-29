@@ -14,19 +14,16 @@ import rx._
 
 
 object UserEditionPanel {
-  def userPanel(user: User, onsaved: () => Unit) = new UserEditionPanel(user, onsaved)
+  def userPanel(user: User, onsaved: () => Unit, passwordRequired: Boolean = false) = new UserEditionPanel(user, onsaved, passwordRequired)
 
-  def userDialog(mID: bs.ModalID, panel: UserEditionPanel) = {
 
-  }
-
-  def userDialog(mID: bs.ModalID, user: User) = new ModalPanel {
+  def userDialog(mID: bs.ModalID, user: User, passwordRequired: Boolean = false) = new ModalPanel {
 
     val modalID = mID
 
-    val panel = Var(userPanel(user, () => close))
+    val panel = Var(userPanel(user, () => close, passwordRequired))
 
-    def resetUser = panel() = userPanel(User.emptyUser, () => close)
+    def resetUser = panel() = userPanel(User.emptyUser, () => close, passwordRequired)
 
 
     // a custom-made panel type for our user forms
@@ -47,7 +44,7 @@ object UserEditionPanel {
   }
 }
 
-class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
+class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequired: Boolean = false) {
 
   val nameInput = bs.input(user.name)(
     placeholder := "Given name",
@@ -57,20 +54,13 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
     placeholder := "Email",
     width := "200px").render
 
-  val saveButton = bs.button("Save", () => {
+  val saveButton = bs.button(if (passwordRequired) "Register" else "Save", () => {
     save
   })(btn_primary)
 
-  // triggers additional div
   val editPass = Var(false)
 
   val editPassButtonStyle = btn_danger
-
-  // TODO
-  //  val editPassButtonStyle:ButtonStyle = Rx {
-  //    if (!editPass()) btn_primary
-  //    else             btn_danger
-  //  }
 
 
   val passInputTemplate = bs.input()(
@@ -124,7 +114,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
       else PassMatchOk()
     }
 
-    println("PASS OK ? " + passStatus())
     passStatus() == PassMatchOk()
   }
 
@@ -148,7 +137,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
   ).render
 
   def save = {
-    // updates passStatus
     if (validatePasswords) {
       Post[Api].modifyPartialUser(PartialUser(
         user.id,
@@ -162,18 +150,23 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
     }
   }
 
+  val passSatusBox = passStatus() match {
+    case ok: PassMatchOk => div(span(" "))
+    case x: PassStatus => div(alertDanger)(x.message)
+  }
+
   val panel = div(
     span(span("Given name"), nameInput),
     span(span("Email"), emailInput),
-    editPassButton,
-    Rx {
+    if (passwordRequired) div(
+      passwordEditionBox,
+      passSatusBox
+    ) else Rx {
       if (editPass()) {
         div(
+          editPassButton,
           passwordEditionBox,
-          passStatus() match {
-            case ok: PassMatchOk => div(span(" "))
-            case x: PassStatus => div(alertDanger)(x.message)
-          }
+          passSatusBox
         )
       }
       else span()

@@ -37,7 +37,7 @@ class UserConnection {
   val errorMessage: Var[String] = Var("")
   val userServiceWall: Var[Option[ServiceWall]] = Var(None)
 
-  val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser)
+  val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser, true)
 
   val emailInput = bs.input("")(
     ms("connectInput") +++ Seq(
@@ -108,7 +108,6 @@ class UserConnection {
   def connectCall = () => connect(emailInput.value, passwordInput.value)
 
   def connect(email: String, password: String) = {
-    println("connect with  " + email + " and " + password)
     Post[Api].connect(email, password).call().foreach { c =>
       c match {
         case Right(error: ErrorData) =>
