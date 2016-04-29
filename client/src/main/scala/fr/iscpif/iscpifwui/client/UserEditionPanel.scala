@@ -46,6 +46,9 @@ object UserEditionPanel {
 
 class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequired: Boolean = false) {
 
+  val passStatus: Var[PassStatus] = Var(PassMatchOk())
+  val editPass = Var(passwordRequired)
+
   val nameInput = bs.input(user.name)(
     placeholder := "Given name",
     width := "200px").render
@@ -58,7 +61,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     save
   })(btn_primary)
 
-  val editPass = Var(false)
 
   val editPassButtonStyle = btn_danger
 
@@ -86,7 +88,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
 
   case class PassMissingBoth(message: String = "Provide twice with your password") extends PassStatus
 
-  val passStatus: Var[PassStatus] = Var(PassMatchOk())
 
   val passwordEditionBox = div(
     span(span("Enter new password"), passInput1),
@@ -150,9 +151,11 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     }
   }
 
-  val passSatusBox = passStatus() match {
-    case ok: PassMatchOk => div(span(" "))
-    case x: PassStatus => div(alertDanger)(x.message)
+  val passSatusBox = Rx {
+    passStatus() match {
+      case ok: PassMatchOk => div(span(" "))
+      case x: PassStatus => div(alertDanger)(x.message)
+    }
   }
 
   val panel = div(
@@ -161,7 +164,8 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     if (passwordRequired) div(
       passwordEditionBox,
       passSatusBox
-    ) else Rx {
+    )
+    else Rx {
       if (editPass()) {
         div(
           editPassButton,
