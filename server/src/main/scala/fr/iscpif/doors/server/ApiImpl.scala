@@ -21,6 +21,7 @@ import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.ext.Data.LDAPUserQuery._
 import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
+import Utils._
 
 class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
@@ -43,24 +44,24 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   //DataBase
   def allUsers: Seq[User] = query(users.result)
 
-  private def addUser(user: User): Unit = query(users += user)
-
-  def addUser(_name: String, _login: String, _password: String, _email: String): Unit =
-    addUser(newUser(name = _name, login = _login, password = _password, email = _email))
+  def addUser(partialUser: PartialUser): Unit = query(users += partialUser)
 
   def removeUser(user: User) = query(users.filter {
     _.id === user.id
   }.delete)
 
-  private def modifyUser(userID: String, newUser: User): Unit = query(users.insertOrUpdate(newUser.copy(id = userID)))
 
-  def modifyUser(userID: String, _name: String, _login: String, _password: String, _email: String): Unit =
-    modifyUser(userID, newUser(name = _name, login = _login, password = _password, email = _email))
+  def modifyUser(user: User): Unit = query(users.insertOrUpdate(user.copy(id = user.id)))
 
-  def connect(login: String, password: String): UserQuery = {
-    val result = query(users.filter { u => u.login === login && u.password === Hashing(password) }.result)
+  def modifyPartialUser(partialUser: PartialUser): Unit = modifyUser(partialUserToUser(partialUser))
 
-    if (result.isEmpty) Right(ErrorData(s"not found $login", 100, ""))
+  def connect(email: String, password: String): UserQuery = {
+
+    val result = query(users.filter { u =>
+      u.email === email &&  u.password === Hashing(password)
+    }.result)
+
+    if (result.isEmpty) Right(ErrorData(s"not found $email", 100, ""))
     else Left(result.head)
   }
 

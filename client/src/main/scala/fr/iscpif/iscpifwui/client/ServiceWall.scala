@@ -33,10 +33,10 @@ import rx._
  */
 
 object ServiceWall {
-  def apply(user: User, authentication: LoginPassword) = new ServiceWall(user, authentication)
+  def apply(user: User) = new ServiceWall(user)
 }
 
-class ServiceWall(_user: User, authentication: LoginPassword) {
+class ServiceWall(_user: User) {
   val user = Var(_user)
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),

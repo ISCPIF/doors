@@ -1,15 +1,14 @@
 package fr.iscpif.iscpifwui.client
 
 import fr.iscpif.doors.client.{UserEditionPanel, Post}
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data.{PartialUser, User}
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import autowire._
-import org.scalajs.dom.raw.HTMLDivElement
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import shared.Api
 import fr.iscpif.scaladget.tools.JsRxTags._
-import scalatags.JsDom.{all => tags, TypedTag}
+import scalatags.JsDom.{all => tags}
 import tags._
 import sheet._
 import rx._
@@ -44,11 +43,13 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
 
 
   val addUserButton = bs.button("Add", () => {
-    Post[Api].addUser(
-      java.util.UUID.randomUUID().toString,
-      java.util.UUID.randomUUID().toString,
-      java.util.UUID.randomUUID().toString,
-      java.util.UUID.randomUUID().toString
+    Post[Api].addUser(PartialUser(
+      s"id + ${java.util.UUID.randomUUID().toString}",
+      s"login + ${java.util.UUID.randomUUID().toString}",
+      s"password + ${java.util.UUID.randomUUID().toString}",
+      s"name + ${java.util.UUID.randomUUID().toString}",
+      s"email + ${java.util.UUID.randomUUID().toString}"
+    )
     ).call().foreach { u =>
       getUsers
     }
@@ -119,7 +120,6 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
   getUsers
 
   def save = {
-    println("save User")
     userEdition() = None
 
   }

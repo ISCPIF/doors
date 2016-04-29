@@ -16,6 +16,9 @@ package fr.iscpif.doors.ext
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+import java.util.UUID
+
 import org.apache.directory.api.ldap.model.exception.{LdapException, LdapAuthenticationException, LdapInvalidDnException, LdapUnwillingToPerformException}
 import org.apache.directory.ldap.client.api.exception.InvalidConnectionException
 import scala.util.{Failure, Success, Try}
@@ -46,6 +49,8 @@ object Data {
     implicit def ordering = new Ordering[User]{
       def compare(u1: User, u2: User) = u1.name compare u2.name
     }
+
+    def emptyUser = User(UUID.randomUUID.toString, "", "", "", "", "")
   }
 
   object Lock {
@@ -57,6 +62,7 @@ object Data {
   }
 
   case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
+  case class PartialUser(id: User.Id, login: String, password: String, name: String, email: String)
   case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
 
   case class ErrorData(className: String, code: Int, message: String)

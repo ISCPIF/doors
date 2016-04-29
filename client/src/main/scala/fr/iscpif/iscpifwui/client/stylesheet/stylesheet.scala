@@ -77,4 +77,12 @@ package object stylesheet {
     right := 15
   )
 
+  lazy val register: ModifierSeq = Seq(
+    pointer,
+    sheet.floatRight,
+    relativePosition,
+    fontSize := 15,
+    right := 10,
+    top := 10
+  )
 }

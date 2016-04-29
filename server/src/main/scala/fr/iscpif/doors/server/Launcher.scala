@@ -1,12 +1,13 @@
 package fr.iscpif.doors.server
 
-import fr.iscpif.doors
-import fr.iscpif.doors.api
 import fr.iscpif.doors.api.{AccessQuest, Settings}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
 import org.eclipse.jetty.util.log._
+import fr.iscpif.doors.api._
+import slick.driver.H2Driver.api._
+import Utils._
 
 /*
  * Copyright (C) 18/02/16 // mathieu.leclaire@openmole.org
@@ -28,6 +29,7 @@ import org.eclipse.jetty.util.log._
 
 object Launcher {
   val arguments = "arguments"
+
   case class Parameter(quests: Map[String, AccessQuest])
 
   // this is my entry object as specified in sbt project definition
@@ -46,6 +48,16 @@ object Launcher {
     context.addServlet(classOf[Servlet], "/")
 
     server.setHandler(context)
+
+    if (!query(users.result).map {
+      _.login
+    }.contains("corser")) {
+      query(users += partialUser("corser", "peter", "Peter Corser", "peter@corser.co"))
+    }
+    println("Added ")
+    query(users.result).foreach {
+      println
+    }
 
     server.start
     server.join

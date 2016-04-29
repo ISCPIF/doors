@@ -1,5 +1,6 @@
 package fr.iscpif.doors.server
 
+import fr.iscpif.doors.ext.Data._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Formats, Extraction}
 
@@ -26,5 +27,8 @@ object Utils {
   implicit class ToJsonDecorator(x: Any) {
     def toJson = pretty(Extraction.decompose(x))
   }
+
+  implicit def partialUserToUser(pUser: PartialUser): User =
+    User(pUser.id, pUser.login, Hashing(pUser.password), pUser.name, pUser.email, Hashing.currentJson)
 
 }

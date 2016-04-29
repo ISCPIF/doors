@@ -17,10 +17,10 @@
   */
 package fr.iscpif.doors
 
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data.PartialUser
 
 package object server {
-  def newUser(login: String, password: String, name: String, email: String, hashAlgo: String = Hashing.currentJson) =
-    User(id = java.util.UUID.randomUUID.toString, login, Hashing(password), name, email, hashAlgo)
+  def partialUser(login: String, password: String, name: String, email: String) =
+    PartialUser(java.util.UUID.randomUUID.toString, login, password, name, email)
 
 }

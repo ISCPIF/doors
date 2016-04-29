@@ -4,7 +4,7 @@ import fr.iscpif.iscpifwui.client.ModalPanel
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import shared.Api
 import scalatags.JsDom.all._
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data.{PartialUser, User}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
@@ -16,11 +16,18 @@ import rx._
 object UserEditionPanel {
   def userPanel(user: User, onsaved: () => Unit) = new UserEditionPanel(user, onsaved)
 
+  def userDialog(mID: bs.ModalID, panel: UserEditionPanel) = {
+
+  }
+
   def userDialog(mID: bs.ModalID, user: User) = new ModalPanel {
 
     val modalID = mID
 
-    val panel = userPanel(user, () => close)
+    val panel = Var(userPanel(user, () => close))
+
+    def resetUser = panel() = userPanel(User.emptyUser, () => close)
+
 
     // a custom-made panel type for our user forms
     val dialog =
@@ -29,10 +36,10 @@ object UserEditionPanel {
         bs.headerDialog(
           h3("Change your user data")
         ),
-        bs.bodyDialog(panel.panel),
+        bs.bodyDialog(panel().panel),
         bs.footerDialog(
           bs.buttonGroup(btnGroup)(
-            panel.saveButton,
+            panel().saveButton,
             closeButton
           )
         )
@@ -79,8 +86,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
     def message: String
   }
 
-  case class PassUndefined(message: String = "undef______") extends PassStatus
-
   case class PassNoMatch(message: String = "The passwords don't match !") extends PassStatus
 
   case class PassMissing1(message: String = "You did not fill the first password") extends PassStatus
@@ -102,18 +107,24 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
     val p1 = passInput1.value
     val p2 = passInput2.value
 
-    if (p1 == "" && p2 == "") passStatus() = PassMissingBoth()
-    else {
-      if (p1 == "") passStatus() = PassMissing1()
-      else {
-        if (p2 == "") passStatus() = PassMissing2()
+    passStatus() = {
+      if (editPass()) {
+        if (p1 == "" && p2 == "") PassMissingBoth()
         else {
-          if (p1 == p2) passStatus() = PassMatchOk()
-          else passStatus() = PassNoMatch()
+          if (p1 == "") PassMissing1()
+          else {
+            if (p2 == "") PassMissing2()
+            else {
+              if (p1 == p2) PassMatchOk()
+              else PassNoMatch()
+            }
+          }
         }
       }
+      else PassMatchOk()
     }
 
+    println("PASS OK ? " + passStatus())
     passStatus() == PassMatchOk()
   }
 
@@ -132,7 +143,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
       if (!editPass()) {
         passInput1.value = ""
         passInput2.value = ""
-        passStatus() = PassUndefined()
       }
     }
   ).render
@@ -140,12 +150,13 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
   def save = {
     // updates passStatus
     if (validatePasswords) {
-      Post[Api].modifyUser(
+      Post[Api].modifyPartialUser(PartialUser(
         user.id,
-        nameInput.value,
         user.login,
         if (passStatus() == PassMatchOk()) passInput1.value else user.password,
+        nameInput.value,
         emailInput.value
+      )
       ).call().foreach(x => onsaved())
 
     }
@@ -160,7 +171,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}) {
         div(
           passwordEditionBox,
           passStatus() match {
-            case none: PassUndefined => div(span(" "))
             case ok: PassMatchOk => div(span(" "))
             case x: PassStatus => div(alertDanger)(x.message)
           }

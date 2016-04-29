@@ -37,9 +37,11 @@ class UserConnection {
   val errorMessage: Var[String] = Var("")
   val userServiceWall: Var[Option[ServiceWall]] = Var(None)
 
-  val loginInput = bs.input("")(
+  val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser)
+
+  val emailInput = bs.input("")(
     ms("connectInput") +++ Seq(
-      placeholder := "Login",
+      placeholder := "Email",
       autofocus
     )
   ).render
@@ -54,6 +56,12 @@ class UserConnection {
 
   val connectButton = bs.button("Connect", connectCall)(
     btn_primary, `type` := "submit").render
+
+  val registerLink = a("Register", register,
+    onclick := { () =>
+      registerUserDialog.resetUser
+      bs.showModal(registerUserDialog.modalID)
+    }).render
 
   val shutdownButton =
     a(shutdown +++ pointer,
@@ -71,38 +79,45 @@ class UserConnection {
             shutdownButton,
             serviceWall.render
           )
-        case _ => div(ms("centerPage"))(
-          connectionFailed() match {
-            case true => div(doorsheet.connectionFailed)(errorMessage())
-            case _ => tags.div
-          },
-          tags.form(
-            tags.p(ms("grouptop"), loginInput),
-            tags.p(ms("groupbottom"), passwordInput),
-            connectButton,
-            onsubmit := { () =>
-              connectCall()
-              false
-            }
+        case _ =>
+          div(
+            registerLink,
+            div(ms("centerPage"))(
+              connectionFailed() match {
+                case true => div(doorsheet.connectionFailed)(errorMessage())
+                case _ => tags.div
+              },
+              tags.form(
+                tags.p(ms("grouptop"), emailInput),
+                tags.p(ms("groupbottom"), passwordInput),
+                connectButton,
+                onsubmit := { () =>
+                  connectCall()
+                  false
+                }
+              )
+            )
           )
-        )
       }
     },
-    tags.img(src := "img/logoISC.png", logoISC)
+    tags.img(src := "img/logoISC.png", logoISC),
+    registerUserDialog.dialog
   ).render
 
 
-  def connectCall = () => connect(LoginPassword(loginInput.value, passwordInput.value))
+  def connectCall = () => connect(emailInput.value, passwordInput.value)
 
-  def connect(authentication: LoginPassword) =
-    Post[Api].connect(authentication.login, authentication.password).call().foreach { c =>
+  def connect(email: String, password: String) = {
+    println("connect with  " + email + " and " + password)
+    Post[Api].connect(email, password).call().foreach { c =>
       c match {
         case Right(error: ErrorData) =>
           errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
         case Left(user: User) =>
-          userServiceWall() = Some(ServiceWall(user, LoginPassword(loginInput.value, passwordInput.value)))
+          userServiceWall() = Some(ServiceWall(user))
       }
     }
+  }
 
 }
