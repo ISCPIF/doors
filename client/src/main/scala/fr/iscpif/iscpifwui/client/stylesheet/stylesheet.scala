@@ -54,13 +54,14 @@ package object stylesheet {
   )
 
   // CONNECTION
-  lazy val shutdown: ModifierSeq = Seq(
-    fontSize := (22),
+  lazy val topLink: ModifierSeq = Seq(
+    fontSize := (20),
     sheet.marginRight(10),
     absolutePosition,
     right := 0,
     top := 7,
     color := "white",
+    pointer,
     zIndex := 1
   )
 
@@ -75,14 +76,5 @@ package object stylesheet {
     width := 200,
     bottom := 15,
     right := 15
-  )
-
-  lazy val register: ModifierSeq = Seq(
-    pointer,
-    sheet.floatRight,
-    relativePosition,
-    fontSize := 15,
-    right := 10,
-    top := 10
   )
 }

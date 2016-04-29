@@ -57,14 +57,14 @@ class UserConnection {
   val connectButton = bs.button("Connect", connectCall)(
     btn_primary, `type` := "submit").render
 
-  val registerLink = a("Register", register,
+  val registerLink = a("Register", topLink,
     onclick := { () =>
       registerUserDialog.resetUser
       bs.showModal(registerUserDialog.modalID)
     }).render
 
   val shutdownButton =
-    a(shutdown +++ pointer,
+    a(topLink +++ pointer,
       onclick := { () ⇒
         userServiceWall() = None
         connectionFailed() = false
