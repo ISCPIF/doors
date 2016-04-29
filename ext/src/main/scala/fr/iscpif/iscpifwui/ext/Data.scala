@@ -16,8 +16,10 @@ package fr.iscpif.doors.ext
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import org.apache.directory.api.ldap.model.exception.{LdapException, LdapAuthenticationException, LdapInvalidDnException, LdapUnwillingToPerformException}
+import monocle.macros._
+import org.apache.directory.api.ldap.model.exception.{LdapAuthenticationException, LdapException, LdapInvalidDnException, LdapUnwillingToPerformException}
 import org.apache.directory.ldap.client.api.exception.InvalidConnectionException
+
 import scala.util.{Failure, Success, Try}
 
 object Data {
@@ -56,10 +58,10 @@ object Data {
     type Id = Int
   }
 
-  case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
-  case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
+  @Lenses case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
+  @Lenses case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
 
-  case class ErrorData(className: String, code: Int, message: String)
+  @Lenses case class ErrorData(className: String, code: Int, message: String)
 
 
   // old UserQuery renamed to LDAPUserQuery

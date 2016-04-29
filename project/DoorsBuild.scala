@@ -15,8 +15,10 @@ object DoorsBuild extends Build {
 
   def projectSettings = Seq(
     organization := Organization,
-      version := Version,
-      scalaVersion := ScalaVersion
+    version := Version,
+    scalaVersion := ScalaVersion,
+    libraryDependencies ++= monocle,
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
   )
 
 
@@ -35,7 +37,7 @@ object DoorsBuild extends Build {
   lazy val hasher =
     ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
 
-  val monocle = Seq(
+  def monocle = Seq(
     "com.github.julien-truffaut"  %%  "monocle-core"    % monocleVersion,
     "com.github.julien-truffaut"  %%  "monocle-generic" % monocleVersion,
     "com.github.julien-truffaut"  %%  "monocle-macro"   % monocleVersion,
@@ -77,7 +79,7 @@ object DoorsBuild extends Build {
         "fr.iscpif" %%% "scaladget" % "0.8.0-SNAPSHOT",
         "org.scala-js" %%% "scalajs-dom" % "0.8.2",
         "org.json4s" %% "json4s-jackson" % json4sVersion
-      ) ++ monocle
+      )
   ) dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
 
   lazy val server = Project(
@@ -97,7 +99,7 @@ object DoorsBuild extends Build {
         "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container;compile",
         "org.json4s" %% "json4s-jackson" % json4sVersion,
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
-      ) ++ monocle
+      )
     )
   ) dependsOn(shared, ext, hasher, api) enablePlugins (JettyPlugin)
 
