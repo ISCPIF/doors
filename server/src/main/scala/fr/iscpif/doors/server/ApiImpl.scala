@@ -57,6 +57,12 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   def modifyPartialUser(partialUser: PartialUser): Unit = modifyUser(partialUserToUser(partialUser))
 
+  private def updatePassword(id: User.Id, password: String /* change with Password*/ ): Unit = {
+    val q = for {u <- users if u.id === id} yield u.password
+    val updateAction = q.update(password)
+  }
+ // pass.password.foreach{p=> updatePassword(id, p)}
+
   def connect(email: String, password: String): UserQuery = {
 
     val result = query(users.filter { u =>
