@@ -32,11 +32,9 @@ import rx._
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object ServiceWall {
-  def apply(user: User) = new ServiceWall(user)
-}
 
 class ServiceWall(_user: User) {
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   val user = Var(_user)
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -64,16 +62,14 @@ class ServiceWall(_user: User) {
 
   val adminSettingsButton = span(
     btn_primary +++ settingsStyle +++ Seq(left := 50, top := 20),
-    onclick := { ()=> bs.showModal(adminEditionPanel.modalID)}
+    onclick := { () => bs.showModal(adminEditionPanel.modalID) }
   )("Admin")
 
-  val render: HTMLDivElement = tags.div(ms("fullpanel"))(
-    tags.div(`class` := Rx {
-      s"centerpanel"
-    })(
-      div(doorsheet.user)(Rx {
-        s"${user().name}"
-      },
+  val render: HTMLDivElement = tags.div(ms("fullpanel"))(Rx {
+    println("RX " + user().name)
+    tags.div(ms("centerpanel"))(
+      div(doorsheet.user)(
+        s"${user().name}",
         userSettingsButton,
         adminSettingsButton
       ),
@@ -83,6 +79,7 @@ class ServiceWall(_user: User) {
       userEditionDialog.dialog,
       adminEditionPanel.render
     )
+  }
   ).render
 
 }

@@ -28,7 +28,7 @@ object DoorsBuild extends Build {
   val httpComponentsVersion = "4.5.1"
   val scalatagsVersion = "0.5.4"
   val autowireVersion = "0.2.5"
-  val upickleVersion = "0.3.8"
+  val upickleVersion = "0.4.1"
   val apacheDirectoryVersion = "1.0.0-M33"
   val jarName = s"doors$Version.jar"
   val monocleVersion = "1.2.1"
@@ -75,7 +75,7 @@ object DoorsBuild extends Build {
         "com.lihaoyi" %%% "autowire" % autowireVersion,
         "com.lihaoyi" %%% "upickle" % upickleVersion,
         "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
-        "com.lihaoyi" %%% "scalarx" % "0.2.9",
+        "com.lihaoyi" %%% "scalarx" % "0.3.1",
         "fr.iscpif" %%% "scaladget" % "0.8.0-SNAPSHOT",
         "org.scala-js" %%% "scalajs-dom" % "0.8.2",
         "org.json4s" %% "json4s-jackson" % json4sVersion

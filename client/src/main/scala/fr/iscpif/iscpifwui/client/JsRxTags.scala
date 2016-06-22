@@ -17,15 +17,12 @@
  */
 package fr.iscpif.doors.client
 
-import scala.collection.{SortedMap, mutable}
 import scalatags.JsDom._
-import scala.util.{Failure, Success, Random}
+import scala.util.{Failure, Success}
 import all._
 import rx._
-import rx.core.{Propagator, Obs}
 import org.scalajs.dom
-import org.scalajs.dom.{Element, DOMParser}
-import scala.scalajs.js
+import org.scalajs.dom.Element
 
 
 /**
@@ -33,6 +30,7 @@ import scala.scalajs.js
  */
 object JsRxTags {
 
+implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   /**
    * Wraps reactive strings in spans, so they can be referenced/replaced
    * when the Rx changes.
@@ -53,7 +51,7 @@ object JsRxTags {
       case Failure(e) => span(e.toString, backgroundColor := "red").render
     }
     var last = rSafe
-    Obs(r, skipInitial = true) {
+    r.triggerLater {
       val newLast = rSafe
       last.parentElement.replaceChild(newLast, last)
       last = newLast
@@ -61,17 +59,17 @@ object JsRxTags {
     bindNode(last)
   }
 
-  implicit def RxAttrValue[T: scalatags.JsDom.AttrValue] = new scalatags.JsDom.AttrValue[Rx[T]] {
+  implicit def RxAttrValue[T: scalatags.JsDom.AttrValue](implicit data: Ctx.Data) = new scalatags.JsDom.AttrValue[Rx[T]] {
     def apply(t: Element, a: Attr, r: Rx[T]): Unit = {
-      Obs(r) {
+      r.trigger {
         implicitly[scalatags.JsDom.AttrValue[T]].apply(t, a, r())
       }
     }
   }
 
-  implicit def RxStyleValue[T: scalatags.JsDom.StyleValue] = new scalatags.JsDom.StyleValue[Rx[T]] {
+  implicit def RxStyleValue[T: scalatags.JsDom.StyleValue](implicit data: Ctx.Data) = new scalatags.JsDom.StyleValue[Rx[T]] {
     def apply(t: Element, s: Style, r: Rx[T]): Unit = {
-      Obs(r) {
+      r.trigger {
         implicitly[scalatags.JsDom.StyleValue[T]].apply(t, s, r())
       }
     }

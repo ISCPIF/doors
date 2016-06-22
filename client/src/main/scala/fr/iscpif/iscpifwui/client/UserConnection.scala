@@ -112,7 +112,7 @@ class UserConnection {
           errorMessage() = error.message + s"(${error.code})"
           connectionFailed() = true
         case Left(user: User) =>
-          userServiceWall() = Some(ServiceWall(user))
+          userServiceWall() = Some(new ServiceWall(user))
       }
     }
   }

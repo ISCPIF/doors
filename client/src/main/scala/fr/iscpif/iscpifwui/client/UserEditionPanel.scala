@@ -14,10 +14,11 @@ import rx._
 
 
 object UserEditionPanel {
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
+
   def userPanel(user: User, onsaved: () => Unit, passwordRequired: Boolean = false) = new UserEditionPanel(user, onsaved, passwordRequired)
 
-
-  def userDialog(mID: bs.ModalID, user: User, passwordRequired: Boolean = false) = new ModalPanel {
+  def userDialog(mID: bs.ModalID, user: User, passwordRequired: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
 
     val modalID = mID
 
@@ -33,10 +34,10 @@ object UserEditionPanel {
         bs.headerDialog(
           h3("Change your user data")
         ),
-        bs.bodyDialog(panel().panel),
+        bs.bodyDialog(panel.now.panel),
         bs.footerDialog(
           bs.buttonGroup(btnGroup)(
-            panel().saveButton,
+            panel.now.saveButton,
             closeButton
           )
         )
@@ -99,7 +100,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     val p2 = passInput2.value
 
     passStatus() = {
-      if (editPass()) {
+      if (editPass.now) {
         if (p1 == "" && p2 == "") PassMissingBoth()
         else {
           if (p1 == "") PassMissing1()
@@ -115,7 +116,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
       else PassMatchOk()
     }
 
-    passStatus() == PassMatchOk()
+    passStatus.now == PassMatchOk()
   }
 
   val editPassButton = bs.button(
@@ -128,9 +129,9 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     ),
     editPassButtonStyle,
     () => {
-      editPass() = !editPass()
+      editPass() = !editPass.now
       // restore pass contents when closing subwindow
-      if (!editPass()) {
+      if (!editPass.now) {
         passInput1.value = ""
         passInput2.value = ""
       }
@@ -142,7 +143,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
       Post[Api].modifyPartialUser(PartialUser(
         user.id,
         user.login,
-        if (passStatus() == PassMatchOk()) passInput1.value else user.password,
+        if (passStatus.now == PassMatchOk()) passInput1.value else user.password,
         nameInput.value,
         emailInput.value
       )
