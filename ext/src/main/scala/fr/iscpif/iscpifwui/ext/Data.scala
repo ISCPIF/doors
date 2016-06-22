@@ -65,7 +65,8 @@ object Data {
   }
 
   case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
-  case class PartialUser(id: User.Id, login: String, password: String, name: String, email: String)
+  case class PartialUser(id: User.Id, login: String, name: String, email: String)
+  case class Password(password: Option[String])
   case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)

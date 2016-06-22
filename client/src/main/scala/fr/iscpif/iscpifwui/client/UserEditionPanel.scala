@@ -4,7 +4,7 @@ import fr.iscpif.iscpifwui.client.ModalPanel
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import shared.Api
 import scalatags.JsDom.all._
-import fr.iscpif.doors.ext.Data.{PartialUser, User}
+import fr.iscpif.doors.ext.Data.{Password, PartialUser, User}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
@@ -47,7 +47,7 @@ object UserEditionPanel {
 
 class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequired: Boolean = false) {
 
-  val passStatus: Var[PassStatus] = Var(PassMatchOk())
+  val passStatus: Var[PassStatus] = Var(PassEmpty())
   val editPass = Var(passwordRequired)
 
   val nameInput = bs.input(user.name)(
@@ -87,7 +87,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
 
   case class PassMatchOk(message: String = "saving...(todo)") extends PassStatus
 
-  case class PassMissingBoth(message: String = "Provide twice with your password") extends PassStatus
+  case class PassEmpty(message: String = "Keeping previous password") extends PassStatus
 
 
   val passwordEditionBox = div(
@@ -95,28 +95,25 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     span(span("Repeat new password"), passInput2)
   )
 
-  def validatePasswords: Boolean = {
+  def checkStatus: PassStatus = {
     val p1 = passInput1.value
     val p2 = passInput2.value
 
     passStatus() = {
-      if (editPass.now) {
-        if (p1 == "" && p2 == "") PassMissingBoth()
+      if (p1 == "" && p2 == "") PassEmpty()
+      else {
+        if (p1 == "") PassMissing1()
         else {
-          if (p1 == "") PassMissing1()
+          if (p2 == "") PassMissing2()
           else {
-            if (p2 == "") PassMissing2()
-            else {
-              if (p1 == p2) PassMatchOk()
-              else PassNoMatch()
-            }
+            if (p1 == p2) PassMatchOk()
+            else PassNoMatch()
           }
         }
       }
-      else PassMatchOk()
     }
-
-    passStatus.now == PassMatchOk()
+    println("in checkStatus" + passStatus.now)
+    return passStatus.now
   }
 
   val editPassButton = bs.button(
@@ -139,22 +136,41 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
   ).render
 
   def save = {
-    if (validatePasswords) {
-      Post[Api].modifyPartialUser(PartialUser(
-        user.id,
-        user.login,
-        if (passStatus.now == PassMatchOk()) passInput1.value else user.password,
-        nameInput.value,
-        emailInput.value
-      )
-      ).call().foreach(x => onsaved())
+    println("hello save")
+    val sentPassword = Password(
+      checkStatus match {
+        // password unchanged
+        case empty: PassEmpty => None
 
+        // changed with 2 boxes matching
+        case ok: PassMatchOk => Some(passInput1.value)
+
+        // changed but not matching
+        case x: PassStatus => Some("")
+      }
+    )
+
+    sentPassword.password match {
+      case Some("") => // do nothing: can't save
+
+      case _ =>
+        println("saving with pass:" + sentPassword)
+        Post[Api].modifyPartialUser(
+          PartialUser(
+            user.id,
+            user.login,
+            nameInput.value,
+            emailInput.value
+          ),
+          sentPassword
+        ).call().foreach(x => onsaved())
     }
   }
 
   val passSatusBox = Rx {
     passStatus() match {
       case ok: PassMatchOk => div(span(" "))
+      case empty: PassEmpty => div(span(" "))
       case x: PassStatus => div(alertDanger)(x.message)
     }
   }

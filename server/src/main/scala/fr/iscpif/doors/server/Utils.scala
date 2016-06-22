@@ -28,7 +28,8 @@ object Utils {
     def toJson = pretty(Extraction.decompose(x))
   }
 
-  implicit def partialUserToUser(pUser: PartialUser): User =
-    User(pUser.id, pUser.login, Hashing(pUser.password), pUser.name, pUser.email, Hashing.currentJson)
-
+  def toUser(pUser: PartialUser, pass: Password): Option[User] =
+    pass.password.map{p =>
+      User(pUser.id, pUser.login, Hashing(p), pUser.name, pUser.email, Hashing.currentJson)
+    }
 }
