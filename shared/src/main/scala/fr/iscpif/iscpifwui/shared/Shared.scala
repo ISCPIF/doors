@@ -32,4 +32,6 @@ trait Api {
   def modifyPartialUser(partialUser: PartialUser): Unit
   def removeUser(user: User): Unit
   def connect(email: String, password: String): UserQuery
+
+  def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id): Unit
 }

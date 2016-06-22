@@ -42,6 +42,8 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
 
   //DataBase
+
+  //USERS
   def allUsers: Seq[User] = query(users.result)
 
   def addUser(partialUser: PartialUser): Unit = query(users += partialUser)
@@ -58,12 +60,24 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   def connect(email: String, password: String): UserQuery = {
 
     val result = query(users.filter { u =>
-      u.email === email &&  u.password === Hashing(password)
+      u.email === email && u.password === Hashing(password)
     }.result)
 
     if (result.isEmpty) Right(ErrorData(s"not found $email", 100, ""))
     else Left(result.head)
   }
 
+  //STATES
+  def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id) = {
+
+    val result = query(states.filter { s =>
+      s.lock === lockID && s.userID == userID
+    }.result)
+
+    if (result.isEmpty) query(states += State(userID, lockID, stateID, System.currentTimeMillis))
+    else result.headOption.map { res =>
+      query(states.update(res))
+    }
+  }
 
 }
