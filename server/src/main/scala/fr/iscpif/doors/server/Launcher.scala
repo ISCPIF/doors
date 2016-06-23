@@ -54,8 +54,7 @@ object Launcher {
     if (!query(users.result).map {
       _.login
     }.contains("corser")) {
-      // comme addUser()
-      // ex: addUser(PartialUser("corser", "Peter Corser", "peter@corser.co"), Password(Some("peter")))
+      // like addUser()
       val pCorser = toUser(partialUser("corser", "Peter Corser", "peter@corser.co"), Password(Some("peter")))
       pCorser.foreach{
         pc => query(users += pc)

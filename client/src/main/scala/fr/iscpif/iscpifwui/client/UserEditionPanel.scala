@@ -18,7 +18,7 @@ object UserEditionPanel {
 
   def userPanel(user: User, onsaved: () => Unit, passwordRequired: Boolean = false) = new UserEditionPanel(user, onsaved, passwordRequired)
 
-  def userDialog(mID: bs.ModalID, user: User, passwordRequired: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
+  def userDialog(mID: bs.ModalID, user: User, mtitle:String="Change your user data", passwordRequired: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
 
     val modalID = mID
 
@@ -32,7 +32,7 @@ object UserEditionPanel {
       bs.modalDialog(
         mID,
         bs.headerDialog(
-          h3("Change your user data")
+          h3(mtitle)
         ),
         bs.bodyDialog(panel.now.panel),
         bs.footerDialog(
@@ -45,10 +45,10 @@ object UserEditionPanel {
   }
 }
 
-class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequired: Boolean = false) {
+class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Boolean = false) {
 
   val passStatus: Var[PassStatus] = Var(PassEmpty())
-  val editPass = Var(passwordRequired)
+  val editPass = Var(isNewUser)
 
   val nameInput = bs.input(user.name)(
     placeholder := "Given name",
@@ -58,7 +58,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
     placeholder := "Email",
     width := "200px").render
 
-  val saveButton = bs.button(if (passwordRequired) "Register" else "Save", () => {
+  val saveButton = bs.button(if (isNewUser) "Register" else "Save", () => {
     save
   })(btn_primary)
 
@@ -146,24 +146,36 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
         case ok: PassMatchOk => Some(passInput1.value)
 
         // changed but not matching
-        case x: PassStatus => Some("")
+        case x: PassStatus => Some("__INVALID__")
       }
     )
-
     sentPassword.password match {
-      case Some("") => // do nothing: can't save
+      case Some("__INVALID__") => // do nothing: can't save
+        println("mismatch: can't save")
 
-      case _ =>
+      case _ => {
         println("saving with pass:" + sentPassword)
-        Post[Api].modifyPartialUser(
-          PartialUser(
-            user.id,
-            user.login,
-            nameInput.value,
-            emailInput.value
-          ),
-          sentPassword
-        ).call().foreach(x => onsaved())
+        val puser = PartialUser(user.id, user.login, nameInput.value, emailInput.value)
+
+        // add/modify
+        // ----------
+        // NB: both methods know how to handle password None
+
+        if (isNewUser) {
+          // user to add
+          Post[Api].addUser(
+            puser,
+            sentPassword
+          ).call().foreach(x => onsaved())
+        }
+        else {
+          // pre-existing user
+          Post[Api].modifyPartialUser(
+            puser,
+            sentPassword
+          ).call().foreach(x => onsaved())
+        }
+      }
     }
   }
 
@@ -178,7 +190,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, passwordRequi
   val panel = div(
     span(span("Given name"), nameInput),
     span(span("Email"), emailInput),
-    if (passwordRequired) div(
+    if (isNewUser) div(
       passwordEditionBox,
       passSatusBox
     )
