@@ -16,16 +16,15 @@ import rx._
 object UserEditionPanel {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
 
-  def userPanel(user: User, onsaved: () => Unit, passwordRequired: Boolean = false) = new UserEditionPanel(user, onsaved, passwordRequired)
+  def userPanel(user: User, onsaved: () => Unit, isNewUser: Boolean = false) = new UserEditionPanel(user, onsaved, isNewUser)
 
-  def userDialog(mID: bs.ModalID, user: User, mtitle:String="Change your user data", passwordRequired: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
+  def userDialog(mID: bs.ModalID, user: User, mtitle:String="Change your user data", isNewUser: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
 
     val modalID = mID
 
-    val panel = Var(userPanel(user, () => close, passwordRequired))
+    val panel = Var(userPanel(user, () => close, isNewUser))
 
-    def resetUser = panel() = userPanel(User.emptyUser, () => close, passwordRequired)
-
+    def resetUser = panel() = userPanel(User.emptyUser, () => close, isNewUser)
 
     // a custom-made panel type for our user forms
     val dialog =
@@ -47,8 +46,9 @@ object UserEditionPanel {
 
 class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Boolean = false) {
 
-  val passStatus: Var[PassStatus] = Var(PassEmpty())
-  val editPass = Var(isNewUser)
+
+  // rx flag <=> "user wants to change his password"
+  val editPass: Var[Boolean] = Var(false)  // Var(isNewUser)
 
   val nameInput = bs.input(user.name)(
     placeholder := "Given name",
@@ -58,63 +58,15 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
     placeholder := "Email",
     width := "200px").render
 
+  val passEditionDiv = PassEditionDiv(user)
+
   val saveButton = bs.button(if (isNewUser) "Register" else "Save", () => {
     save
   })(btn_primary)
 
 
-  val editPassButtonStyle = btn_danger
-
-
-  val passInputTemplate = bs.input()(
-    width := "200px",
-    `type` := "password"
-  )
-
-  val passInput1 = passInputTemplate.render
-  val passInput2 = passInputTemplate.render
-
-  // for password forms validation
-  sealed trait PassStatus {
-    def message: String
-  }
-
-  case class PassNoMatch(message: String = "The passwords don't match !") extends PassStatus
-
-  case class PassMissing1(message: String = "You did not fill the first password") extends PassStatus
-
-  case class PassMissing2(message: String = "You did not fill the second password") extends PassStatus
-
-  case class PassMatchOk(message: String = "saving...(todo)") extends PassStatus
-
-  case class PassEmpty(message: String = "Keeping previous password") extends PassStatus
-
-
-  val passwordEditionBox = div(
-    span(span("Enter new password"), passInput1),
-    span(span("Repeat new password"), passInput2)
-  )
-
-  def checkStatus: PassStatus = {
-    val p1 = passInput1.value
-    val p2 = passInput2.value
-
-    passStatus() = {
-      if (p1 == "" && p2 == "") PassEmpty()
-      else {
-        if (p1 == "") PassMissing1()
-        else {
-          if (p2 == "") PassMissing2()
-          else {
-            if (p1 == p2) PassMatchOk()
-            else PassNoMatch()
-          }
-        }
-      }
-    }
-    println("in checkStatus" + passStatus.now)
-    return passStatus.now
-  }
+  // TODO finir transformation en Var
+  val editPassButtonStyle = Var(btn_danger)
 
   val editPassButton = bs.button(
     span(
@@ -124,84 +76,75 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
       },
       " Change password"
     ),
-    editPassButtonStyle,
+    editPassButtonStyle.now,
+
+    // button callback
     () => {
       editPass() = !editPass.now
       // restore pass contents when closing subwindow
       if (!editPass.now) {
-        passInput1.value = ""
-        passInput2.value = ""
+        passEditionDiv.resetValues()
       }
+      else {
+        editPassButtonStyle() = btn_success
+      }
+
     }
   ).render
 
   def save = {
     println("hello save")
-    val sentPassword = Password(
-      checkStatus match {
-        // password unchanged
-        case empty: PassEmpty => None
+    val someValidatedPassword = passEditionDiv.getFinalValue
+    someValidatedPassword match {
+      // input was not validated as password: do nothing (can't save)
+      case None =>
+        println("invalid password input: can't save")
 
-        // changed with 2 boxes matching
-        case ok: PassMatchOk => Some(passInput1.value)
-
-        // changed but not matching
-        case x: PassStatus => Some("__INVALID__")
-      }
-    )
-    sentPassword.password match {
-      case Some("__INVALID__") => // do nothing: can't save
-        println("mismatch: can't save")
-
-      case _ => {
-        println("saving with pass:" + sentPassword)
+      case Some(p) => {
+        println("saving with pass:" + someValidatedPassword)
         val puser = PartialUser(user.id, user.login, nameInput.value, emailInput.value)
 
-        // add/modify
-        // ----------
-        // NB: both methods know how to handle password None
+        someValidatedPassword.foreach { validatedPassword =>
+          // add/modify
+          // ----------
+          // NB: both methods know how to handle password None
 
-        if (isNewUser) {
-          // user to add
-          Post[Api].addUser(
-            puser,
-            sentPassword
-          ).call().foreach(x => onsaved())
-        }
-        else {
-          // pre-existing user
-          Post[Api].modifyPartialUser(
-            puser,
-            sentPassword
-          ).call().foreach(x => onsaved())
+          if (isNewUser) {
+            // user to add
+            Post[Api].addUser(
+              puser,
+              validatedPassword
+            ).call().foreach(x => onsaved())
+          }
+          else {
+            // pre-existing user
+            Post[Api].modifyPartialUser(
+              puser,
+              validatedPassword
+            ).call().foreach(x => onsaved())
+          }
+
         }
       }
     }
   }
 
-  val passSatusBox = Rx {
-    passStatus() match {
-      case ok: PassMatchOk => div(span(" "))
-      case empty: PassEmpty => div(span(" "))
-      case x: PassStatus => div(alertDanger)(x.message)
-    }
-  }
 
   val panel = div(
+
+    // partialUser infos
+    // -----------------
     span(span("Given name"), nameInput),
     span(span("Email"), emailInput),
-    if (isNewUser) div(
-      passwordEditionBox,
-      passSatusBox
-    )
+
+    // password infos
+    // --------------
+    if (isNewUser) passEditionDiv.render
     else Rx {
       div(
         editPassButton,
         if (editPass()) {
-          div(
-            passwordEditionBox,
-            passSatusBox
-          )
+          passEditionDiv.render
         } else span()
       )
     }
