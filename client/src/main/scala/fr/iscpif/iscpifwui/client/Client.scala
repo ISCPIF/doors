@@ -54,13 +54,8 @@ object Client {
 
   @JSExport
   def application(id: String): Unit = {
-    println("ID: " + id)
-    println("Email : " + userConnection.emailInput.value)
-    Post[Api].user(id).call().foreach { o=>
-      println("OO " + o)
-      o match {
+    Post[Api].user(id).call().foreach { _ match {
         case Some(u: User) =>
-          println("User " + u)
           dom.document.body.appendChild(
             tags.div(
               tags.form(
