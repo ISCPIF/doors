@@ -46,7 +46,6 @@ object UserEditionPanel {
 
 class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Boolean = false) {
 
-
   // rx flag <=> "user wants to change his password"
   val editPass: Var[Boolean] = Var(false)  // Var(isNewUser)
 
@@ -93,18 +92,17 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
   ).render
 
   def save = {
-    println("hello save")
-    val someValidatedPassword = passEditionDiv.getFinalValue
-    someValidatedPassword match {
-      // input was not validated as password: do nothing (can't save)
+    val somePairOfPasses = passEditionDiv.getFinalValues
+    somePairOfPasses match {
+      // input was not validated as passwords: do nothing (can't save)
       case None =>
+        // TODO user message
         println("invalid password input: can't save")
 
       case Some(p) => {
-        println("saving with pass:" + someValidatedPassword)
         val puser = PartialUser(user.id, user.login, nameInput.value, emailInput.value)
 
-        someValidatedPassword.foreach { validatedPassword =>
+        somePairOfPasses.foreach { pairOfPasses =>
           // add/modify
           // ----------
           // NB: both methods know how to handle password None
@@ -113,17 +111,18 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
             // user to add
             Post[Api].addUser(
               puser,
-              validatedPassword
+              pairOfPasses.newpass
             ).call().foreach(x => onsaved())
           }
           else {
             // pre-existing user
             Post[Api].modifyPartialUser(
               puser,
-              validatedPassword
+              // passwords will contain None simultaneously
+              pairOfPasses.newpass,
+              pairOfPasses.oldpass
             ).call().foreach(x => onsaved())
           }
-
         }
       }
     }

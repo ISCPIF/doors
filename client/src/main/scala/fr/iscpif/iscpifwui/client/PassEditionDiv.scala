@@ -1,9 +1,10 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+
 import scalatags.JsDom.all._
-import fr.iscpif.doors.ext.Data.{Password, User}
-import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.doors.ext.Data.{PairOfPasses, Password, User}
+import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
 import rx._
@@ -21,7 +22,10 @@ class PassEditionDiv(user: User, passMinChars: Int) {
 
   val passInputTemplate = bs.input()(
     width := "300px",
-    `type` := "password"
+    `type` := "password",
+    oninput := { () ⇒
+      updateStatus
+    }
   )
 
   val oldPassInput  = passInputTemplate.render
@@ -34,35 +38,33 @@ class PassEditionDiv(user: User, passMinChars: Int) {
     newPassInput2.value = ""
   }
 
-  def getFinalValue : Option[Password] = {
-    val somePassword = updateStatus match {
-        // password unchanged
-        case empty: PassEmpty => Some(Password(None))
-
-        // changed with 2 boxes matching
-        case ok: PassMatchOk => Some(Password(Some(newPassInput1.value)))
-
-        // changed but not matching
-        case x: PassStatus => None
-      }
-    return somePassword
+  // customize for any constraints on new pass
+  def validatePassString(passString: String) : Boolean = {
+    return (passString.length > passMinChars)
   }
 
+  def getFinalValues : Option[PairOfPasses] = {
+    val oldnew = updateStatus match {
+        // changed with 2 new boxes matching and 1 old box filled
+        case ok: PassMatchOk => Some(PairOfPasses(oldpass = Password(Some(oldPassInput.value)),
+                                             newpass = Password(Some(newPassInput1.value))))
+        // not changed
+        case empty: PassEmpty => Some(PairOfPasses(oldpass=Password(None), newpass=Password(None)))
 
-  // when to do password validation
-  // TODO replace by newPassInput.onchange event
-  val passValidatorBtn = bs.button(
-      "Validate password",
-      () => {
-        println("check triggered by passValidatorBtn") ;
-        updateStatus
+        // changed and erased
+        case empty: PassUndefined => Some(PairOfPasses(oldpass=Password(None), newpass=Password(None)))
+
+        // changed but validation Error
+        case err: PassError => None
       }
-    )(btn_primary)
+
+    return oldnew
+  }
 
   val passwordEditionBox = div(
-    // TODO oldPassInput
-    span(span("Enter new password"), newPassInput1),
-    span(span("Repeat new password"), newPassInput2)
+    span(span("Old password"), oldPassInput),
+    span(span("New password"), newPassInput1),
+    span(span("New password again"), newPassInput2)
   )
 
   val passStatus: Var[PassStatus] = Var(PassUndefined())
@@ -82,17 +84,20 @@ class PassEditionDiv(user: User, passMinChars: Int) {
 
 
   def updateStatus() : PassStatus = {
-    // TODO oldPassInput logic
+    // no possible oldpass check client side so any p0 != "" is valid here
+
+    val p0 = oldPassInput.value
     val p1 = newPassInput1.value
     val p2 = newPassInput2.value
 
     passStatus() =
-      (p1, p2) match {
-        case ("", "") => PassEmpty()
-        case ("", _)  => PassError("You did not fill the first password")
-        case (_, "")  => PassError("You did not fill the second password")
-        case (p1, p2) if p1 != p2 => PassError("The passwords don't match !")
-        case (p1, _) if p1.length < passMinChars => PassError("This new password is too short")
+      (p0, p1, p2) match {
+        case ("", "", "") => PassEmpty()
+        case ("", _, _)   => PassError("You did not fill the old password")
+        case (p0, "", _)  => PassError("You did not fill the first password")
+        case (p0, _, "")  => PassError("You did not fill the second password")
+        case (p0, p1, p2) if p1 != p2 => PassError("The passwords don't match !")
+        case (p0, p1, _) if ! validatePassString(p1) => PassError("Passwords match but this new password is too simple")
         case _ => PassMatchOk()
       }
 
@@ -112,11 +117,8 @@ class PassEditionDiv(user: User, passMinChars: Int) {
   val render =  Rx {
     div(
       passwordEditionBox,
-      passStatusBox,
-      passValidatorBtn
+      passStatusBox
     )
   }
 
-
 }
-
