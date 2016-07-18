@@ -19,14 +19,14 @@ package fr.iscpif.doors.client
 
 import fr.iscpif.doors.client.stylesheet._
 import fr.iscpif.doors.ext.Data.User
-import fr.iscpif.scaladget.stylesheet.all
-import org.scalajs
 import org.scalajs.dom
 import org.scalajs.dom._
+import shared.Api
 import scala.concurrent.Future
 import rx._
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import autowire._
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import sheet._
 import scalatags.JsDom.tags
@@ -39,10 +39,11 @@ object Client {
 
   val userConnection = new UserConnection
 
-  val shutdownButton =  tags.button(topLink +++ btn_primary, `type` := "submit")("Logout")
+  val shutdownButton = tags.button(topLink +++ btn_primary, `type` := "submit")("Logout")
 
 
   dom.window.sessionStorage
+
   @JSExport
   def connection(): Unit = {
     userConnection.render.map { r =>
@@ -52,20 +53,28 @@ object Client {
   }
 
   @JSExport
-  def application(): Unit = {
-    dom.document.body.appendChild(
-      tags.div(
-        tags.form(
-          action := "/logout",
-          method := "post",
-          shutdownButton
-        ).render,
-        //TO BE CHANGED !!!
-        new ServiceWall(User("Toto", "tata", "auie", "nstrnst", "strnst", "stt")).render
-      ).render
-    )
+  def application(id: String): Unit = {
+    println("ID: " + id)
+    println("Email : " + userConnection.emailInput.value)
+    Post[Api].user(id).call().foreach { o=>
+      println("OO " + o)
+      o match {
+        case Some(u: User) =>
+          println("User " + u)
+          dom.document.body.appendChild(
+            tags.div(
+              tags.form(
+                action := "/logout",
+                method := "post",
+                shutdownButton
+              ).render,
+              new ServiceWall(u).render
+            ).render
+          )
+        case _ =>
+      }
+    }
   }
-
 }
 
 object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {

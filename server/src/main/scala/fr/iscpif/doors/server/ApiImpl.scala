@@ -44,8 +44,8 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   //DataBase
 
   //USERS
-  def user(userID: UserID): Option[User] = query(users.filter { u =>
-    u.id === userID.id
+  def user(id: String): Option[User] = query(users.filter { u =>
+    u.id === id
   }.result).headOption
 
   def allUsers: Seq[User] = query(users.result)

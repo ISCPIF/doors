@@ -47,7 +47,9 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
   val basePath = "shared"
 
   val connection = html("Client().connection();")
-  val application = html("Client().application();")
+
+  def application = html(s"Client().application('${userIDFromSession.map{_.id}.getOrElse("")}');")
+
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"
 
@@ -96,7 +98,7 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
     response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
     response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
     basicAuth.status.code match {
-      case 200 =>  redirect("/app")
+      case 200 => redirect("/app")
       case _ => redirect("/connection")
     }
   }
@@ -109,18 +111,29 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
 
 
   post("/logout") {
-    connectedUsers() = connectedUsers.now.filterNot {
-      _ == session.getAttribute(USER_ID)
+    userIDFromSession.foreach { u =>
+      connectedUsers() = connectedUsers.now.filterNot {
+        _ == u
+      }
     }
     redirect("/connection")
   }
 
-  def isLoggedIn = connectedUsers.now.contains(session.getAttribute(USER_ID))
+  def isLoggedIn: Boolean = userIDFromSession.map {
+    connectedUsers.now.contains
+  }.getOrElse(false)
 
   def recordUser(u: UserID) = {
     session.put(USER_ID, u)
     connectedUsers() = connectedUsers.now :+ u
   }
+
+  def userIDFromSession =
+    session.getAttribute(USER_ID) match {
+      case u: UserID => Some(u)
+      case _ => None
+    }
+
 
   post("/api/user") {
     val login = params get "login" getOrElse ("")
