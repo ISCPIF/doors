@@ -64,14 +64,31 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     _.id === user.id
   }.delete)
 
-  def modifyPartialUser(partialUser: PartialUser, pass:Password): Unit = {
-    // for debug
-    println("modifyPartialUser(): Modifying user " + partialUser + "...")
+  def modifyPartialUser(partialUser: PartialUser, newpass:Password, oldpass:Password): Unit = {
+
+    // 1) modify normal infos
     updatePartialUser(partialUser)
-    pass.password.foreach{
-      p =>
-        updatePassword(partialUser.id, p)
-        println("...with password" + pass.password)
+
+    // 2) if there is a new pass...
+    newpass.password.foreach {
+      np =>
+        // ... there is also an old pass...
+        oldpass.password.foreach {
+          op =>
+            // ... and we re-check the old pass...
+            val whosThere = query(users.filter {u => u.id === partialUser.id && u.password === Hashing(op)}.result)
+
+            val isAllowed = whosThere.nonEmpty
+
+            // ... before modifying to new pass
+            if (isAllowed) {
+              updatePassword(partialUser.id, np)
+            }
+            else {
+              // TODO client callback: msg "Old password doesn't match: couldn't modify"
+              println("modifyPartialUser(): Old password doesn't match: couldn't modify user '" + partialUser.email + "'")
+            }
+        }
     }
   }
 

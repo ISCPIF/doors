@@ -30,7 +30,7 @@ trait Api {
   def allUsers(): Seq[User]
   def addUser(partialUser: PartialUser, pass:Password): Unit
   // def modifyUser(user: User): Unit
-  def modifyPartialUser(partialUser: PartialUser, pass: Password): Unit
+  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit
   def removeUser(user: User): Unit
 
   def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id): Unit
