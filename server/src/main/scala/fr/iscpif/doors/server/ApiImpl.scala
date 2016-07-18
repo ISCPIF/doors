@@ -50,20 +50,56 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   def allUsers: Seq[User] = query(users.result)
 
-  def addUser(partialUser: PartialUser): Unit = query(users += partialUser)
+  def addUser(partialUser: PartialUser, pass:Password): Unit = {
+    val someUser = toUser(partialUser, pass)
+    someUser.foreach{
+      u =>
+        query(users += u)
+        // for debug
+        println("addUser(): Created user " + u + "with password" + pass.password)
+    }
+  }
 
   def removeUser(user: User) = query(users.filter {
     _.id === user.id
   }.delete)
 
+  def modifyPartialUser(partialUser: PartialUser, pass:Password): Unit = {
+    // for debug
+    println("modifyPartialUser(): Modifying user " + partialUser + "...")
+    updatePartialUser(partialUser)
+    pass.password.foreach{
+      p =>
+        updatePassword(partialUser.id, p)
+        println("...with password" + pass.password)
+    }
+  }
 
-  def modifyUser(user: User): Unit = query(users.insertOrUpdate(user.copy(id = user.id)))
+  private def updatePartialUser(puser:PartialUser): Unit = {
+    // slick: query all fields except password in order to update them
+    query{
+      val q = for {u <- users if u.id === puser.id} yield (u.login,u.name,u.email)
+      q.update((puser.login, puser.name, puser.email))
+    }
+  }
 
-  def modifyPartialUser(partialUser: PartialUser): Unit = modifyUser(partialUserToUser(partialUser))
 
-  private def updatePassword(id: User.Id, password: String /* change with Password*/): Unit = {
-    val q = for {u <- users if u.id === id} yield u.password
-    val updateAction = q.update(password)
+  private def updatePassword(id: User.Id, password:String): Unit = {
+    // idem: query just the password to update it
+    query {
+      val q = for {u <- users if u.id === id} yield u.password
+      q.update(Hashing(password))
+    }
+  }
+
+  def connect(email: String, password: String): UserQuery = {
+
+    val result = query(users.filter { u =>
+      u.email === email && u.password === Hashing(password)
+    }.result)
+
+    if (result.isEmpty) Right(ErrorData(s"not found $email", 100, ""))
+    else Left(result.head)
   }
 
   //STATES

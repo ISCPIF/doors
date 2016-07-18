@@ -1,6 +1,7 @@
 package fr.iscpif.doors.server
 
 import fr.iscpif.doors.api.{AccessQuest, Settings}
+import fr.iscpif.doors.ext.Data.Password
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
@@ -49,10 +50,15 @@ object Launcher {
 
     server.setHandler(context)
 
+
     if (!query(users.result).map {
       _.login
     }.contains("corser")) {
-      query(users += partialUser("corser", "peter", "Peter Corser", "peter@corser.co"))
+      // like addUser()
+      val pCorser = toUser(partialUser("corser", "Peter Corser", "peter@corser.co"), Password(Some("peter")))
+      pCorser.foreach{
+        pc => query(users += pc)
+      }
     }
     println("Added ")
     query(users.result).foreach {

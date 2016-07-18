@@ -39,7 +39,8 @@ class UserConnection {
   val errorMessage: Var[String] = Var("")
   val user: Var[Option[User]] = Var(None)
 
-  val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser, true)
+  // register <=> like a user edition but with passwordRequired = true
+  val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser, mtitle="Registration", true)
 
   val emailInput = bs.input("")(
     name := "email",
