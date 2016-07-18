@@ -27,6 +27,8 @@ import upickle._
 import autowire._
 import shared._
 
+import collection.JavaConversions._
+import rx._
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._
@@ -36,27 +38,88 @@ import fr.iscpif.doors.api.AccessQuest
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
+
   def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 }
 
-class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet {
+class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with AuthenticationSupport {
 
   val basePath = "shared"
 
-  get("/") {
-    contentType = "text/html"
+  val connection = html("Client().connection();")
+  val application = html("Client().application();")
+  val connectedUsers: Var[Seq[UserID]] = Var(Seq())
+  val USER_ID = "UserID"
 
-    tags.html(
-      tags.head(
-        tags.meta(tags.httpEquiv := "Content-Type", tags.content := "text/html; charset=UTF-8"),
-        tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/bootstrap.min.css"),
-        tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
-        tags.script(tags.`type` := "text/javascript", tags.src := "js/client-opt.js"),
-        tags.script(tags.`type` := "text/javascript", tags.src := "js/jquery.min.js"),
-        tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap.min.js")
-      ),
-      tags.body(tags.onload := "Client().run();")
-    )
+  def html(javascritMethod: String) = tags.html(
+    tags.head(
+      tags.meta(tags.httpEquiv := "Content-Type", tags.content := "text/html; charset=UTF-8"),
+      tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/bootstrap.min.css"),
+      tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
+      tags.script(tags.`type` := "text/javascript", tags.src := "js/client-opt.js"),
+      tags.script(tags.`type` := "text/javascript", tags.src := "js/jquery.min.js"),
+      tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap.min.js")
+    ),
+    tags.body(tags.onload := javascritMethod)
+  )
+
+  protected def basicAuth() = {
+    val baReq = new DoorsAuthStrategy(this)
+    val rep = baReq.authenticate()
+    rep match {
+      case Some(u: UserID) =>
+        response.setHeader("WWW-Authenticate", "Doors realm=\"%s\"" format realm)
+        recordUser(u)
+        Ok()
+      case _ =>
+        redirect("/connection")
+    }
+  }
+
+  get("/") {
+    redirect("/app")
+  }
+
+  get("/connection") {
+    if (isLoggedIn) redirect("/app")
+    else {
+      response.setHeader("Access-Control-Allow-Origin", "*")
+      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
+      response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
+      contentType = "text/html"
+      connection
+    }
+  }
+
+  post("/connection") {
+    response.setHeader("Access-Control-Allow-Origin", "*")
+    response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
+    response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
+    basicAuth.status.code match {
+      case 200 =>  redirect("/app")
+      case _ => redirect("/connection")
+    }
+  }
+
+  get("/app") {
+    contentType = "text/html"
+    if (isLoggedIn) application
+    else redirect("/connection")
+  }
+
+
+  post("/logout") {
+    connectedUsers() = connectedUsers.now.filterNot {
+      _ == session.getAttribute(USER_ID)
+    }
+    redirect("/connection")
+  }
+
+  def isLoggedIn = connectedUsers.now.contains(session.getAttribute(USER_ID))
+
+  def recordUser(u: UserID) = {
+    session.put(USER_ID, u)
+    connectedUsers() = connectedUsers.now :+ u
   }
 
   post("/api/user") {

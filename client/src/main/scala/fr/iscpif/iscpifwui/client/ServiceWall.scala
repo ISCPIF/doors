@@ -66,7 +66,6 @@ class ServiceWall(_user: User) {
   )("Admin")
 
   val render: HTMLDivElement = tags.div(ms("fullpanel"))(Rx {
-    println("RX " + user().name)
     tags.div(ms("centerpanel"))(
       div(doorsheet.user)(
         s"${user().name}",

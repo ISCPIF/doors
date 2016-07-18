@@ -26,12 +26,12 @@ trait Api {
   def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
   //Database
+  def user(userID: UserID): Option[User]
   def allUsers(): Seq[User]
   def addUser(partialUser: PartialUser): Unit
   def modifyUser(user: User): Unit
   def modifyPartialUser(partialUser: PartialUser): Unit
   def removeUser(user: User): Unit
-  def connect(email: String, password: String): UserQuery
 
   def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id): Unit
 }

@@ -44,6 +44,10 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   //DataBase
 
   //USERS
+  def user(userID: UserID): Option[User] = query(users.filter { u =>
+    u.id === userID.id
+  }.result).headOption
+
   def allUsers: Seq[User] = query(users.result)
 
   def addUser(partialUser: PartialUser): Unit = query(users += partialUser)
@@ -57,20 +61,9 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   def modifyPartialUser(partialUser: PartialUser): Unit = modifyUser(partialUserToUser(partialUser))
 
-  private def updatePassword(id: User.Id, password: String /* change with Password*/ ): Unit = {
+  private def updatePassword(id: User.Id, password: String /* change with Password*/): Unit = {
     val q = for {u <- users if u.id === id} yield u.password
     val updateAction = q.update(password)
-  }
- // pass.password.foreach{p=> updatePassword(id, p)}
-
-  def connect(email: String, password: String): UserQuery = {
-
-    val result = query(users.filter { u =>
-      u.email === email && u.password === Hashing(password)
-    }.result)
-
-    if (result.isEmpty) Right(ErrorData(s"not found $email", 100, ""))
-    else Left(result.head)
   }
 
   //STATES

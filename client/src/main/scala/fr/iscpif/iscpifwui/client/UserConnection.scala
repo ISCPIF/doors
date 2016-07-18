@@ -17,6 +17,8 @@ package fr.iscpif.doors.client
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import org.scalajs.dom
+import org.scalajs.dom.raw.{FormData, XMLHttpRequest}
 import shared.Api
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
@@ -35,25 +37,26 @@ class UserConnection {
 
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
-  val userServiceWall: Var[Option[ServiceWall]] = Var(None)
+  val user: Var[Option[User]] = Var(None)
 
   val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser, true)
 
   val emailInput = bs.input("")(
+    name := "email",
     loginPasswordInput,
     placeholder := "Email",
     autofocus
   ).render
 
   val passwordInput = bs.input("")(
+    name := "password",
     loginPasswordInput,
     `type` := "password",
     placeholder := "Password",
     autofocus
   ).render
 
-  val connectButton = bs.button("Connect", connectCall)(
-    btn_primary, `type` := "submit").render
+  val connectButton = tags.button(btn_primary, `type` := "submit")("Connect")
 
   val registerLink = a("Register", topLink,
     onclick := { () =>
@@ -61,60 +64,24 @@ class UserConnection {
       bs.showModal(registerUserDialog.modalID)
     }).render
 
-  val shutdownButton =
-    a(topLink +++ pointer,
-      onclick := { () ⇒
-        userServiceWall() = None
-        connectionFailed() = false
-      }
-    )("Logout")
-
-  val render = tags.div(
-    Rx {
-      userServiceWall() match {
-        case Some(serviceWall: ServiceWall) =>
-          tags.div(
-            shutdownButton,
-            serviceWall.render
-          )
-        case _ =>
-          div(
-            registerLink,
-            div(ms("centerPage"))(
-              connectionFailed() match {
-                case true => div(doorsheet.connectionFailed)(errorMessage())
-                case _ => tags.div
-              },
-              tags.form(
-                tags.p(ms("grouptop"), emailInput),
-                tags.p(ms("groupbottom"), passwordInput),
-                connectButton,
-                onsubmit := { () =>
-                  connectCall()
-                  false
-                }
-              )
-            )
-          )
-      }
-    },
-    tags.img(src := "img/logoISC.png", logoISC),
-    registerUserDialog.dialog
-  ).render
-
-
-  def connectCall = () => connect(emailInput.value, passwordInput.value)
-
-  def connect(email: String, password: String) = {
-    Post[Api].connect(email, password).call().foreach { c =>
-      c match {
-        case Right(error: ErrorData) =>
-          errorMessage() = error.message + s"(${error.code})"
-          connectionFailed() = true
-        case Left(user: User) =>
-          userServiceWall() = Some(new ServiceWall(user))
-      }
-    }
+  val render = Rx {
+    tags.div(
+      registerLink,
+      div(ms("centerPage"))(
+        connectionFailed() match {
+          case true => div(doorsheet.connectionFailed)(errorMessage())
+          case _ => tags.div
+        },
+        tags.form(
+          action := "/connection",
+          method := "post",
+          tags.p(ms("grouptop"), emailInput),
+          tags.p(ms("groupbottom"), passwordInput),
+          connectButton
+        ).render
+      ),
+      tags.img(src := "img/logoISC.png", logoISC),
+      registerUserDialog.dialog
+    ).render
   }
-
 }

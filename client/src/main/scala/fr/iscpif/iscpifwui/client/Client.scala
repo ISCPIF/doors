@@ -17,6 +17,9 @@ package fr.iscpif.doors.client
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import fr.iscpif.doors.client.stylesheet._
+import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.scaladget.stylesheet.all
 import org.scalajs
 import org.scalajs.dom
 import org.scalajs.dom._
@@ -24,27 +27,45 @@ import scala.concurrent.Future
 import rx._
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
-import shared._
-import upickle._
-import autowire._
+import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import sheet._
+import scalatags.JsDom.tags
+import scalatags.JsDom.all._
+
 @JSExport("Client")
 object Client {
 
-  val helloValue = Var(0)
-  val caseClassValue = Var("empty")
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
+
+  val userConnection = new UserConnection
+
+  val shutdownButton =  tags.button(topLink +++ btn_primary, `type` := "submit")("Logout")
+
+
+  dom.window.sessionStorage
+  @JSExport
+  def connection(): Unit = {
+    userConnection.render.map { r =>
+      dom.document.body.appendChild(r)
+    }
+
+  }
 
   @JSExport
-  def run(): Unit = {
-    val body = dom.document.body
-
-    // <=== ANCIEN COMPORTEMENT LDAPUSER ===>
-    //val ldpapConnection = new LDAPConnection
-    // body.appendChild(ldpapConnection.render)
-
-    // <=== NOUVEAU COMPORTEMENT USER ===>
-    val userConnection = new UserConnection
-    body.appendChild(userConnection.render)
+  def application(): Unit = {
+    dom.document.body.appendChild(
+      tags.div(
+        tags.form(
+          action := "/logout",
+          method := "post",
+          shutdownButton
+        ).render,
+        //TO BE CHANGED !!!
+        new ServiceWall(User("Toto", "tata", "auie", "nstrnst", "strnst", "stt")).render
+      ).render
+    )
   }
+
 }
 
 object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
