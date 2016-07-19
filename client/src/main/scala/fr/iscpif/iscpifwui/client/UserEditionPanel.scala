@@ -57,7 +57,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
     placeholder := "Email",
     width := "200px").render
 
-  val passEditionDiv = PassEditionDiv(user)
+  val passEditionDiv = PassEditionDiv(user, isNewUser)
 
   val saveButton = bs.button(if (isNewUser) "Register" else "Save", () => {
     save
