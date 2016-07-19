@@ -38,4 +38,9 @@ object Utils {
   def connect(email: String, password: String) = query(users.filter { u =>
     u.email === email && u.password === Hashing(password)
   }.result)
+
+  def state(user: User, lock: Lock.Id) = query(states.filter { s =>
+  s.userID === user.id && s.lock === lock
+  }.result)
+
 }
