@@ -24,10 +24,14 @@ import slick.driver.H2Driver.api._
 object ISCPIFDoors extends App {
 
   def quests = {
-    val peter = users.filter(_.login === "corser").result
+    def admins =  (for {
+      s <- states if s.lock === "admin"
+      u <- users if u.id === s.userID
+    } yield u).result
+
 
     Map(
-      "subscription" -> ManualValidation(peter)
+      "subscription" -> ManualValidation(admins)
     )
   }
 

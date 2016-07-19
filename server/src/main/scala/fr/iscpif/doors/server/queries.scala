@@ -21,7 +21,7 @@ import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
 
-object lock {
+object queries {
 
   def create(user: User.Id, lock: Lock.Id, date: Long = System.currentTimeMillis()) = {
     query(states += State(user, lock, States.locked, date))

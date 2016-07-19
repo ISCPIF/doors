@@ -76,7 +76,7 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
         oldpass.password.foreach {
           op =>
             // ... and we re-check the old pass...
-            val whosThere = query(users.filter {u => u.id === partialUser.id && u.password === Hashing(op)}.result)
+            val whosThere = query(users.filter { u => u.id === partialUser.id && u.password === Hashing(op)}.result)
 
             val isAllowed = whosThere.nonEmpty
 
@@ -100,23 +100,12 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     }
   }
 
-
   private def updatePassword(id: User.Id, password:String): Unit = {
     // idem: query just the password to update it
     query {
       val q = for {u <- users if u.id === id} yield u.password
       q.update(Hashing(password))
     }
-  }
-
-  def connect(email: String, password: String): UserQuery = {
-
-    val result = query(users.filter { u =>
-      u.email === email && u.password === Hashing(password)
-    }.result)
-
-    if (result.isEmpty) Right(ErrorData(s"not found $email", 100, ""))
-    else Left(result.head)
   }
 
   //STATES
