@@ -24,7 +24,7 @@ import slick.driver.H2Driver.api._
 object queries {
 
   def create(user: User.Id, lock: Lock.Id, date: Long = System.currentTimeMillis()) = {
-    query(states += State(user, lock, States.locked, date))
+    query(states += State(user, lock, States.LOCKED, date))
   }
 
   def state(user: User, lock: Lock.Id) = query(states.filter { s =>

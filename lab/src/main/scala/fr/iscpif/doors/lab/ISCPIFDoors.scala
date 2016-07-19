@@ -18,7 +18,7 @@
 package fr.iscpif.doors.lab
 
 import fr.iscpif.doors.api._
-import fr.iscpif.doors.server.Launcher
+import fr.iscpif.doors.server.{Launcher, locks}
 import slick.driver.H2Driver.api._
 
 object ISCPIFDoors extends App {
@@ -31,7 +31,7 @@ object ISCPIFDoors extends App {
 
 
     Map(
-      "subscription" -> ManualValidation(admins)
+      locks.SUBSCRIPTION -> ManualValidation(admins)
     )
   }
 

@@ -31,12 +31,12 @@ case class ManualValidation(validators: DbQuery[Seq[User]]) extends AccessQuest 
     val vs = query(validators).map(_.id).toSet
     if(vs.isEmpty) failure("validator not set")
     else if(!vs.contains(requester)) failure("you are not a validator")
-    else Success(States.opened)
+    else Success(States.OPENED)
   }
 
   def status(state: State.Id): Try[String] = state match {
-    case States.locked => Try(s"Validation waiting approval of one of the users: ${query(validators).map(_.name).mkString(",")}.")
-    case States.opened => Success("Approved")
+    case States.LOCKED => Try(s"Validation waiting approval of one of the users: ${query(validators).map(_.name).mkString(",")}.")
+    case States.OPENED => Success("Approved")
     case x => failure(s"Invalid state $x")
   }
 }

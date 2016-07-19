@@ -19,6 +19,7 @@ package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.ext.Data.LDAPUserQuery._
+import scala.concurrent.ExecutionContext.Implicits.global
 import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
 import Utils._
@@ -27,7 +28,7 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   //LDAP
   def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
-    LdapConnection.connect(authentication)
+  LdapConnection.connect(authentication)
 
   def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery = {
     val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
@@ -50,13 +51,18 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   def allUsers: Seq[User] = query(users.result)
 
-  def addUser(partialUser: PartialUser, pass:Password): Unit = {
+  def addUser(partialUser: PartialUser, pass: Password): Unit = {
     val someUser = toUser(partialUser, pass)
-    someUser.foreach{
+    someUser.foreach {
       u =>
-        query(users += u)
-        // for debug
-        println("addUser(): Created user " + u + "with password" + pass.password)
+        val transaction = (for {
+          _ <- users += u
+          userLength <- users.length.result
+          _ <- states += State(u.id, locks.ADMIN, States.OPENED, System.currentTimeMillis) if (userLength == 1)
+          _ <- states += State(u.id, locks.REGISTRATION, States.OPENED, System.currentTimeMillis)
+        } yield ()).transactionally
+
+        db.run(transaction)
     }
   }
 
@@ -64,7 +70,7 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     _.id === user.id
   }.delete)
 
-  def modifyPartialUser(partialUser: PartialUser, newpass:Password, oldpass:Password): Unit = {
+  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit = {
 
     // 1) modify normal infos
     updatePartialUser(partialUser)
@@ -76,7 +82,7 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
         oldpass.password.foreach {
           op =>
             // ... and we re-check the old pass...
-            val whosThere = query(users.filter { u => u.id === partialUser.id && u.password === Hashing(op)}.result)
+            val whosThere = query(users.filter { u => u.id === partialUser.id && u.password === Hashing(op) }.result)
 
             val isAllowed = whosThere.nonEmpty
 
@@ -92,15 +98,15 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     }
   }
 
-  private def updatePartialUser(puser:PartialUser): Unit = {
+  private def updatePartialUser(puser: PartialUser): Unit = {
     // slick: query all fields except password in order to update them
-    query{
-      val q = for {u <- users if u.id === puser.id} yield (u.login,u.name,u.email)
+    query {
+      val q = for {u <- users if u.id === puser.id} yield (u.login, u.name, u.email)
       q.update((puser.login, puser.name, puser.email))
     }
   }
 
-  private def updatePassword(id: User.Id, password:String): Unit = {
+  private def updatePassword(id: User.Id, password: String): Unit = {
     // idem: query just the password to update it
     query {
       val q = for {u <- users if u.id === id} yield u.password

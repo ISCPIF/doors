@@ -1,7 +1,7 @@
-package fr.iscpif.doors.api
+package fr.iscpif.doors.server
 
 /*
- * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 19/07/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,20 +17,8 @@ package fr.iscpif.doors.api
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data
-import slick.driver.H2Driver.api._
-object States {
-  val LOCKED = 0
-  val OPENED = 1
-}
-
-
-class States(tag: Tag) extends Table[Data.State](tag, "STATES") {
-  def userID = column[Data.User.Id]("USER_ID")
-  def lock = column[Data.Lock.Id]("LOCK")
-  def state = column[Data.State.Id]("STATE")
-  def time = column[Long]("TIME")
-
-  def * = (userID, lock, state, time) <> ((Data.State.apply _).tupled, Data.State.unapply)
-  def user = foreignKey("USER_FK", userID, users)(_.id)
+object locks {
+  lazy val ADMIN = "admin"
+  lazy val REGISTRATION = "registration"
+  lazy val SUBSCRIPTION = "subscription"
 }

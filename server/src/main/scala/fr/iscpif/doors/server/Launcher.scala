@@ -51,7 +51,7 @@ object Launcher {
     server.setHandler(context)
 
 
-    if (!query(users.result).map {
+   /* if (!query(users.result).map {
       _.login
     }.contains("corser")) {
       // like addUser()
@@ -59,8 +59,8 @@ object Launcher {
       pCorser.foreach{
         pc => query(users += pc)
       }
-    }
-    println("Added ")
+    }*/
+
     query(users.result).foreach {
       println
     }
