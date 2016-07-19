@@ -29,9 +29,10 @@ trait Api {
   def user(id: String): Option[User]
   def allUsers(): Seq[User]
   def addUser(partialUser: PartialUser, pass:Password): Unit
-  // def modifyUser(user: User): Unit
   def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit
   def removeUser(user: User): Unit
 
+  //States
   def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id): Unit
+  def isAdmin(userID: User.Id): Boolean
 }

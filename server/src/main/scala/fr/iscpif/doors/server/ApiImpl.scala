@@ -127,4 +127,8 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     }
   }
 
+  def isAdmin(userID: User.Id): Boolean = query(states.filter{ s=>
+    s.lock === locks.ADMIN && s.userID === userID
+  }.result) != 0
+
 }
