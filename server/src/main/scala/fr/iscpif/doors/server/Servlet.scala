@@ -138,10 +138,10 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
   post("/api/user") {
     val login = params get "login" getOrElse ("")
     val pass = params get "password" getOrElse ("")
-    val connectRequest = LdapConnection.connect(LoginPassword(login, pass))
-    connectRequest match {
-      case Left(u: LDAPUser) => Ok(u.toJson)
-      case Right(e: ErrorData) => halt(e.code, e.toJson)
+
+    Utils.connect(login, pass).headOption match {
+      case Some(u: User) => Ok(u.toJson)
+      case None => halt(404, (s"User $login not found").toJson)
     }
   }
 

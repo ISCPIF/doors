@@ -1,8 +1,10 @@
 package fr.iscpif.doors.server
 
+import fr.iscpif.doors.api._
 import fr.iscpif.doors.ext.Data._
 import org.json4s.jackson.JsonMethods._
-import org.json4s.{DefaultFormats, Formats, Extraction}
+import org.json4s.{DefaultFormats, Extraction, Formats}
+import slick.driver.H2Driver.api._
 
 /*
  * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
@@ -32,4 +34,8 @@ object Utils {
     pass.password.map{p =>
       User(pUser.id, pUser.login, Hashing(p), pUser.name, pUser.email, Hashing.currentJson)
     }
+
+  def connect(email: String, password: String) = query(users.filter { u =>
+    u.email === email && u.password === Hashing(password)
+  }.result)
 }

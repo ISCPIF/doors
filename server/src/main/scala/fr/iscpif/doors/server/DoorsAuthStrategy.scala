@@ -1,14 +1,10 @@
 package fr.iscpif.doors.server
 
-import java.util.Locale
-
 import fr.iscpif.doors.api._
 import org.scalatra.auth.ScentryStrategy
 import slick.driver.H2Driver.api._
 import fr.iscpif.doors.ext.Data.UserID
 import org.scalatra.ScalatraBase
-import org.scalatra.auth.strategy.BasicAuthStrategy
-import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
 
 /*
  * Copyright (C) 24/06/16 // mathieu.leclaire@openmole.org
@@ -35,9 +31,7 @@ class DoorsAuthStrategy(protected override val app: ScalatraBase)
     val email = app.params.getOrElse("email", "")
     val password = app.params.getOrElse("password", "")
 
-    val result = query(users.filter { u =>
-      u.email === email && u.password === Hashing(password)
-    }.result)
+    val result = Utils.connect(email, password)
 
 
     if (result.isEmpty) None
