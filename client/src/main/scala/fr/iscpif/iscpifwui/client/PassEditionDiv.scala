@@ -14,11 +14,11 @@ object PassEditionDiv {
     // default should be 8
     val passMinChars = 3
 
-    def apply(user: User) = new PassEditionDiv(user, passMinChars)
+    def apply(user: User, isNewUser: Boolean) = new PassEditionDiv(user, passMinChars, isNewUser)
 }
 
 
-class PassEditionDiv(user: User, passMinChars: Int) {
+class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
 
   val passInputTemplate = bs.input()(
     width := "300px",
@@ -61,11 +61,18 @@ class PassEditionDiv(user: User, passMinChars: Int) {
     return oldnew
   }
 
-  val passwordEditionBox = div(
-    span(span("Old password"), oldPassInput),
-    span(span("New password"), newPassInput1),
-    span(span("New password again"), newPassInput2)
-  )
+  val passwordEditionBox = isNewUser match {
+    case true => div(
+      span(span("Password"), newPassInput1),
+      span(span("Password again"), newPassInput2)
+    )
+
+    case false => div(
+      span(span("Old password"), oldPassInput),
+      span(span("New password"), newPassInput1),
+      span(span("New password again"), newPassInput2)
+    )
+  }
 
   val passStatus: Var[PassStatus] = Var(PassUndefined())
 
@@ -90,16 +97,26 @@ class PassEditionDiv(user: User, passMinChars: Int) {
     val p1 = newPassInput1.value
     val p2 = newPassInput2.value
 
-    passStatus() =
-      (p0, p1, p2) match {
-        case ("", "", "") => PassEmpty()
-        case ("", _, _)   => PassError("You did not fill the old password")
-        case (p0, "", _)  => PassError("You did not fill the first password")
-        case (p0, _, "")  => PassError("You did not fill the second password")
-        case (p0, p1, p2) if p1 != p2 => PassError("The passwords don't match !")
-        case (p0, p1, _) if ! validatePassString(p1) => PassError("Passwords match but this new password is too simple")
+    passStatus() = isNewUser match {
+      case true => (p1, p2) match {
+        case ("", "") => PassEmpty()
+        case ("", _) => PassError("You did not fill the first password")
+        case (_, "") => PassError("You did not fill the second password")
+        case (p1, p2) if p1 != p2 => PassError("The passwords don't match !")
+        case (p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple")
         case _ => PassMatchOk()
       }
+
+      case false => (p0, p1, p2) match {
+          case ("", "", "") => PassEmpty()
+          case ("", _, _) => PassError("You did not fill the old password")
+          case (p0, "", _) => PassError("You did not fill the first password")
+          case (p0, _, "") => PassError("You did not fill the second password")
+          case (p0, p1, p2) if p1 != p2 => PassError("The passwords don't match !")
+          case (p0, p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple")
+          case _ => PassMatchOk()
+        }
+    }
 
     println("in updateStatus" + passStatus.now)
     return passStatus.now
