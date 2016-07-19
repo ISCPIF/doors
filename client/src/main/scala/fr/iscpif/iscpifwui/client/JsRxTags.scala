@@ -59,16 +59,16 @@ implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
     bindNode(last)
   }
 
-  implicit def RxAttrValue[T: scalatags.JsDom.AttrValue](implicit data: Ctx.Data) = new scalatags.JsDom.AttrValue[Rx[T]] {
-    def apply(t: Element, a: Attr, r: Rx[T]): Unit = {
+  implicit def RxAttrValue[T: scalatags.JsDom.AttrValue](implicit data: Ctx.Data) = new scalatags.JsDom.AttrValue[Rx.Dynamic[T]] {
+    def apply(t: Element, a: Attr, r: Rx.Dynamic[T]): Unit = {
       r.trigger {
         implicitly[scalatags.JsDom.AttrValue[T]].apply(t, a, r())
       }
     }
   }
 
-  implicit def RxStyleValue[T: scalatags.JsDom.StyleValue](implicit data: Ctx.Data) = new scalatags.JsDom.StyleValue[Rx[T]] {
-    def apply(t: Element, s: Style, r: Rx[T]): Unit = {
+  implicit def RxStyleValue[T: scalatags.JsDom.StyleValue](implicit data: Ctx.Data) = new scalatags.JsDom.StyleValue[Rx.Dynamic[T]] {
+    def apply(t: Element, s: Style, r: Rx.Dynamic[T]): Unit = {
       r.trigger {
         implicitly[scalatags.JsDom.StyleValue[T]].apply(t, s, r())
       }
