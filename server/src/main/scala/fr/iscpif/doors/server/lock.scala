@@ -27,4 +27,8 @@ object lock {
     query(states += State(user, lock, States.locked, date))
   }
 
+  def state(user: User, lock: Lock.Id) = query(states.filter { s =>
+    s.userID === user.id && s.lock === lock
+  }.result)
+
 }

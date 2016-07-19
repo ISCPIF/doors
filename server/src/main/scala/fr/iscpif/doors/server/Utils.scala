@@ -39,8 +39,4 @@ object Utils {
     u.email === email && u.password === Hashing(password)
   }.result)
 
-  def state(user: User, lock: Lock.Id) = query(states.filter { s =>
-  s.userID === user.id && s.lock === lock
-  }.result)
-
 }
