@@ -27,7 +27,7 @@ object ISCPIFDoors extends App {
     val peter = users.filter(_.login === "corser").result
 
     Map(
-      "subscription" -> DoorsValidation(peter)
+      "subscription" -> ManualValidation(peter)
     )
   }
 

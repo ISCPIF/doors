@@ -25,7 +25,7 @@ trait AccessQuest {
   def status(currentState: State.Id):  Try[String]
 }
 
-case class DoorsValidation(validators: DbQuery[Seq[User]]) extends AccessQuest {
+case class ManualValidation(validators: DbQuery[Seq[User]]) extends AccessQuest {
 
   def promote(requester: User.Id, state: State.Id): Try[State.Id] = {
     val vs = query(validators).map(_.id).toSet
