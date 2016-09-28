@@ -31,12 +31,18 @@ object Utils {
   }
 
   def toUser(pUser: PartialUser, pass: Password): Option[User] =
-    pass.password.map{p =>
+    pass.password.map { p =>
       User(pUser.id, pUser.login, Hashing(p), pUser.name, pUser.email, Hashing.currentJson)
     }
 
   def connect(email: String, password: String) = query(users.filter { u =>
     u.email === email && u.password === Hashing(password)
   }.result)
+
+  def hasAdmin: Boolean = {
+    query(states.filter { s =>
+      s.lock === locks.ADMIN
+    }.result).length > 0
+  }
 
 }

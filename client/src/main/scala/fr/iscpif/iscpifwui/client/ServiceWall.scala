@@ -33,7 +33,7 @@ import rx._
  */
 
 
-class ServiceWall(_user: User) {
+class ServiceWall(_user: User, isAdmin: Boolean) {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   val user = Var(_user)
   val services = Seq(
@@ -70,13 +70,12 @@ class ServiceWall(_user: User) {
       div(doorsheet.user)(
         s"${user().name}",
         userSettingsButton,
-        adminSettingsButton
+        if (isAdmin) adminSettingsButton else div
       ),
       BootstrapTags.thumbs(services).render,
-      tags.img(src := Resources.isc, logoISC)
-      ,
+      tags.img(src := Resources.isc, logoISC),
       userEditionDialog.dialog,
-      adminEditionPanel.render
+      if (isAdmin) adminEditionPanel.render else div
     )
   }
   ).render

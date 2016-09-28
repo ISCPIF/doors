@@ -53,16 +53,27 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   def addUser(partialUser: PartialUser, pass: Password): Unit = {
     val someUser = toUser(partialUser, pass)
-    someUser.foreach {
-      u =>
-        val transaction = (for {
+    val currentTime = System.currentTimeMillis
+    someUser.foreach { u =>
+      val addUser =
+        for {
           _ <- users += u
-          userLength <- users.length.result
-          _ <- states += State(u.id, locks.ADMIN, States.OPENED, System.currentTimeMillis) if (userLength == 1)
-          _ <- states += State(u.id, locks.REGISTRATION, States.OPENED, System.currentTimeMillis)
-        } yield ()).transactionally
+          _ <- states += State(u.id, locks.REGISTRATION, States.OPENED, currentTime)
+        } yield ()
 
-        db.run(transaction)
+      val admins =
+        states.filter { s => s.lock === locks.ADMIN }.result.map(_.size)
+
+      val transaction = admins.flatMap {
+        case 0 =>
+          for {
+            _ <- addUser
+            _ <- states += State(u.id, locks.ADMIN, States.OPENED, currentTime)
+          } yield ()
+        case _ => addUser
+      }
+
+      db.run(transaction.transactionally)
     }
   }
 
@@ -82,7 +93,9 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
         oldpass.password.foreach {
           op =>
             // ... and we re-check the old pass...
-            val whosThere = query(users.filter { u => u.id === partialUser.id && u.password === Hashing(op) }.result)
+            val whosThere = query(users.filter {
+              u => u.id === partialUser.id && u.password === Hashing(op)
+            }.result)
 
             val isAllowed = whosThere.nonEmpty
 
@@ -101,7 +114,9 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   private def updatePartialUser(puser: PartialUser): Unit = {
     // slick: query all fields except password in order to update them
     query {
-      val q = for {u <- users if u.id === puser.id} yield (u.login, u.name, u.email)
+      val q = for {
+        u <- users if u.id === puser.id
+      } yield (u.login, u.name, u.email)
       q.update((puser.login, puser.name, puser.email))
     }
   }
@@ -109,7 +124,9 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   private def updatePassword(id: User.Id, password: String): Unit = {
     // idem: query just the password to update it
     query {
-      val q = for {u <- users if u.id === id} yield u.password
+      val q = for {
+        u <- users if u.id === id
+      } yield u.password
       q.update(Hashing(password))
     }
   }
@@ -117,18 +134,24 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
   //STATES
   def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id) = {
 
-    val result = query(states.filter { s =>
-      s.lock === lockID && s.userID == userID
+    val result = query(states.filter {
+      s =>
+        s.lock === lockID && s.userID == userID
     }.result)
 
     if (result.isEmpty) query(states += State(userID, lockID, stateID, System.currentTimeMillis))
-    else result.headOption.map { res =>
-      query(states.update(res))
+    else result.headOption.map {
+      res =>
+        query(states.update(res))
     }
   }
 
-  def isAdmin(userID: User.Id): Boolean = query(states.filter{ s=>
-    s.lock === locks.ADMIN && s.userID === userID
-  }.result) != 0
+  def isAdmin(userID: User.Id): Boolean = {
+    val o = query(states.filter {
+      s =>
+        s.lock === locks.ADMIN && s.userID === userID
+    }.result)
+    o.length > 0
+  }
 
 }

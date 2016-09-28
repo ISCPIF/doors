@@ -54,18 +54,21 @@ object Client {
 
   @JSExport
   def application(id: String): Unit = {
-    Post[Api].user(id).call().foreach { _ match {
+    Post[Api].user(id).call().foreach {
+      _ match {
         case Some(u: User) =>
-          dom.document.body.appendChild(
-            tags.div(
-              tags.form(
-                action := "/logout",
-                method := "post",
-                shutdownButton
-              ).render,
-              new ServiceWall(u).render
-            ).render
-          )
+          Post[Api].isAdmin(u.id).call().foreach { isAdmin =>
+            dom.document.body.appendChild(
+              tags.div(
+                tags.form(
+                  action := "/logout",
+                  method := "post",
+                  shutdownButton
+                ).render,
+                new ServiceWall(u, isAdmin).render
+              ).render
+            )
+          }
         case _ =>
       }
     }
