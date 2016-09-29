@@ -1,18 +1,19 @@
 package fr.iscpif.doors.client
 
+import org.scalajs.dom
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.iscpifwui.client.AdminEditionDialog
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
 import fr.iscpif.scaladget.tools.JsRxTags._
 import org.scalajs.dom.raw.HTMLDivElement
+
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import UserEditionPanel._
-
 import rx._
 
 /*
@@ -55,15 +56,19 @@ class ServiceWall(_user: User, isAdmin: Boolean) {
     pointer
   )
 
-  val userSettingsButton = span(
-    glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30),
-    onclick := { () => bs.showModal(userEditionDialog.modalID) }
+  // add the modals to the dom
+  dom.document.body.appendChild(userEditionDialog.dialog.dialog)
+  if (isAdmin) dom.document.body.appendChild(adminEditionPanel.dialog)
+
+  // construct 2 buttons for the modals
+  val userSettingsButton = userEditionDialog.dialog.trigger(
+    // "button" element
+    span(glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30) +++ pointer)
   )
 
-  val adminSettingsButton = span(
-    btn_primary +++ settingsStyle +++ Seq(left := 50, top := 20),
-    onclick := { () => bs.showModal(adminEditionPanel.modalID) }
-  )("Admin")
+  val adminSettingsButton = adminEditionPanel.trigger(
+    span("Admin", btn_primary +++ settingsStyle +++ Seq(left := 50, top := 20))
+  )
 
   val render: HTMLDivElement = tags.div(ms("fullpanel"))(Rx {
     tags.div(ms("centerpanel"))(
@@ -73,9 +78,9 @@ class ServiceWall(_user: User, isAdmin: Boolean) {
         if (isAdmin) adminSettingsButton else div
       ),
       BootstrapTags.thumbs(services).render,
-      tags.img(src := Resources.isc, logoISC),
-      userEditionDialog.dialog,
-      if (isAdmin) adminEditionPanel.render else div
+      tags.img(src := Resources.isc, logoISC)
+      // userEditionDialog.dialog,
+      // if (isAdmin) adminEditionPanel.dialog else div
     )
   }
   ).render

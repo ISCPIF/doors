@@ -18,34 +18,37 @@ object UserEditionPanel {
 
   def userPanel(user: User, onsaved: () => Unit, isNewUser: Boolean = false) = new UserEditionPanel(user, onsaved, isNewUser)
 
-  def userDialog(mID: bs.ModalID, user: User, mtitle:String="Change your user data", isNewUser: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
+  def userDialog(mID: bs.ModalID, 
+                 user: User, mtitle:String="Change your user data",
+		 isNewUser: Boolean = false, onsaved: () => Unit = () => {}) = new ModalPanel {
 
     val modalID = mID
+
+    val dialog = new bs.ModalDialog
+
 
     val panel = Var(userPanel(user, () => close, isNewUser))
 
     def resetUser = panel() = userPanel(User.emptyUser, () => close, isNewUser)
 
     // a custom-made panel type for our user forms
-    val dialog =
-      bs.modalDialog(
-        mID,
-        bs.headerDialog(
-          h3(mtitle)
-        ),
-        bs.bodyDialog(panel.now.panel),
-        bs.footerDialog(
-          bs.buttonGroup(btnGroup)(
-            panel.now.saveButton,
-            closeButton
-          )
+    dialog.header(bs.ModalDialog
+      .headerDialogShell(h3(mtitle)))
+    dialog.body(bs.ModalDialog
+      .bodyDialogShell(panel.now.panel))
+    dialog.footer(bs.ModalDialog
+      .footerDialogShell(
+        bs.buttonGroup()(
+          panel.now.saveButton
+          // , closeButton
         )
-      )
+      ))
   }
+
 }
 
 class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Boolean = false) {
-
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   // rx flag <=> "user wants to change his password"
   val editPass: Var[Boolean] = Var(false)  // Var(isNewUser)
 

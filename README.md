@@ -7,7 +7,7 @@ First, build the javascript:
 ```sh
 $ cd doors
 $ sbt
-> toJar // Build the client JS files and move them in server/target/scala-2.11/doorsX.X.X-SNAPSHOT.jar
+> toJar // Build the client JS files and move them in lab/target/scala-2.11/doorsX.X.X-SNAPSHOT.jar
 ```
 
 Then, start the server:
@@ -16,7 +16,7 @@ Then, start the server:
 ```
 
 ## Run it ! ##
-Open [http://localhost:8080/](http://localhost:8080/) in your browser.
+Open [http://localhost:8989/](http://localhost:8989/) in your browser.
 
 ## Standalone version ##
 To generate the jar and the script controling it, just run:
@@ -24,7 +24,7 @@ To generate the jar and the script controling it, just run:
 $ sbt toJar
 ```
 
-The jar and the script are generated in server/target/scala_2.11. Just run:
+The jar and the script are generated in lab/target/scala_2.11. Just run:
 
 
 ```sh

@@ -122,12 +122,16 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
     return passStatus.now
   }
 
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   val passStatusBox = Rx {
     passStatus() match {
       case initial: PassUndefined => div(" ")
-      case success: PassMatchOk => div(alertSuccess)(success.message, width := "300px")
-      case empty:   PassEmpty   => div(alertInfo)(empty.message, width := "300px")
-      case danger:  PassStatus  => div(alertDanger)(danger.message, width := "300px")
+//      case success: PassMatchOk => div(alertSuccess)(success.message, width := "300px")
+//      case empty:   PassEmpty   => div(alertInfo)(empty.message, width := "300px")
+//      case danger:  PassStatus  => div(alertDanger)(danger.message, width := "300px")
+      case success: PassMatchOk => div(success.message, width := "300px")
+      case empty:   PassEmpty   => div(empty.message, width := "300px")
+      case danger:  PassStatus  => div(danger.message, width := "300px")
     }
   }
 

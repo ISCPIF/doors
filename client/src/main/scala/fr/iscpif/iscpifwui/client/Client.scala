@@ -28,6 +28,8 @@ import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
+import bs._
 import sheet._
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
@@ -72,6 +74,13 @@ object Client {
         case _ =>
       }
     }
+  }
+
+  @JSExport
+  def loadBootstrap(): Unit = {
+    println("appending bootstrap-native at end")
+    dom.document.body.appendChild( tags.script(`type` := "text/javascript", src := "js/bootstrap-native.min.js")
+    )
   }
 }
 

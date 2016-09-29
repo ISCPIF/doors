@@ -34,7 +34,7 @@ import rx._
 import fr.iscpif.doors.ext.Data._
 
 class UserConnection {
-
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
   val user: Var[Option[User]] = Var(None)
@@ -59,11 +59,14 @@ class UserConnection {
 
   val connectButton = tags.button(btn_primary, `type` := "submit")("Connect")
 
-  val registerLink = a("Register", topLink,
+  val registerLinkElement = a("Register", topLink,
     onclick := { () =>
       registerUserDialog.resetUser
-      bs.showModal(registerUserDialog.modalID)
-    }).render
+    })
+
+  val registerLink = registerUserDialog.dialog.trigger(registerLinkElement).render
+
+  dom.document.body.appendChild(registerUserDialog.dialog.dialog)
 
   val render = Rx {
     tags.div(
@@ -81,8 +84,8 @@ class UserConnection {
           connectButton
         ).render
       ),
-      tags.img(src := "img/logoISC.png", logoISC),
-      registerUserDialog.dialog
+      tags.img(src := "img/logoISC.png", logoISC)
     ).render
   }
 }
+

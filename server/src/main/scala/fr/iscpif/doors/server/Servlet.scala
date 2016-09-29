@@ -46,9 +46,9 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
 
   val basePath = "shared"
 
-  val connection = html("Client().connection();")
+  val connection = html("Client().connection(); Client().loadBootstrap(); ")
 
-  def application = html(s"Client().application('${userIDFromSession.map{_.id}.getOrElse("")}');")
+  def application = html(s"Client().application('${userIDFromSession.map{_.id}.getOrElse("")}') ; Client().loadBootstrap();")
 
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"
@@ -58,9 +58,10 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
       tags.meta(tags.httpEquiv := "Content-Type", tags.content := "text/html; charset=UTF-8"),
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/bootstrap.min.css"),
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
-      tags.script(tags.`type` := "text/javascript", tags.src := "js/client-opt.js"),
-      tags.script(tags.`type` := "text/javascript", tags.src := "js/jquery.min.js"),
-      tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap.min.js")
+      tags.script(tags.`type` := "text/javascript", tags.src := "js/client-opt.js")
+
+        // bootstrap-native.js loader at the end thanks to loadBootstrap
+        // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
     ),
     tags.body(tags.onload := javascritMethod)
   )

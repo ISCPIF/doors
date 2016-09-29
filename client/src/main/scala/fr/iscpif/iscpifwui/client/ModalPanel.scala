@@ -26,11 +26,11 @@ import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 trait ModalPanel {
   def modalID: bs.ModalID
 
-  def dialog: bs.Dialog
+  def dialog: bs.ModalDialog
 
   val closeButton = bs.button("Close", () ⇒ close)(btn_default, data("dismiss") := "modal")
 
-  def close: Unit = bs.hideModal(modalID)
+  def close: Unit = dialog.hideModal(modalID)
 
-  def isVisible: Boolean = bs.isModalVisible(modalID)
+  // def isVisible: Boolean = bs.isModalVisible(modalID)
 }

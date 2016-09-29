@@ -34,8 +34,8 @@ object AdminEditionDialog {
   def apply(id: bs.ModalID) = new AdminEditionDialog(id)
 }
 
-class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
-
+class AdminEditionDialog(_modalID: bs.ModalID) extends bs.ModalDialog {
+  implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   lazy val modalID = _modalID
 
   val users: Var[Seq[User]] = Var(Seq())
@@ -86,7 +86,7 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
       td(colMD(7), "States ..."),
       td(colMD(1),
         tags.span(Rx {
-          glyph_trash +++ pointer +++(lineHovered() == Some(user), opaque, transparent)
+          glyph_trash +++ pointer +++ (lineHovered() == Some(user), opaque, transparent)
         },
           onclick := { () ⇒
             Post[Api].removeUser(user).call().foreach { u =>
@@ -96,17 +96,13 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
         )
       )
     )
-
   }
 
-  val dialog = bs.modalDialog(
-    modalID,
-    bs.headerDialog(
-      h3("Admin panel"),
-      addUserButton
-    ),
-    bs.bodyDialog(
-      Rx {
+
+  this.header(bs.ModalDialog.headerDialogShell(h3("Admin panel"), addUserButton))
+
+  this.body(bs.ModalDialog.bodyDialogShell(
+    Rx {
         userEdition() match {
           case Some(u: User) =>
             val userpanel = UserEditionPanel.userPanel(u, () => save)
@@ -114,11 +110,12 @@ class AdminEditionDialog(_modalID: bs.ModalID) extends ModalPanel {
           case _ => span()
         }
       },
-      userTable),
-    bs.footerDialog(
-      closeButton
-    )
+    userTable)
   )
+
+
+  // dialog.footer = bs.ModalDialog.footerDialogShell(closeButton)
+  this.footer(bs.ModalDialog.footerDialogShell(div("close button TODO")))
 
   getUsers
 
