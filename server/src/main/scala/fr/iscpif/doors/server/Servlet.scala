@@ -56,7 +56,7 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
   def html(javascritMethod: String) = tags.html(
     tags.head(
       tags.meta(tags.httpEquiv := "Content-Type", tags.content := "text/html; charset=UTF-8"),
-      tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/bootstrap.min.css"),
+      tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/bootstrap.min-3.3.7.css"),
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
       tags.script(tags.`type` := "text/javascript", tags.src := "js/client-opt.js")
 
