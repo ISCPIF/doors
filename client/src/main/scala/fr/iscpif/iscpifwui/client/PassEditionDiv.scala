@@ -36,6 +36,11 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
   val newPassInput1 = bs.input("")(placeholder := "New password", passStyle).render
   val newPassInput2 = bs.input("")(placeholder := "New password again", passStyle).render
 
+  def resetValues() = {
+    oldPassInput.value  = ""
+    newPassInput1.value = ""
+    newPassInput2.value = ""
+  }
 
   // customize for any constraints on new pass
   def validatePassString(passString: String) : Boolean = {

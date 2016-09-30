@@ -28,9 +28,12 @@ object UserEditionPanel {
     val dialog = new bs.ModalDialog
 
 
-    val panel = Var(userPanel(user, () => close, isNewUser))
+    // val panel = Var(userPanel(user, () => close, isNewUser))
 
-    def resetUser = panel() = userPanel(User.emptyUser, () => close, isNewUser)
+    // def resetUser = panel() = userPanel(User.emptyUser, () => close, isNewUser)
+
+    val panel = Var(userPanel(user, () => {}, isNewUser))
+    def resetUser = panel() = userPanel(User.emptyUser, () => {}, isNewUser)
 
     // a custom-made panel type for our user forms
     dialog.header(bs.ModalDialog
@@ -84,8 +87,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
       editPass() = !editPass.now
       // restore pass contents when closing subwindow
       if (!editPass.now) {
-        // TODO
-        // passEditionDiv.resetValues()
+        passEditionDiv.resetValues()
       }
       else {
         editPassButtonStyle() = btn_success

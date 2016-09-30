@@ -30,6 +30,7 @@ trait ModalPanel {
 
   val closeButton = bs.button("Close", () ⇒ close)(btn_default, data("dismiss") := "modal")
 
+  // FIXME: actually not working
   def close: Unit = dialog.hideModal(modalID)
 
   // def isVisible: Boolean = bs.isModalVisible(modalID)
