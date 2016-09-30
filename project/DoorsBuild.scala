@@ -77,7 +77,7 @@ object DoorsBuild extends Build {
       "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
       "com.lihaoyi" %%% "scalarx" % "0.3.1",
       "fr.iscpif" %%% "scaladget" % "0.9.0-SNAPSHOT",
-      "org.scala-js" %%% "scalajs-dom" % "0.8.2",
+      "org.scala-js" %%% "scalajs-dom" % "0.9.0",
       "org.json4s" %% "json4s-jackson" % json4sVersion
     )
     ) dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
