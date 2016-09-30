@@ -28,13 +28,13 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
     oninput := (
       () ⇒ {
         updateStatus
-        println("updating status")
+        println("oninput: updating status")
       })
     )
 
   val oldPassInput  = bs.input("")(placeholder := "Previous password", passStyle).render
   val newPassInput1 = bs.input("")(placeholder := "New password", passStyle).render
-  val newPassInput2 = bs.input("")(placeholder := "new password again", passStyle).render
+  val newPassInput2 = bs.input("")(placeholder := "New password again", passStyle).render
 
 
   // customize for any constraints on new pass
@@ -63,8 +63,6 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
   val passwordEditionBox = isNewUser match {
     case true => div(
       bs.vForm(width := 500) (
-        // newPassInput1.tag(passStyle),
-        // newPassInput2.tag(passStyle)
         newPassInput1.withLabel("Password"),
         newPassInput2.withLabel("Repeat password")
       )
@@ -72,9 +70,6 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
 
     case false => div(
       bs.vForm(width := 500) (
-//        oldPassInput.tag(placeholder := ("Enter the previous password"), passStyle),
-//        newPassInput1.tag(placeholder := ("Enter the new password"), passStyle),
-//        newPassInput2.tag(placeholder := ("Enter the new password again"), passStyle)
          oldPassInput.withLabel("Password"),
          newPassInput1.withLabel("Password"),
          newPassInput2.withLabel("Repeat password")
@@ -95,7 +90,7 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
 
   case class PassMatchOk(message: String = "Your new password is valid") extends PassStatus
 
-  case class PassEmpty(message: String = "Empty input! If you save we'll be keeping previous password") extends PassStatus
+  case class PassEmpty(message: String = "Empty input!") extends PassStatus
 
 
   def updateStatus() : PassStatus = {
@@ -104,6 +99,8 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
     val p0 = oldPassInput.value
     val p1 = newPassInput1.value
     val p2 = newPassInput2.value
+
+    println("start updateStatus:\n  p0=" + p0 + ",\n  p1=" + p1 + ",\n  p2=" + p2)
 
     passStatus() = isNewUser match {
       case true => (p1, p2) match {
@@ -125,8 +122,7 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
           case _ => PassMatchOk()
         }
     }
-
-    println("in updateStatus" + passStatus.now)
+    println("finish updateStatus" + passStatus.now)
     return passStatus.now
   }
 
@@ -134,12 +130,9 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
   val passStatusBox = Rx {
     passStatus() match {
       case initial: PassUndefined => div(" ")
-//      case success: PassMatchOk => div(alertSuccess)(success.message, width := "300px")
-//      case empty:   PassEmpty   => div(alertInfo)(empty.message, width := "300px")
-//      case danger:  PassStatus  => div(alertDanger)(danger.message, width := "300px")
-      case success: PassMatchOk => div(success.message, width := "300px")
-      case empty:   PassEmpty   => div(empty.message, width := "300px")
-      case danger:  PassStatus  => div(danger.message, width := "300px")
+      case success: PassMatchOk => div(bs.successAlert("Ok", success.message)(), width := "300px")
+      case empty:   PassEmpty   => div(bs.infoAlert("Info", empty.message)(), width := "300px")
+      case danger:  PassStatus  => div(bs.dangerAlert("Warning", danger.message)(), width := "300px")
     }
   }
 
