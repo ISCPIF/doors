@@ -7,8 +7,8 @@ import shared.Api
 import scalatags.JsDom.all._
 import fr.iscpif.doors.ext.Data.{Password, PartialUser, User}
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
-import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
+import fr.iscpif.scaladget.tools.JsRxTags._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import rx._
@@ -68,9 +68,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
     save
   })(btn_primary)
 
-
-  // TODO finir transformation en Var (changement de style)
-  val editPassButtonStyle = Var(btn_danger +++ btn_small)
+  val editPassButtonStyle = btn_danger +++ btn_small +++ sheet.marginTop(10) +++ sheet.marginBottom(20)
 
   val editPassButton = bs.button(
     span(
@@ -80,7 +78,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
       },
       " Change password"
     ),
-    editPassButtonStyle.now,
+    editPassButtonStyle,
 
     // button callback
     () => {
@@ -88,9 +86,6 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
       // restore pass contents when closing subwindow
       if (!editPass.now) {
         passEditionDiv.resetValues()
-      }
-      else {
-        editPassButtonStyle() = btn_success
       }
 
     }
