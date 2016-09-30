@@ -55,11 +55,9 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
 
 
 
-  val nameInput = BS.input(user.name)
-  val nameTag = nameInput.tag(placeholder := "Given name", width := "100%")
+  val nameInput = bs.input(user.name)(placeholder := "Given name", width := "100%").render
 
-  val emailInput = BS.input(user.email)
-  val emailTag = emailInput.tag(placeholder := "Email", width := "100%")
+  val emailInput = bs.input(user.email)(placeholder := "Email", width := "100%").render
 
   val passEditionDiv = PassEditionDiv(user, isNewUser)
 
@@ -139,8 +137,8 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
     // partialUser infos
     // -----------------
     bs.vForm(width := "100%")(
-      nameTag.withLabel("Given name"),
-      emailTag.withLabel("Email")
+      nameInput.withLabel("Given name"),
+      emailInput.withLabel("Email")
     ),
 
     // password infos

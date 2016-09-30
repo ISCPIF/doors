@@ -4,7 +4,6 @@ import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import bs._
 import scalatags.JsDom.all._
 import fr.iscpif.doors.ext.Data.{PairOfPasses, Password, User}
-import fr.iscpif.scaladget.api.BootstrapTags.BS
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
@@ -33,16 +32,10 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
       })
     )
 
-  val oldPassInput  = BS.input("")
-  val newPassInput1 = BS.input("")
-  val newPassInput2 = BS.input("")
+  val oldPassInput  = bs.input("")(placeholder := "Previous password", passStyle).render
+  val newPassInput1 = bs.input("")(placeholder := "New password", passStyle).render
+  val newPassInput2 = bs.input("")(placeholder := "new password again", passStyle).render
 
-//  def resetValues() = {
-//    // problem: reassignment to Val
-//    oldPassInput.value  = ""
-//    newPassInput1.value = ""
-//    newPassInput2.value = ""
-//  }
 
   // customize for any constraints on new pass
   def validatePassString(passString: String) : Boolean = {
@@ -72,8 +65,8 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
       bs.vForm(width := 500) (
         // newPassInput1.tag(passStyle),
         // newPassInput2.tag(passStyle)
-        newPassInput1.tag(passStyle).withLabel("Password"),
-        newPassInput2.tag(passStyle).withLabel("Repeat password")
+        newPassInput1.withLabel("Password"),
+        newPassInput2.withLabel("Repeat password")
       )
     ).render
 
@@ -82,9 +75,9 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
 //        oldPassInput.tag(placeholder := ("Enter the previous password"), passStyle),
 //        newPassInput1.tag(placeholder := ("Enter the new password"), passStyle),
 //        newPassInput2.tag(placeholder := ("Enter the new password again"), passStyle)
-         oldPassInput.tag(placeholder := ("Enter the previous password"), passStyle).withLabel("Password"),
-         newPassInput1.tag(placeholder := ("Enter the new password"), passStyle).withLabel("Password"),
-         newPassInput2.tag(placeholder := ("Enter the new password again"), passStyle).withLabel("Repeat password")
+         oldPassInput.withLabel("Password"),
+         newPassInput1.withLabel("Password"),
+         newPassInput2.withLabel("Repeat password")
       )
     ).render
   }

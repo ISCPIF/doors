@@ -86,10 +86,7 @@ class ServiceWall(user: User) {
         div(doorsheet.user)(
           s"${user.name}",
           userSettingsButton,
-          Rx {
-            if (isAdmin()) adminSettingsButton
-            else div
-          }
+          rxIf(isAdmin, adminSettingsButton, div)
         ),
         BootstrapTags.thumbs(services).render,
         tags.img(src := Resources.isc, logoISC)
