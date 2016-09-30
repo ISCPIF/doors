@@ -49,8 +49,9 @@ object Client {
   @JSExport
   def connection(): Unit = {
     userConnection.render.map { r =>
-      dom.document.body.appendChild(r)
-      appendBootstrapJS
+      bs.withBootstrapNative{
+        r
+      }
     }
   }
 
@@ -59,7 +60,7 @@ object Client {
     Post[Api].user(id).call().foreach {
       _ match {
         case Some(u: User) =>
-          dom.document.body.appendChild(
+          bs.withBootstrapNative(
             tags.div(
               tags.form(
                 action := "/logout",
@@ -69,7 +70,6 @@ object Client {
               new ServiceWall(u).render
             ).render
           )
-          appendBootstrapJS
         case _ =>
       }
     }
