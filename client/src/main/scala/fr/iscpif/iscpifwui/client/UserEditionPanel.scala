@@ -28,9 +28,12 @@ object UserEditionPanel {
     val dialog = new bs.ModalDialog
 
 
-    val panel = Var(userPanel(user, () => close, isNewUser))
+    // val panel = Var(userPanel(user, () => close, isNewUser))
 
-    def resetUser = panel() = userPanel(User.emptyUser, () => close, isNewUser)
+    // def resetUser = panel() = userPanel(User.emptyUser, () => close, isNewUser)
+
+    val panel = Var(userPanel(user, () => {}, isNewUser))
+    def resetUser = panel() = userPanel(User.emptyUser, () => {}, isNewUser)
 
     // a custom-made panel type for our user forms
     dialog.header(bs.ModalDialog
