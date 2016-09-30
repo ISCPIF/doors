@@ -84,8 +84,7 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
       editPass() = !editPass.now
       // restore pass contents when closing subwindow
       if (!editPass.now) {
-        // TODO
-        // passEditionDiv.resetValues()
+        passEditionDiv.resetValues()
       }
       else {
         editPassButtonStyle() = btn_success
