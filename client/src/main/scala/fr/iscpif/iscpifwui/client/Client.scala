@@ -76,7 +76,6 @@ object Client {
 
   @JSExport
   def loadBootstrap(): Unit = {
-    println("appending bootstrap-native at end")
     dom.document.body.appendChild( tags.script(`type` := "text/javascript", src := "js/bootstrap-native.min.js")
     )
   }
