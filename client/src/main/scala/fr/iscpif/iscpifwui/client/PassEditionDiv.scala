@@ -28,7 +28,6 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
     oninput := (
       () ⇒ {
         updateStatus
-        println("oninput: updating status")
       })
     )
 
@@ -105,7 +104,7 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
     val p1 = newPassInput1.value
     val p2 = newPassInput2.value
 
-    println("start updateStatus:\n  p0=" + p0 + ",\n  p1=" + p1 + ",\n  p2=" + p2)
+    // println("start updateStatus:\n  p0=" + p0 + ",\n  p1=" + p1 + ",\n  p2=" + p2)
 
     passStatus() = isNewUser match {
       case true => (p1, p2) match {
@@ -127,7 +126,7 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
           case _ => PassMatchOk()
         }
     }
-    println("finish updateStatus" + passStatus.now)
+
     return passStatus.now
   }
 
