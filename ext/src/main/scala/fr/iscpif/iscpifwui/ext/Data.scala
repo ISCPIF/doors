@@ -49,7 +49,8 @@ object Data {
 
   object User {
     type Id = String
-    implicit def ordering = new Ordering[User]{
+
+    implicit def ordering = new Ordering[User] {
       def compare(u1: User, u2: User) = u1.name compare u2.name
     }
 
@@ -65,11 +66,15 @@ object Data {
   }
 
   case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
-  
+
   case class UserID(id: User.Id)
+
   case class PartialUser(id: User.Id, login: String, name: String, email: String)
+
   case class Password(password: Option[String])
-  case class PairOfPasses(oldpass: Password, newpass:Password)
+
+  case class PairOfPasses(oldpass: Password, newpass: Password)
+
   case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)
@@ -144,5 +149,11 @@ object Data {
   case class OtherLDAPError(exceptionName: String, message: String, stack: String) extends Error
 
   case class UnexceptedError(message: String, stackTrace: String, level: Option[String] = None) extends Error
+
+  case object UnauthorizedError extends Error {
+    def message = "Not authorized to perform this action"
+  }
+
+  case class Capacity(authorized: Boolean)
 
 }

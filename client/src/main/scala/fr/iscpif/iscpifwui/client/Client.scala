@@ -59,18 +59,16 @@ object Client {
     Post[Api].user(id).call().foreach {
       _ match {
         case Some(u: User) =>
-          Post[Api].isAdmin(u.id).call().foreach { isAdmin =>
-            dom.document.body.appendChild(
-              tags.div(
-                tags.form(
-                  action := "/logout",
-                  method := "post",
-                  shutdownButton
-                ).render,
-                new ServiceWall(u, isAdmin).render
-              ).render
-            )
-          }
+          dom.document.body.appendChild(
+            tags.div(
+              tags.form(
+                action := "/logout",
+                method := "post",
+                shutdownButton
+              ).render,
+              new ServiceWall(u).render
+            ).render
+          )
         case _ =>
       }
     }
@@ -84,21 +82,21 @@ object Client {
   }
 }
 
-object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
+  object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
 
-  override def doCall(req: Request): Future[String] = {
-    val url = req.path.mkString("/")
-    val host = window.document.location.host
+    override def doCall(req: Request): Future[String] = {
+      val url = req.path.mkString("/")
+      val host = window.document.location.host
 
-    ext.Ajax.post(
-      url = s"http://$host/$url",
-      data = upickle.default.write(req.args)
-    ).map {
-      _.responseText
+      ext.Ajax.post(
+        url = s"http://$host/$url",
+        data = upickle.default.write(req.args)
+      ).map {
+        _.responseText
+      }
     }
+
+    def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
+
+    def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
   }
-
-  def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
-
-  def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
-}

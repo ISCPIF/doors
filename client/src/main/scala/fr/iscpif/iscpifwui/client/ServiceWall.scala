@@ -9,12 +9,15 @@ import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
 import fr.iscpif.scaladget.tools.JsRxTags._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import autowire._
 import org.scalajs.dom.raw.HTMLDivElement
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import UserEditionPanel._
 import rx._
+import shared.Api
 
 /*
  * Copyright (C) 23/09/15 // mathieu.leclaire@openmole.org
@@ -34,9 +37,15 @@ import rx._
  */
 
 
-class ServiceWall(_user: User, isAdmin: Boolean) {
+class ServiceWall(user: User) {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
-  val user = Var(_user)
+  val atLeastOneRight = Post[Api].atLeastOneAdminRight.call()
+  val isAdmin = Var(false)
+
+  atLeastOneRight.foreach { cap =>
+    isAdmin() = cap.authorized
+  }
+
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
@@ -46,7 +55,7 @@ class ServiceWall(_user: User, isAdmin: Boolean) {
     ServiceLink("Complex-systems VO", Resources.vo, "https://voms.grid.auth.gr:8443/voms/vo.complex-systems.eu/", "Subscribe to the VO complex-systems.eu")
   )
 
-  val userEditionDialog = userDialog("userEditionPanel", _user)
+  val userEditionDialog = userDialog("userEditionPanel", user)
 
   val adminEditionPanel = new AdminEditionDialog("adminEditionPanel")
 
@@ -58,7 +67,7 @@ class ServiceWall(_user: User, isAdmin: Boolean) {
 
   // add the modals to the dom
   dom.document.body.appendChild(userEditionDialog.dialog.dialog)
-  if (isAdmin) dom.document.body.appendChild(adminEditionPanel.dialog)
+  if (isAdmin.now) dom.document.body.appendChild(adminEditionPanel.dialog)
 
   // construct 2 buttons for the modals
   val userSettingsButton = userEditionDialog.dialog.trigger(
@@ -70,19 +79,22 @@ class ServiceWall(_user: User, isAdmin: Boolean) {
     span("Admin", btn_primary +++ settingsStyle +++ Seq(left := 50, top := 20))
   )
 
-  val render: HTMLDivElement = tags.div(ms("fullpanel"))(Rx {
-    tags.div(ms("centerpanel"))(
-      div(doorsheet.user)(
-        s"${user().name}",
-        userSettingsButton,
-        if (isAdmin) adminSettingsButton else div
-      ),
-      BootstrapTags.thumbs(services).render,
-      tags.img(src := Resources.isc, logoISC)
-      // userEditionDialog.dialog,
-      // if (isAdmin) adminEditionPanel.dialog else div
-    )
-  }
-  ).render
+
+  val render: HTMLDivElement =
+    tags.div(ms("fullpanel"))(
+          tags.div(ms("centerpanel"))(
+            div(doorsheet.user)(
+              s"${user.name}",
+              userSettingsButton,
+              Rx{
+                if(isAdmin()) adminSettingsButton
+                else div
+              }
+            ),
+            BootstrapTags.thumbs(services).render,
+            tags.img(src := Resources.isc, logoISC)
+          )
+    ).render
+
 
 }

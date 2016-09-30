@@ -17,11 +17,10 @@
   */
 package fr.iscpif.doors
 
-import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data.{User, UserID}
 import slick.dbio.DBIOAction
 import slick.lifted.TableQuery
-
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import slick.driver.H2Driver.api._
@@ -44,6 +43,22 @@ package object api {
 
   def failure(s: String) = Failure(new RuntimeException(s))
 
+
+  type Quests = Map[String, AccessQuest]
+
+  type Authorized = (Quests, UserID) => DbQuery[Boolean]
+
+  def isAdmin: Authorized =
+    (quests: Quests, uid: UserID) => {
+      def adminUsers =
+        for {
+          s <- states if s.lock === "admin"
+          u <- users if s.userID === uid.id
+        } yield u.id
+
+      adminUsers.result.map{_.contains(uid.id)
+      }
+    }
 
 
 }

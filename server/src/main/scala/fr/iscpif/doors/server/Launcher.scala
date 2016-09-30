@@ -34,7 +34,7 @@ object Launcher {
   case class Parameter(quests: Map[String, AccessQuest])
 
   // this is my entry object as specified in sbt project definition
-  def run(quests: => Map[String, AccessQuest], port: Int) = {
+  def run(quests: => Quests, port: Int) = {
     Log.setLog(null)
 
     Settings.initDB

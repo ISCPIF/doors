@@ -147,10 +147,15 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
   }
 
   post(s"/$basePath/*") {
-    Await.result(AutowireServer.route[shared.Api](new ApiImpl(quests))(
-      autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
-        upickle.default.read[Map[String, String]](request.body))
-    ), Duration.Inf)
+    session.get(USER_ID) match {
+      case None => halt(404, "Not logged in")
+      case Some(loggedUserId) =>
+        Await.result(AutowireServer.route[shared.Api](new ApiImpl(quests, loggedUserId.asInstanceOf[UserID]))(
+          autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
+            upickle.default.read[Map[String, String]](request.body))
+        ), Duration.Inf)
+    }
+
   }
 
 }

@@ -24,7 +24,14 @@ import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
 import Utils._
 
-class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
+class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends shared.Api {
+
+  implicit class Check(capacity: Capacity) {
+    def check[T](f: => T): Either[T, Error] =
+      if (capacity.authorized) Left(f)
+      else Right(UnauthorizedError)
+  }
+
 
   //LDAP
   def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
@@ -51,7 +58,11 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
 
   def allUsers: Seq[User] = query(users.result)
 
-  def addUser(partialUser: PartialUser, pass: Password): Unit = {
+  def atLeastOneAdminRight: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
+
+  def canAddUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
+
+  def addUser(partialUser: PartialUser, pass: Password): Unit = canAddUser.check {
     val someUser = toUser(partialUser, pass)
     val currentTime = System.currentTimeMillis
     someUser.foreach { u =>
@@ -77,39 +88,46 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     }
   }
 
-  def removeUser(user: User) = query(users.filter {
-    _.id === user.id
-  }.delete)
+  def canRemoveUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
 
-  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit = {
-
-    // 1) modify normal infos
-    updatePartialUser(partialUser)
-
-    // 2) if there is a new pass...
-    newpass.password.foreach {
-      np =>
-        // ... there is also an old pass...
-        oldpass.password.foreach {
-          op =>
-            // ... and we re-check the old pass...
-            val whosThere = query(users.filter {
-              u => u.id === partialUser.id && u.password === Hashing(op)
-            }.result)
-
-            val isAllowed = whosThere.nonEmpty
-
-            // ... before modifying to new pass
-            if (isAllowed) {
-              updatePassword(partialUser.id, np)
-            }
-            else {
-              // TODO client callback: msg "Old password doesn't match: couldn't modify"
-              println("modifyPartialUser(): Old password doesn't match: couldn't modify user '" + partialUser.email + "'")
-            }
-        }
-    }
+  def removeUser(user: User) = canRemoveUser.check {
+    query(users.filter {
+      _.id === user.id
+    }.delete)
   }
+
+  def canModifyPartialUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
+
+  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit =
+    canModifyPartialUser.check {
+
+      // 1) modify normal infos
+      updatePartialUser(partialUser)
+
+      // 2) if there is a new pass...
+      newpass.password.foreach {
+        np =>
+          // ... there is also an old pass...
+          oldpass.password.foreach {
+            op =>
+              // ... and we re-check the old pass...
+              val whosThere = query(users.filter {
+                u => u.id === partialUser.id && u.password === Hashing(op)
+              }.result)
+
+              val isAllowed = whosThere.nonEmpty
+
+              // ... before modifying to new pass
+              if (isAllowed) {
+                updatePassword(partialUser.id, np)
+              }
+              else {
+                // TODO client callback: msg "Old password doesn't match: couldn't modify"
+                println("modifyPartialUser(): Old password doesn't match: couldn't modify user '" + partialUser.email + "'")
+              }
+          }
+      }
+    }
 
   private def updatePartialUser(puser: PartialUser): Unit = {
     // slick: query all fields except password in order to update them
@@ -146,12 +164,12 @@ class ApiImpl(quests: Map[String, AccessQuest]) extends shared.Api {
     }
   }
 
-  def isAdmin(userID: User.Id): Boolean = {
+  /*def isAdmin(userID: User.Id): Boolean = {
     val o = query(states.filter {
       s =>
         s.lock === locks.ADMIN && s.userID === userID
     }.result)
     o.length > 0
-  }
+  }*/
 
 }

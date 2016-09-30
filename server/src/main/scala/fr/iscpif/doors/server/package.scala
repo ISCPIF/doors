@@ -23,4 +23,5 @@ package object server {
   def partialUser(login: String, name: String, email: String) =
     PartialUser(java.util.UUID.randomUUID.toString, login, name, email)
 
+
 }
