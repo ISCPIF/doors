@@ -50,8 +50,8 @@ object Client {
   def connection(): Unit = {
     userConnection.render.map { r =>
       dom.document.body.appendChild(r)
+      appendBootstrapJS
     }
-
   }
 
   @JSExport
@@ -69,33 +69,32 @@ object Client {
               new ServiceWall(u).render
             ).render
           )
+          appendBootstrapJS
         case _ =>
       }
     }
   }
 
-  @JSExport
-  def loadBootstrap(): Unit = {
-    dom.document.body.appendChild( tags.script(`type` := "text/javascript", src := "js/bootstrap-native.min.js")
-    )
-  }
+  private def appendBootstrapJS =
+    dom.document.body.appendChild(tags.script(`type` := "text/javascript", src := "js/bootstrap-native.min.js"))
+
 }
 
-  object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
+object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
 
-    override def doCall(req: Request): Future[String] = {
-      val url = req.path.mkString("/")
-      val host = window.document.location.host
+  override def doCall(req: Request): Future[String] = {
+    val url = req.path.mkString("/")
+    val host = window.document.location.host
 
-      ext.Ajax.post(
-        url = s"http://$host/$url",
-        data = upickle.default.write(req.args)
-      ).map {
-        _.responseText
-      }
+    ext.Ajax.post(
+      url = s"http://$host/$url",
+      data = upickle.default.write(req.args)
+    ).map {
+      _.responseText
     }
-
-    def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
-
-    def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
   }
+
+  def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
+
+  def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
+}

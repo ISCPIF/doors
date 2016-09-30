@@ -46,9 +46,9 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
 
   val basePath = "shared"
 
-  val connection = html("Client().connection();Client().loadBootstrap(); ")
+  val connection = html("Client().connection();")
 
-  def application = html(s"Client().application('${userIDFromSession.map{_.id}.getOrElse("")}');Client().loadBootstrap();")
+  def application = html(s"Client().application('${userIDFromSession.map{_.id}.getOrElse("")}');")
 
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"

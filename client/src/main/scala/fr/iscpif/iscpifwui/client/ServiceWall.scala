@@ -67,7 +67,7 @@ class ServiceWall(user: User) {
 
   // add the modals to the dom
   dom.document.body.appendChild(userEditionDialog.dialog.dialog)
-  if (isAdmin.now) dom.document.body.appendChild(adminEditionPanel.dialog)
+  dom.document.body.appendChild(adminEditionPanel.dialog)
 
   // construct 2 buttons for the modals
   val userSettingsButton = userEditionDialog.dialog.trigger(
@@ -82,18 +82,18 @@ class ServiceWall(user: User) {
 
   val render: HTMLDivElement =
     tags.div(ms("fullpanel"))(
-          tags.div(ms("centerpanel"))(
-            div(doorsheet.user)(
-              s"${user.name}",
-              userSettingsButton,
-              Rx{
-                if(isAdmin()) adminSettingsButton
-                else div
-              }
-            ),
-            BootstrapTags.thumbs(services).render,
-            tags.img(src := Resources.isc, logoISC)
-          )
+      tags.div(ms("centerpanel"))(
+        div(doorsheet.user)(
+          s"${user.name}",
+          userSettingsButton,
+          Rx {
+            if (isAdmin()) adminSettingsButton
+            else div
+          }
+        ),
+        BootstrapTags.thumbs(services).render,
+        tags.img(src := Resources.isc, logoISC)
+      )
     ).render
 
 
