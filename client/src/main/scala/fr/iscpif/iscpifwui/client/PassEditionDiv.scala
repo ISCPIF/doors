@@ -1,9 +1,10 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-
+import bs._
 import scalatags.JsDom.all._
 import fr.iscpif.doors.ext.Data.{PairOfPasses, Password, User}
+import fr.iscpif.scaladget.api.BootstrapTags.BS
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
@@ -20,23 +21,28 @@ object PassEditionDiv {
 
 class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
 
-  val passInputTemplate = bs.input()(
+  // val testInputTypedTag = BS.input("")(Seq(width := 150))
+
+  val passStyle: ModifierSeq = Seq(
     width := "300px",
     `type` := "password",
-    oninput := { () ⇒
-      updateStatus
-    }
-  )
+    oninput := (
+      () ⇒ {
+        updateStatus
+        println("updating status")
+      })
+    )
 
-  val oldPassInput  = passInputTemplate.render
-  val newPassInput1 = passInputTemplate.render
-  val newPassInput2 = passInputTemplate.render
+  val oldPassInput  = BS.input("")
+  val newPassInput1 = BS.input("")
+  val newPassInput2 = BS.input("")
 
-  def resetValues() = {
-    oldPassInput.value  = ""
-    newPassInput1.value = ""
-    newPassInput2.value = ""
-  }
+//  def resetValues() = {
+//    // problem: reassignment to Val
+//    oldPassInput.value  = ""
+//    newPassInput1.value = ""
+//    newPassInput2.value = ""
+//  }
 
   // customize for any constraints on new pass
   def validatePassString(passString: String) : Boolean = {
@@ -63,15 +69,24 @@ class PassEditionDiv(user: User, passMinChars: Int, isNewUser:Boolean) {
 
   val passwordEditionBox = isNewUser match {
     case true => div(
-      span(span("Password"), newPassInput1),
-      span(span("Password again"), newPassInput2)
-    )
+      bs.vForm(width := 500) (
+        // newPassInput1.tag(passStyle),
+        // newPassInput2.tag(passStyle)
+        newPassInput1.tag(passStyle).withLabel("Password"),
+        newPassInput2.tag(passStyle).withLabel("Repeat password")
+      )
+    ).render
 
     case false => div(
-      span(span("Old password"), oldPassInput),
-      span(span("New password"), newPassInput1),
-      span(span("New password again"), newPassInput2)
-    )
+      bs.vForm(width := 500) (
+//        oldPassInput.tag(placeholder := ("Enter the previous password"), passStyle),
+//        newPassInput1.tag(placeholder := ("Enter the new password"), passStyle),
+//        newPassInput2.tag(placeholder := ("Enter the new password again"), passStyle)
+         oldPassInput.tag(placeholder := ("Enter the previous password"), passStyle).withLabel("Password"),
+         newPassInput1.tag(placeholder := ("Enter the new password"), passStyle).withLabel("Password"),
+         newPassInput2.tag(placeholder := ("Enter the new password again"), passStyle).withLabel("Repeat password")
+      )
+    ).render
   }
 
   val passStatus: Var[PassStatus] = Var(PassUndefined())

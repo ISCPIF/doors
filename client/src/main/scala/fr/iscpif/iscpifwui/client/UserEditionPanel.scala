@@ -2,6 +2,7 @@ package fr.iscpif.doors.client
 
 import fr.iscpif.iscpifwui.client.ModalPanel
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import bs._
 import shared.Api
 import scalatags.JsDom.all._
 import fr.iscpif.doors.ext.Data.{Password, PartialUser, User}
@@ -52,13 +53,13 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
   // rx flag <=> "user wants to change his password"
   val editPass: Var[Boolean] = Var(false)  // Var(isNewUser)
 
-  val nameInput = bs.input(user.name)(
-    placeholder := "Given name",
-    width := "200px").render
 
-  val emailInput = bs.input(user.email)(
-    placeholder := "Email",
-    width := "200px").render
+
+  val nameInput = BS.input(user.name)
+  val nameTag = nameInput.tag(placeholder := "Given name", width := "100%")
+
+  val emailInput = BS.input(user.email)
+  val emailTag = emailInput.tag(placeholder := "Email", width := "100%")
 
   val passEditionDiv = PassEditionDiv(user, isNewUser)
 
@@ -67,8 +68,8 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
   })(btn_primary)
 
 
-  // TODO finir transformation en Var
-  val editPassButtonStyle = Var(btn_danger)
+  // TODO finir transformation en Var (changement de style)
+  val editPassButtonStyle = Var(btn_danger +++ btn_small)
 
   val editPassButton = bs.button(
     span(
@@ -85,7 +86,8 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
       editPass() = !editPass.now
       // restore pass contents when closing subwindow
       if (!editPass.now) {
-        passEditionDiv.resetValues()
+        // TODO
+        // passEditionDiv.resetValues()
       }
       else {
         editPassButtonStyle() = btn_success
@@ -136,8 +138,10 @@ class UserEditionPanel(user: User, onsaved: () => Unit = () => {}, isNewUser: Bo
 
     // partialUser infos
     // -----------------
-    span(span("Given name"), nameInput),
-    span(span("Email"), emailInput),
+    bs.vForm(width := "100%")(
+      nameTag.withLabel("Given name"),
+      emailTag.withLabel("Email")
+    ),
 
     // password infos
     // --------------
