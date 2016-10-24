@@ -70,9 +70,8 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
 
   def canModifyPartialUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
 
-  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit =
-    canModifyPartialUser.check {
-
+  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit = {
+    def modify = {
       // 1) modify normal infos
       updatePartialUser(partialUser)
 
@@ -100,6 +99,13 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
           }
       }
     }
+
+    // you can always modify yourself
+    if (partialUser.id == loggedUserId.id) modify
+
+    // you can also modify if you have admin capacity
+    else canModifyPartialUser.check   { modify }
+  }
 
   private def updatePartialUser(puser: PartialUser): Unit = {
     // slick: query all fields except password in order to update them
