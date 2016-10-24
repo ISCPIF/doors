@@ -56,8 +56,8 @@ object Client {
   }
 
   @JSExport
-  def application(id: String): Unit = {
-    Post[Api].user(id).call().foreach {
+  def application(): Unit = {
+    Post[Api].loggedUser.call().foreach {
       _ match {
         case Some(u: User) =>
           bs.withBootstrapNative(
@@ -74,9 +74,6 @@ object Client {
       }
     }
   }
-
-  private def appendBootstrapJS =
-    dom.document.body.appendChild(tags.script(`type` := "text/javascript", src := "js/bootstrap-native.min.js"))
 
 }
 

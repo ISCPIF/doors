@@ -52,41 +52,13 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
   //DataBase
 
   //USERS
-  def user(id: String): Option[User] = query(users.filter { u =>
-    u.id === id
+  def loggedUser: Option[User] = query(users.filter { u =>
+    u.id === loggedUserId.id
   }.result).headOption
 
   def allUsers: Seq[User] = query(users.result)
 
   def atLeastOneAdminRight: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
-
-  def canAddUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
-
-  def addUser(partialUser: PartialUser, pass: Password): Unit = canAddUser.check {
-    val someUser = toUser(partialUser, pass)
-    val currentTime = System.currentTimeMillis
-    someUser.foreach { u =>
-      val addUser =
-        for {
-          _ <- users += u
-          _ <- states += State(u.id, locks.REGISTRATION, States.OPENED, currentTime)
-        } yield ()
-
-      val admins =
-        states.filter { s => s.lock === locks.ADMIN }.result.map(_.size)
-
-      val transaction = admins.flatMap {
-        case 0 =>
-          for {
-            _ <- addUser
-            _ <- states += State(u.id, locks.ADMIN, States.OPENED, currentTime)
-          } yield ()
-        case _ => addUser
-      }
-
-      db.run(transaction.transactionally)
-    }
-  }
 
   def canRemoveUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
 
@@ -134,8 +106,8 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
     query {
       val q = for {
         u <- users if u.id === puser.id
-      } yield (u.login, u.name, u.email)
-      q.update((puser.login, puser.name, puser.email))
+      } yield (u.name, u.email)
+      q.update((puser.name, puser.email))
     }
   }
 

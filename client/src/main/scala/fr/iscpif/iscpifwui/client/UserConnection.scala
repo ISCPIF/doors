@@ -18,20 +18,23 @@ package fr.iscpif.doors.client
  */
 
 import org.scalajs.dom
-import org.scalajs.dom.raw.{FormData, XMLHttpRequest}
-import shared.Api
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import fr.iscpif.scaladget.api.Dropdown._
+import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
+import shared.{Api, UnloggedApi}
 import fr.iscpif.scaladget.tools.JsRxTags._
+
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import rx._
+import bs._
 import fr.iscpif.doors.ext.Data._
+import org.scalajs.dom.raw.HTMLDivElement
 
 class UserConnection {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
@@ -39,9 +42,7 @@ class UserConnection {
   val errorMessage: Var[String] = Var("")
   val user: Var[Option[User]] = Var(None)
 
-  // register <=> like a user edition but with passwordRequired = true
-  val registerUserDialog = UserEditionPanel.userDialog("userEditionPanel", User.emptyUser, mtitle="Registration", true)
-
+  // SIGN IN
   val emailInput = bs.input("")(
     name := "email",
     loginPasswordInput,
@@ -59,18 +60,53 @@ class UserConnection {
 
   val connectButton = tags.button(btn_primary, `type` := "submit")("Connect")
 
-  val registerLinkElement = a("Register", topLink,
-    onclick := { () =>
-      registerUserDialog.resetUser
-    })
 
-  val registerLink = registerUserDialog.dialog.trigger(registerLinkElement).render
+  // SIGN UP
+  val personalEdition = new UserEdition
+  val passEdition = PassEdition.newUser
 
-  dom.document.body.appendChild(registerUserDialog.dialog.dialog)
+  val registerLinkElement: Dropdown[HTMLDivElement] = div(width := 250)(
+    personalEdition.panel,
+    passEdition.panel,
+    Rx {
+      val passE = passEdition.stringError().getOrElse("")
+      val personalE = personalEdition.stringErrors()
+      bs.dangerAlert("", personalE.mkString(", ") + s", $passE",
+        passEdition.isStatusOK.flatMap { pOK => personalEdition.isPanelValid.map { perOK => () =>
+          !(perOK && pOK)
+        }
+        }
+      )()
+    },
+    buttonGroup()(
+    bs.button("OK", btn_primary, () => {
+      passEdition.updateStatus
+      personalEdition.checkData.foreach {
+        personalOK =>
+          if (personalOK && passEdition.isStatusOK.now) {
+            Post[UnloggedApi].addUser(
+              PartialUser(
+                java.util.UUID.randomUUID().toString,
+                personalEdition.name,
+                personalEdition.email
+              ),
+              Password(
+                Some(passEdition.newPassword)
+              )
+            ).call()
+
+            registerLinkElement.close
+          }
+      }
+    }),
+      bs.button("Cancel", btn_default, ()=> registerLinkElement.close)
+    )
+  ).dropdown("Register", btn_primary)
+
 
   val render = Rx {
     tags.div(
-      registerLink,
+      registerLinkElement.render,
       div(ms("centerPage"))(
         connectionFailed() match {
           case true => div(doorsheet.connectionFailed)(errorMessage())

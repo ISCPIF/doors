@@ -48,7 +48,7 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
 
   val connection = html("Client().connection();")
 
-  def application = html(s"Client().application('${userIDFromSession.map{_.id}.getOrElse("")}');")
+  def application = html(s"Client().application();")
 
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"
@@ -58,7 +58,7 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
       tags.meta(tags.httpEquiv := "Content-Type", tags.content := "text/html; charset=UTF-8"),
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/bootstrap.min-3.3.7.css"),
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
-      tags.script(tags.`type` := "text/javascript", tags.src := "js/client-opt.js")
+      tags.script(tags.`type` := "text/javascript", tags.src := "js/client-fastopt.js")
 
         // bootstrap-native.js loader at the end thanks to loadBootstrap
         // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
@@ -148,7 +148,12 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
 
   post(s"/$basePath/*") {
     session.get(USER_ID) match {
-      case None => halt(404, "Not logged in")
+      case None =>
+        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl)(
+          autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
+            upickle.default.read[Map[String, String]](request.body))
+        ), Duration.Inf)
+        //halt(404, "Not logged in")
       case Some(loggedUserId) =>
         Await.result(AutowireServer.route[shared.Api](new ApiImpl(quests, loggedUserId.asInstanceOf[UserID]))(
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),

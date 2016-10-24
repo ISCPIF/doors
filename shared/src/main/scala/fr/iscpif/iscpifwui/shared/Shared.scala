@@ -23,24 +23,33 @@ import fr.iscpif.doors.ext.Data._
 trait Api {
   //LDAP
   def connectToLDAP(authentication: LoginPassword): LDAPUserQuery
+
   def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
   //Database
-  def user(id: String): Option[User]
+  def loggedUser(): Option[User]
+
   def allUsers(): Seq[User]
 
   def atLeastOneAdminRight(): Capacity
 
-  def canAddUser(): Capacity
-  def addUser(partialUser: PartialUser, pass:Password): Unit
-
   def canModifyPartialUser(): Capacity
+
   def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit
 
   def canRemoveUser(): Capacity
+
   def removeUser(user: User): Unit
 
   //States
   def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id): Unit
- // def isAdmin(userID: User.Id): Boolean
+
+  // def isAdmin(userID: User.Id): Boolean
+}
+
+
+trait UnloggedApi {
+  def isEmailUsed(email: String): Boolean
+
+  def addUser(partialUser: PartialUser, pass: Password): Unit
 }

@@ -32,7 +32,7 @@ object Utils {
 
   def toUser(pUser: PartialUser, pass: Password): Option[User] =
     pass.password.map { p =>
-      User(pUser.id, pUser.login, Hashing(p), pUser.name, pUser.email, Hashing.currentJson)
+      User(pUser.id, Hashing(p), pUser.name, pUser.email, Hashing.currentJson)
     }
 
   def connect(email: String, password: String) = query(users.filter { u =>

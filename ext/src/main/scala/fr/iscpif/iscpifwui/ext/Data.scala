@@ -54,7 +54,7 @@ object Data {
       def compare(u1: User, u2: User) = u1.name compare u2.name
     }
 
-    def emptyUser = User(UUID.randomUUID.toString, "", "", "", "", "")
+    def emptyUser = User(UUID.randomUUID.toString, "", "", "", "")
   }
 
   object Lock {
@@ -69,13 +69,25 @@ object Data {
 
   case class UserID(id: User.Id)
 
-  case class PartialUser(id: User.Id, login: String, name: String, email: String)
+  case class PartialUser(id: User.Id, name: String, email: String)
 
   case class Password(password: Option[String])
 
-  case class PairOfPasses(oldpass: Password, newpass: Password)
+  sealed trait PassStatus {
+    def message: String
+  }
 
-  case class User(id: User.Id, login: String, password: String, name: String, email: String, hashAlgorithm: String)
+  case class PassUndefined(message: String = "Never changed") extends PassStatus
+
+  case class PassError(message: String) extends PassStatus
+
+  case class PassMatchOk(message: String = "Your new password is valid") extends PassStatus
+
+  case class PassEmpty(message: String = "Empty password !") extends PassStatus
+
+  case class PairOfPasses(oldpass: Password, newpass: Password, status: PassStatus)
+
+  case class User(id: User.Id, password: String, name: String, email: String, hashAlgorithm: String)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 

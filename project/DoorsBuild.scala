@@ -139,7 +139,7 @@ object DoorsBuild extends Build {
   lazy val bootstrap = Project(
     "bootstrap",
     file("target/bootstrap")) settings (projectSettings: _*) settings(
-    go <<= (fullOptJS in client in Compile, resourceDirectory in client in Compile, target in lab in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
+    go <<= (fastOptJS in client in Compile, resourceDirectory in client in Compile, target in lab in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
       copy(ct, r, new File(st, s"scala-$version/webapp"))
     },
     toJar <<= (go, assembly in lab in Compile, target in lab in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
