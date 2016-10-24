@@ -122,14 +122,14 @@ class PassEdition(passChecking: (String, String, String) => PassStatus,
     }
 
 
-  lazy val panel = passForm.render
+  lazy val panel = passForm
 
   lazy val errorPanel = Rx {
     bs.dangerAlert("", stringError().getOrElse(""))()
   }
 
   lazy val panelWithError = div(
-    panel,
+    panel.render,
     errorPanel
   )
 

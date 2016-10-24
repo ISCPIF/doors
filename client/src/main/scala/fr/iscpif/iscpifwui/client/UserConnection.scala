@@ -67,7 +67,7 @@ class UserConnection {
 
   val registerLinkElement: Dropdown[HTMLDivElement] = div(width := 250)(
     personalEdition.panel,
-    passEdition.panel,
+    passEdition.panel.render,
     Rx {
       val passE = passEdition.stringError().getOrElse("")
       val personalE = personalEdition.stringErrors()

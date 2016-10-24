@@ -78,19 +78,6 @@ class AdminEditionDialog {
   }
 
 
-  val panel = {
-    Rx {
-      val emptyUser = User.emptyUser
-      personalEditionPanel.nameInput.value = user().getOrElse(emptyUser).name
-      personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
-    }
-
-    div(
-      personalEditionPanel.panel,
-      passEdition.panel
-    )
-  }
-
 
   val addUserButton = bs.button("Add", () => {
     Post[UnloggedApi].addUser(
@@ -126,6 +113,21 @@ class AdminEditionDialog {
 
   val lineHovered: Var[Option[User]] = Var(None)
 
+  val panel = {
+    Rx {
+      val emptyUser = User.emptyUser
+      personalEditionPanel.nameInput.value = user().getOrElse(emptyUser).name
+      personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
+    }
+
+
+    bs.accordion(
+      accordionItem("Personal info", personalEditionPanel.panel),
+      accordionItem("Password", passEdition.panelWithError),
+      accordionItem("Administration", userTable)
+    )
+  }
+
   case class ReactiveLine(user: User) {
 
     val render = tr(row)(
@@ -150,9 +152,7 @@ class AdminEditionDialog {
 
   modalDialog.header(bs.ModalDialog.headerDialogShell(h3("Admin panel")/*, addUserButton*/))
 
-  modalDialog.body(bs.ModalDialog.bodyDialogShell(
-    panel,
-    userTable)
+  modalDialog.body(bs.ModalDialog.bodyDialogShell(panel)
   )
 
 
