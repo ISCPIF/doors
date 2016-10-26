@@ -95,6 +95,8 @@ object Data {
 
   case class UserChronicle(userID: User.Id, chronicle: Chronicle.Id)
 
+  case class Version(id: Int)
+
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 
 

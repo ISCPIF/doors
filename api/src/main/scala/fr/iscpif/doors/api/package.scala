@@ -33,7 +33,7 @@ package object api {
   lazy val chronicles = TableQuery[Chronicles]
   lazy val userChronicles = TableQuery[UserChronicles]
   lazy val emails = TableQuery[Emails]
-
+  lazy val versions = TableQuery[Versions]
   /*val userChronicles = for {
     (u, c) <- users join chronicles
   } yield (u.id, c.chronicleID)*/

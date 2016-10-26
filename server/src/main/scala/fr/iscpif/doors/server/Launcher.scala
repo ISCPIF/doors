@@ -38,6 +38,7 @@ object Launcher {
     Log.setLog(null)
 
     Settings.initDB
+    Settings.updateDB
 
     val server = new Server(port)
 

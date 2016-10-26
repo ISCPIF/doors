@@ -1,11 +1,10 @@
 package fr.iscpif.doors.api
 
-import java.io.File
 import java.util.UUID
 
 import com.typesafe.config.ConfigFactory
 import slick.driver.H2Driver.api._
-
+import fr.iscpif.doors.ext.Data.Version
 import scala.util._
 
 /*
@@ -24,6 +23,7 @@ import scala.util._
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 import slick.driver.H2Driver.api._
 import better.files._
 
@@ -37,8 +37,10 @@ object Settings {
 
   lazy val dbName = "h2"
   lazy val dbLocation = defaultLocation / dbName
+  lazy val dbVersion = 2
 
   def configFile = defaultLocation / "doors.conf"
+
   def saltConfig = "salt"
 
   lazy val config = ConfigFactory.parseFile(configFile.toJava)
@@ -49,9 +51,25 @@ object Settings {
     config.getString(confKey)
   }
 
+  def updateDB = {
+    val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
+    val v = query(versions.result)
+
+    val updateQuery = {
+      if (v.exists(_.id < dbVersion)) {
+        println("TODO: UPDATE DB")
+        addVersionQuery
+      }
+      else if (v.isEmpty) addVersionQuery
+      else DBIO.seq()
+    }
+
+    db.run(updateQuery)
+  }
+
   def initDB = {
     if (!(defaultLocation / s"$dbName.mv.db").exists) {
-      query((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema).create)
+      query((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema ++ versions.schema).create)
     }
   }
 
