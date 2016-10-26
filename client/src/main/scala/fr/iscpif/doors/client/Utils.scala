@@ -1,7 +1,7 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors.client
 
 /*
- * Copyright (C) 19/07/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 25/10/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,9 +17,6 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object locks {
-  lazy val ADMIN = "admin"
-  lazy val REGISTRATION = "registration"
-  lazy val SUBSCRIPTION = "subscription"
-  lazy val EMAIL_VALIDATION = "emailValidation"
+object Utils {
+  def uuid = java.util.UUID.randomUUID.toString
 }

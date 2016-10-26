@@ -1,13 +1,7 @@
-package fr.iscpif.iscpifwui.client
-
-import fr.iscpif.scaladget.api.BootstrapTags
-import fr.iscpif.scaladget.stylesheet.all._
-
-import scalatags.JsDom.all._
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+package fr.iscpif.doors.api
 
 /*
- * Copyright (C) 27/04/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 25/10/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,15 +17,16 @@ import fr.iscpif.scaladget.api.{BootstrapTags => bs}
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-trait ModalPanel {
-  def modalID: bs.ModalID
+import fr.iscpif.doors.ext.Data._
+import slick.driver.H2Driver.api._
 
-  //def dialog: bs.ModalDialog
 
-  //val closeButton = bs.button("Close", () ⇒ close)(btn_default, data("dismiss") := "modal")
+class UserChronicles(tag: Tag) extends Table[UserChronicle](tag, "USER_CHRONICLES") {
+  def userID = column[User.Id]("USER_ID")
+  def chronicleID = column[Chronicle.Id]("CHRONICLE")
 
-  // FIXME: actually not working
- // def close: Unit = dialog.hideModal(modalID)
+  def * = (userID, chronicleID) <> ((UserChronicle.apply _).tupled, UserChronicle.unapply)
 
-  // def isVisible: Boolean = bs.isModalVisible(modalID)
+  def user = foreignKey("USER_FK", userID, users)(_.id)
+
 }

@@ -1,7 +1,7 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors.api
 
 /*
- * Copyright (C) 19/07/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 24/10/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,9 +17,14 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object locks {
-  lazy val ADMIN = "admin"
-  lazy val REGISTRATION = "registration"
-  lazy val SUBSCRIPTION = "subscription"
-  lazy val EMAIL_VALIDATION = "emailValidation"
+import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.Data.Email
+import slick.driver.H2Driver.api._
+
+
+class Emails(tag: Tag) extends Table[Email](tag, "EMAILS") {
+  def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
+  def email = column[String]("EMAIL")
+
+  def * = (chronicleID, email) <> ((Email.apply _).tupled, Email.unapply)
 }

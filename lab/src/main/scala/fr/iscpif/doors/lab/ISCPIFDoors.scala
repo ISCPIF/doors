@@ -25,8 +25,9 @@ object ISCPIFDoors extends App {
 
   def quests = {
     def admins =  (for {
-      s <- states if s.lock === "admin"
-      u <- users if u.id === s.userID
+      c <- chronicles if c.lock === locks.ADMIN
+      uc <- userChronicles if uc.chronicleID === c.chronicleID
+      u <- users.filter{_.id === uc.userID}
     } yield u).result
 
 

@@ -42,7 +42,7 @@ trait Api {
   def removeUser(user: User): Unit
 
   //States
-  def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id): Unit
+ // def addState(userID: User.Id, lockID: Lock.Id, stateID: Chronicle.Id): Unit
 
   // def isAdmin(userID: User.Id): Boolean
 }
@@ -51,5 +51,5 @@ trait Api {
 trait UnloggedApi {
   def isEmailUsed(email: String): Boolean
 
-  def addUser(partialUser: PartialUser, pass: Password): Unit
+  def addUser(partialUser: PartialUser, email: String, pass: Password): Unit
 }

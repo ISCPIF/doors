@@ -33,7 +33,6 @@ class DoorsAuthStrategy(protected override val app: ScalatraBase)
 
     val result = Utils.connect(email, password)
 
-
     if (result.isEmpty) None
     else Some(UserID(result.head.id))
 

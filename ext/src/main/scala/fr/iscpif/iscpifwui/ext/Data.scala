@@ -17,11 +17,8 @@ package fr.iscpif.doors.ext
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import java.util.UUID
-
 import monocle.macros._
 import org.apache.directory.api.ldap.model.exception.{LdapAuthenticationException, LdapException, LdapInvalidDnException, LdapUnwillingToPerformException}
-
 import org.apache.directory.ldap.client.api.exception.InvalidConnectionException
 
 import scala.util.{Failure, Success, Try}
@@ -54,22 +51,26 @@ object Data {
       def compare(u1: User, u2: User) = u1.name compare u2.name
     }
 
-    def emptyUser = User(UUID.randomUUID.toString, "", "", "", "")
+    def emptyUser = User(java.util.UUID.randomUUID.toString, "", "", "", "")
   }
 
   object Lock {
     type Id = String
   }
 
-  object State {
-    type Id = Int
+  object Chronicle {
+    type Id = String
   }
 
-  case class State(user: User.Id, lock: Lock.Id, state: State.Id, time: Long)
+  object State{
+    type Id = String
+  }
+
+  case class Chronicle(chronicle: Chronicle.Id, lock: Lock.Id, state: State.Id, time: Long, increment: Option[Long])
 
   case class UserID(id: User.Id)
 
-  case class PartialUser(id: User.Id, name: String, email: String)
+  case class PartialUser(id: User.Id, name: String)
 
   case class Password(password: Option[String])
 
@@ -87,7 +88,12 @@ object Data {
 
   case class PairOfPasses(oldpass: Password, newpass: Password, status: PassStatus)
 
-  case class User(id: User.Id, password: String, name: String, email: String, hashAlgorithm: String)
+  case class User(id: String, password: String, name: String, hashAlgorithm: String, hashParameters: String)
+
+
+  case class Email(id: Chronicle.Id, email: String)
+
+  case class UserChronicle(userID: User.Id, chronicle: Chronicle.Id)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 

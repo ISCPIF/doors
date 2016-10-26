@@ -94,7 +94,7 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
               }
               else {
                 // TODO client callback: msg "Old password doesn't match: couldn't modify"
-                println("modifyPartialUser(): Old password doesn't match: couldn't modify user '" + partialUser.email + "'")
+                println("modifyPartialUser(): Old password doesn't match: couldn't modify user '" + partialUser.name + "'")
               }
           }
       }
@@ -112,8 +112,8 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
     query {
       val q = for {
         u <- users if u.id === puser.id
-      } yield (u.name, u.email)
-      q.update((puser.name, puser.email))
+      } yield (u.name)
+      q.update((puser.name))
     }
   }
 
@@ -128,26 +128,15 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
   }
 
   //STATES
-  def setState(userID: User.Id, lockID: Lock.Id, stateID: State.Id) = {
+  // We only add rows in Chronicles and do not do any updates (to keep the history). If the (LockID, stateID)
+ /* def addState(userID: User.Id, lockID: Lock.Id, chronicleID: Chronicle.Id, stateID: State.Id): Unit = {
 
-    val result = query(states.filter {
-      s =>
-        s.lock === lockID && s.userID == userID
+    val result = query(chronicles.filter {
+      c =>
+        c.lock === lockID && c.state == stateID && c.chronicleID === chronicleID
     }.result)
 
-    if (result.isEmpty) query(states += State(userID, lockID, stateID, System.currentTimeMillis))
-    else result.headOption.map {
-      res =>
-        query(states.update(res))
-    }
-  }
-
-  /*def isAdmin(userID: User.Id): Boolean = {
-    val o = query(states.filter {
-      s =>
-        s.lock === locks.ADMIN && s.userID === userID
-    }.result)
-    o.length > 0
+    if (result.isEmpty) addNewChronicle(userID, lockID,stateID)
   }*/
 
 }

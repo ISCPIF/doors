@@ -19,18 +19,19 @@ package fr.iscpif.doors.api
 
 import fr.iscpif.doors.ext.Data
 import slick.driver.H2Driver.api._
+
 object States {
-  val LOCKED = 0
-  val OPENED = 1
+  val LOCKED = "LOCKED"
+  val OPEN = "OPEN"
 }
 
 
-class States(tag: Tag) extends Table[Data.State](tag, "STATES") {
-  def userID = column[Data.User.Id]("USER_ID")
+class Chronicles(tag: Tag) extends Table[Data.Chronicle](tag, "CHRONICLES") {
+  def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
   def lock = column[Data.Lock.Id]("LOCK")
   def state = column[Data.State.Id]("STATE")
   def time = column[Long]("TIME")
+  def increment = column[Long]("INCREMENT", O.AutoInc)
 
-  def * = (userID, lock, state, time) <> ((Data.State.apply _).tupled, Data.State.unapply)
-  def user = foreignKey("USER_FK", userID, users)(_.id)
+  def * = (chronicleID, lock, state, time, increment.?) <> ((Data.Chronicle.apply _).tupled, Data.Chronicle.unapply)
 }

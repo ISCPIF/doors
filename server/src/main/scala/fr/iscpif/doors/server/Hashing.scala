@@ -32,10 +32,12 @@ object Hashing {
     def apply(s: String): String
   }
 
-  val current = PBKDF2(1000, 128)
-  val currentJson = current.toJson
+  val PBKDF2_METHOD = "PBKDF2"
+  val currentMethod = PBKDF2_METHOD
+  val currentParameters = PBKDF2(1000, 128)
+  val currentParametersJson = currentParameters.toJson
 
-  def apply[T](s: String, hash: T = current)(implicit hashing: HashingMethod[T]) = (hashing(hash)(Settings.salt)(s))
+  def apply[T](s: String, hash: T = currentParameters)(implicit hashing: HashingMethod[T]) = (hashing(hash)(Settings.salt)(s))
 }
 
 sealed trait HashingMethod[T] {

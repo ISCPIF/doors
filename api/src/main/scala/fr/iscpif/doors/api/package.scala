@@ -30,7 +30,13 @@ import scala.util.Failure
 package object api {
 
   lazy val users = TableQuery[Users]
-  lazy val states = TableQuery[States]
+  lazy val chronicles = TableQuery[Chronicles]
+  lazy val userChronicles = TableQuery[UserChronicles]
+  lazy val emails = TableQuery[Emails]
+
+  /*val userChronicles = for {
+    (u, c) <- users join chronicles
+  } yield (u.id, c.chronicleID)*/
 
   lazy val db = Database.forDriver(
     driver = new org.h2.Driver,
@@ -52,11 +58,12 @@ package object api {
     (quests: Quests, uid: UserID) => {
       def adminUsers =
         for {
-          s <- states if s.lock === "admin"
-          u <- users if s.userID === uid.id
-        } yield u.id
+          c <- chronicles if c.lock === "admin"
+          uc <- userChronicles.filter { uc=> uc.userID === uid.id && uc.chronicleID === c.chronicleID }
+        } yield uc.userID
 
-      adminUsers.result.map{_.contains(uid.id)
+      adminUsers.result.map {
+        _.contains(uid.id)
       }
     }
 

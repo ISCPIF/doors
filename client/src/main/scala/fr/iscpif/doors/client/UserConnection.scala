@@ -79,27 +79,27 @@ class UserConnection {
       )()
     },
     buttonGroup()(
-    bs.button("OK", btn_primary, () => {
-      passEdition.updateStatus
-      personalEdition.checkData.foreach {
-        personalOK =>
-          if (personalOK && passEdition.isStatusOK.now) {
-            Post[UnloggedApi].addUser(
-              PartialUser(
-                java.util.UUID.randomUUID().toString,
-                personalEdition.name,
-                personalEdition.email
-              ),
-              Password(
-                Some(passEdition.newPassword)
-              )
-            ).call()
+      bs.button("OK", btn_primary, () => {
+        passEdition.updateStatus
+        personalEdition.checkData.foreach {
+          personalOK =>
+            if (personalOK && passEdition.isStatusOK.now) {
+              Post[UnloggedApi].addUser(
+                PartialUser(
+                  Utils.uuid,
+                  personalEdition.name
+                ),
+                personalEdition.email,
+                Password(
+                  Some(passEdition.newPassword)
+                )
+              ).call()
 
-            registerLinkElement.close
-          }
-      }
-    }),
-      bs.button("Cancel", btn_default, ()=> registerLinkElement.close)
+              registerLinkElement.close
+            }
+        }
+      }),
+      bs.button("Cancel", btn_default, () => registerLinkElement.close)
     )
   ).dropdown("Register", btn_primary)
 

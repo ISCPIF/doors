@@ -1,6 +1,5 @@
 package fr.iscpif.doors.client
 
-
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import bs._
 import shared.{Api, UnloggedApi}
@@ -29,7 +28,7 @@ class UserEdition(user: Var[Option[User]] = Var(None)) {
     user.now match {
       case Some(u: User) =>
         nameInput.value = u.name
-        emailInput.value = u.email
+       // emailInput.value = u.email
       case _ =>
     }
   }

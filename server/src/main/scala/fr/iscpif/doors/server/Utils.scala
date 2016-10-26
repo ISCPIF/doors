@@ -32,17 +32,67 @@ object Utils {
 
   def toUser(pUser: PartialUser, pass: Password): Option[User] =
     pass.password.map { p =>
-      User(pUser.id, Hashing(p), pUser.name, pUser.email, Hashing.currentJson)
+      User(pUser.id, Hashing(p), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
     }
 
-  def connect(email: String, password: String) = query(users.filter { u =>
-    u.email === email && u.password === Hashing(password)
-  }.result)
+  def connect(email: String, password: String): Option[User] =
+    query(
+      (for {
+        e <- emails if (e.email === email)
+        uc <- userChronicles if (e.chronicleID === uc.chronicleID)
+        u <- users if (u.id === uc.userID)
+      } yield (u)).result.headOption).filter {
+      _.password == Hashing(password)
+    }
+
+
+  /* def isMatching(user: User, email: String) = (for {
+     (e, uc) <- emails join userChronicles on (_.chronicleID === _.chronicleID) if (e.email === email && uc.userID === user.id)
+   } yield ()).length > 0*/
+
+
+  // Add user
+  def userAddQueries(user: User, chronicleID: Chronicle.Id) = DBIO.seq(
+    users += user,
+    chronicleAddQueries(chronicleID, user.id, locks.REGISTRATION, States.LOCKED)
+  )
+
+  def addUser(user: User, chronicleID: Chronicle.Id) = query(userAddQueries(user, chronicleID))
+
+
+  // Add email
+  def emailAddQueries(userID: User.Id, email: String) = {
+    val doesEmailExist = query(emails.filter {
+      _.email === email
+    }.result)
+    if (doesEmailExist.isEmpty) {
+      val chronicleID = uuid
+      DBIO.seq(
+        emails += Email(chronicleID, email),
+        chronicleAddQueries(chronicleID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
+      )
+    } else DBIO.seq()
+  }
+
+  def addEmail(userID: User.Id, email: String) = query(emailAddQueries(userID, email))
+
+
+  // Add chronicle
+  def chronicleAddQueries(chronicleID: Chronicle.Id, userID: User.Id, lockID: Lock.Id, stateID: State.Id) = DBIO.seq(
+    chronicles += Chronicle(chronicleID, lockID, stateID, System.currentTimeMillis, None),
+    userChronicles += UserChronicle(userID, chronicleID)
+  )
+
+  def addChronicle(chronicleID: Chronicle.Id, userID: User.Id, lockID: Lock.Id, stateID: State.Id) =
+    query(chronicleAddQueries(chronicleID, userID, lockID, stateID))
+
 
   def hasAdmin: Boolean = {
-    query(states.filter { s =>
+    query(chronicles.filter { s =>
       s.lock === locks.ADMIN
     }.result).length > 0
   }
+
+  def uuid = java.util.UUID.randomUUID.toString
 
 }

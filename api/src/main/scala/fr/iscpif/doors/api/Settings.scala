@@ -51,7 +51,7 @@ object Settings {
 
   def initDB = {
     if (!(defaultLocation / s"$dbName.mv.db").exists) {
-      query((users.schema ++ states.schema).create)
+      query((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema).create)
     }
   }
 
@@ -59,7 +59,7 @@ object Settings {
     Try(get(saltConfig)) match {
       case Success(s) => s
       case Failure(_) =>
-        val s = UUID.randomUUID().toString
+        val s = UUID.randomUUID.toString
         configFile << s"$saltConfig = $s"
         s
     }

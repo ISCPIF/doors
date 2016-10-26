@@ -57,6 +57,7 @@ object Client {
 
   @JSExport
   def application(): Unit = {
+    println("Application")
     Post[Api].loggedUser.call().foreach {
       _ match {
         case Some(u: User) =>

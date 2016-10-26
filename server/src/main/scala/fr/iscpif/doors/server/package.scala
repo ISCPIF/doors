@@ -21,7 +21,7 @@ import fr.iscpif.doors.ext.Data.PartialUser
 
 package object server {
   def partialUser(name: String, email: String) =
-    PartialUser(java.util.UUID.randomUUID.toString, name, email)
+    PartialUser(Utils.uuid, name)
 
 
 }

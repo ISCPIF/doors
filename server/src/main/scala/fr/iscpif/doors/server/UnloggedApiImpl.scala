@@ -18,41 +18,40 @@ package fr.iscpif.doors.server
  */
 
 import fr.iscpif.doors.api._
-import fr.iscpif.doors.ext.Data.{PartialUser, Password, State}
+import fr.iscpif.doors.ext.Data._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.H2Driver.api._
 
 class UnloggedApiImpl extends shared.UnloggedApi {
 
   // TODO : consult the email DB
-  def isEmailUsed(email: String): Boolean = !query(users.filter { u =>
+  def isEmailUsed(email: String): Boolean = !query(emails.filter { u =>
     u.email === email
   }.result).isEmpty
 
-
-  def addUser(partialUser: PartialUser, pass: Password): Unit = {
+  def addUser(partialUser: PartialUser, email: String, pass: Password): Unit = {
     val someUser = Utils.toUser(partialUser, pass)
     val currentTime = System.currentTimeMillis
+    val chronicleID = Utils.uuid
     someUser.foreach { u =>
-      val addUser =
-        for {
-          _ <- users += u
-          _ <- states += State(u.id, locks.REGISTRATION, States.OPENED, currentTime)
-        } yield ()
+      val userAndEmailQueries = DBIO.seq(
+        Utils.userAddQueries(u, chronicleID),
+        Utils.emailAddQueries(u.id, email)
+      )
 
-      val admins =
-        states.filter { s => s.lock === locks.ADMIN }.result.map(_.size)
+      val admins = chronicles.filter { c => c.lock === locks.ADMIN }.result.map(_.size)
 
-      val transaction = admins.flatMap {
-        case 0 =>
-          for {
-            _ <- addUser
-            _ <- states += State(u.id, locks.ADMIN, States.OPENED, currentTime)
-          } yield ()
-        case _ => addUser
-      }
+      val transaction = DBIO.seq(
+        userAndEmailQueries,
+        admins.flatMap {
+          case 0 => DBIO.seq(Utils.chronicleAddQueries(chronicleID, u.id, locks.ADMIN, States.OPEN))
+          case _ => DBIO.seq()
+        }
+      )
 
       db.run(transaction.transactionally)
     }
   }
+
 }

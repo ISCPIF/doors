@@ -1,6 +1,6 @@
 package fr.iscpif.doors.client
 
-import fr.iscpif.doors.ext.Data.{PartialUser, PassMatchOk, Password, User}
+import fr.iscpif.doors.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import autowire._
@@ -61,7 +61,7 @@ class AdminEditionDialog {
       case ok: PassMatchOk => {
         user.now match {
           case Some(u: User) =>
-            val puser = PartialUser(u.id, personalEditionPanel.name, personalEditionPanel.email)
+            val puser = PartialUser(u.id, personalEditionPanel.name)
             Post[Api].modifyPartialUser(
               puser,
               pairOfPasses.newpass,
@@ -80,18 +80,17 @@ class AdminEditionDialog {
 
 
   val addUserButton = bs.button("Add", () => {
-    Post[UnloggedApi].addUser(
+   /* Post[UnloggedApi].addUser(
       PartialUser(
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString,
-        java.util.UUID.randomUUID().toString
+        Utils.uuid,
+        ""
       ),
       Password(
-        Some(java.util.UUID.randomUUID().toString)
+        Some(Utils.uuid)
       )
     ).call().foreach { u =>
       getUsers
-    }
+    }*/
   })(sheet.btn_primary +++ btn_right)
 
 
@@ -117,7 +116,7 @@ class AdminEditionDialog {
     Rx {
       val emptyUser = User.emptyUser
       personalEditionPanel.nameInput.value = user().getOrElse(emptyUser).name
-      personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
+     // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
     }
 
 

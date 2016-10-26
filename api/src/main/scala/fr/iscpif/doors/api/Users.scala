@@ -27,8 +27,8 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
   def id = column[User.Id]("ID", O.PrimaryKey)
   def password = column[String]("PASSWORD")
   def name = column[String]("NAME")
-  def email = column[String]("EMAIL")
   def hashAlgorithm = column[String]("HASH_ALGORITHM")
+  def hashParameters = column[String]("HASH_PARAMETERS")
 
-  def * = (id, password, name, email, hashAlgorithm) <> ((User.apply _).tupled, User.unapply)
+  def * = (id, password, name, hashAlgorithm, hashParameters) <> ((User.apply _).tupled, User.unapply)
 }
