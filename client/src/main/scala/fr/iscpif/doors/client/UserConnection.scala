@@ -71,7 +71,7 @@ class UserConnection {
     Rx {
       val passE = passEdition.stringError().getOrElse("")
       val personalE = personalEdition.stringErrors()
-      bs.dangerAlert("", personalE.mkString(", ") + s", $passE",
+      bs.dangerAlerts("", (personalE :+ passE).filterNot{_.isEmpty},
         passEdition.isStatusOK.flatMap { pOK => personalEdition.isPanelValid.map { perOK => () =>
           !(perOK && pOK)
         }
