@@ -19,7 +19,7 @@ package fr.iscpif.doors.client
 
 import org.scalajs.dom
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.api.Dropdown._
+import fr.iscpif.scaladget.api.Selector._
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
@@ -101,7 +101,7 @@ class UserConnection {
       }),
       bs.button("Cancel", btn_default, () => registerLinkElement.close)
     )
-  ).dropdown("Register", btn_primary)
+  ).dropdown("Register", btn_primary, Seq(sheet.marginTop(15), sheet.marginLeft(10)))
 
 
   val render = Rx {
