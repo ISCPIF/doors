@@ -52,9 +52,16 @@ object Launcher {
     server.setHandler(context)
 
 
+  //TEST EMAIL
+  /*  import courier._, Defaults._
 
-    val api = new UnloggedApiImpl
-    api.addUser(PartialUser("1111", "Joe"), "joe@gmail.com", Password(Some("aaa")))
+    DoorsMailer.send(Envelope.from("xxx" `@` "xxx")
+      .to("xxxx" `@` "xxx")
+      .subject("Message from DOORS")
+      .content(Text("Youhou !"))).onSuccess {
+      case _ => println("message delivered")
+    }*/
+
 
     query(users.result).foreach {
       println

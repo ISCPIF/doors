@@ -100,7 +100,9 @@ object DoorsBuild extends Build {
         "javax.servlet" % "javax.servlet-api" % "3.1.0" % "provided",
         "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container;compile",
         "org.json4s" %% "json4s-jackson" % json4sVersion,
-        "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
+        "org.apache.directory.api" % "api-all" % apacheDirectoryVersion,
+        "me.lessis" %% "courier" % "0.1.3",
+        "javax.mail" % "mail" % "1.4.7"
       )
     )
     ) dependsOn(shared, ext, hasher, api) enablePlugins (JettyPlugin)
