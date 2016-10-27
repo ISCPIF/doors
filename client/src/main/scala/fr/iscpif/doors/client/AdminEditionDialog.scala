@@ -6,14 +6,15 @@ import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import autowire._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
-import shared.{Api, UnloggedApi}
+import shared.Api
 import fr.iscpif.scaladget.tools.JsRxTags._
 
-import scalatags.JsDom.{all => tags}
+import scalatags.JsDom.{TypedTag, all => tags}
 import tags._
 import sheet._
 import rx._
 import bs._
+import org.scalajs.dom.raw.HTMLDivElement
 
 /*
  * Copyright (C) 27/04/16 // mathieu.leclaire@openmole.org
@@ -41,13 +42,20 @@ class AdminEditionDialog {
 
   val users: Var[Seq[User]] = Var(Seq())
   val user: Var[Option[User]] = Var(None)
+  val canModify: Var[Boolean] = Var(false)
   val userEdition: Var[Option[User]] = Var(None)
 
   lazy val modalDialog = bs.ModalDialog()
 
-  Post[Api].loggedUser().call().foreach { u =>
-    user() = u
+  Post[Api].loggedUser().call().foreach { uopt =>
+    user() = uopt
+    uopt.foreach { u =>
+      Post[Api].canModifyPartialUser(u.id).call().foreach { ok =>
+        canModify() = ok.authorized
+      }
+    }
   }
+
 
   val personalEditionPanel = new UserEdition(user)
 
@@ -55,17 +63,15 @@ class AdminEditionDialog {
 
 
   def save = {
-    val pairOfPasses = passEdition.pairOfPasses
-    pairOfPasses.status match {
+    // passEdition.check
+    passEdition.isStatusOK.foreach { pOK =>
       // input was not validated as passwords: do nothing (can't save)
-      case ok: PassMatchOk => {
+      if (pOK) {
         user.now match {
           case Some(u: User) =>
             val puser = PartialUser(u.id, personalEditionPanel.name)
-            Post[Api].modifyPartialUser(
-              puser,
-              pairOfPasses.newpass,
-              pairOfPasses.oldpass
+            Post[Api].updatePartialUser(
+              puser
             ).call().foreach { x =>
               userEdition() = None
               modalDialog.close
@@ -73,24 +79,22 @@ class AdminEditionDialog {
           case _ =>
         }
       }
-      case _ =>
     }
   }
 
 
-
   val addUserButton = bs.button("Add", () => {
-   /* Post[UnloggedApi].addUser(
-      PartialUser(
-        Utils.uuid,
-        ""
-      ),
-      Password(
-        Some(Utils.uuid)
-      )
-    ).call().foreach { u =>
-      getUsers
-    }*/
+    /* Post[UnloggedApi].addUser(
+       PartialUser(
+         Utils.uuid,
+         ""
+       ),
+       Password(
+         Some(Utils.uuid)
+       )
+     ).call().foreach { u =>
+       getUsers
+     }*/
   })(sheet.btn_primary +++ btn_right)
 
 
@@ -112,17 +116,44 @@ class AdminEditionDialog {
 
   val lineHovered: Var[Option[User]] = Var(None)
 
+
+  def divIfAuthorized(d: User => TypedTag[HTMLDivElement]) = tags.div(
+    Rx {
+      if (canModify()) {
+        user().map { u =>
+          d(u)
+        }.getOrElse(tags.div())
+      } else tags.div()
+    }
+  )
+
   val panel = {
     Rx {
       val emptyUser = User.emptyUser
       personalEditionPanel.nameInput.value = user().getOrElse(emptyUser).name
-     // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
+      // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
     }
 
 
     bs.accordion(
-      accordionItem("Personal info", personalEditionPanel.panel),
-      accordionItem("Password", passEdition.panelWithError),
+      accordionItem("Personal info",
+        divIfAuthorized { u =>
+          personalEditionPanel.panel
+        }),
+      accordionItem("Change Password",
+        divIfAuthorized { u =>
+          tags.div(
+            passEdition.panelWithError,
+            bs.button("Change password", btn_primary, () => {
+              passEdition.isStatusOK.foreach { pOK =>
+                if (pOK)
+                  Post[Api].updatePassword(u.id, passEdition.newPassword).call().foreach { p =>
+                    println("Pass updated")
+                  }
+              }
+            }))
+        }
+      ),
       accordionItem("Administration", userTable)
     )
   }
@@ -149,7 +180,7 @@ class AdminEditionDialog {
   }
 
 
-  modalDialog.header(bs.ModalDialog.headerDialogShell(h3("Admin panel")/*, addUserButton*/))
+  modalDialog.header(bs.ModalDialog.headerDialogShell(h3("Admin panel") /*, addUserButton*/))
 
   modalDialog.body(bs.ModalDialog.bodyDialogShell(panel)
   )

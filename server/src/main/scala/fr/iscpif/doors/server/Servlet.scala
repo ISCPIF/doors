@@ -95,7 +95,6 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
   }
 
   post("/connection") {
-    println("CONNECSION")
     response.setHeader("Access-Control-Allow-Origin", "*")
     response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
     response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")

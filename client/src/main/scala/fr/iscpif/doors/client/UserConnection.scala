@@ -69,21 +69,20 @@ class UserConnection {
     personalEdition.panel,
     passEdition.panel.render,
     Rx {
+     // passEdition.isStatusOK
       val passE = passEdition.stringError().getOrElse("")
       val personalE = personalEdition.stringErrors()
       bs.dangerAlerts("", (personalE :+ passE).filterNot{_.isEmpty},
-        passEdition.isStatusOK.flatMap { pOK => personalEdition.isPanelValid.map { perOK => () =>
-          !(perOK && pOK)
-        }
-        }
+        passEdition.errorToShow.flatMap{ pOK => personalEdition.isPanelValid.map { perOK =>
+          !(perOK && !pOK)
+        }}
       )()
     },
     buttonGroup()(
       bs.button("OK", btn_primary, () => {
-        passEdition.updateStatus
-        personalEdition.checkData.foreach {
-          personalOK =>
-            if (personalOK && passEdition.isStatusOK.now) {
+        personalEdition.checkData.foreach { personalOK =>
+          passEdition.isStatusOK.foreach { passOK =>
+            if (personalOK && passOK) {
               Post[UnloggedApi].addUser(
                 PartialUser(
                   Utils.uuid,
@@ -97,6 +96,7 @@ class UserConnection {
 
               registerLinkElement.close
             }
+          }
         }
       }),
       bs.button("Cancel", btn_default, () => registerLinkElement.close)

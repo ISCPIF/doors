@@ -7,44 +7,54 @@ import scalatags.JsDom.all._
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
-import org.scalajs.dom.raw.{HTMLElement, HTMLInputElement}
+import autowire._
+
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
+import org.scalajs.dom.raw.HTMLElement
 import sheet._
 import rx._
+import shared.Api
+
+import scala.concurrent.Future
 
 
 object PassEdition {
   // default should be 8
   val PASS_MIN_CHAR = 3
 
-  def newUser = new PassEdition(newUserPassChecking, new NewUserPasswordForm)
+  def newUser = new PassEdition(new NewUserPasswordForm)
 
-  def oldUser = new PassEdition(oldUserPassChecking, new OldUserPasswordForm)
+  def oldUser = new PassEdition(new OldUserPasswordForm)
 
   def validatePassString(passString: String): Boolean = (passString.length > PASS_MIN_CHAR)
 
-  def newUserPassChecking(oldPass: String, p1: String, p2: String): PassStatus = {
-    (p1, p2) match {
-      case ("", "") => PassEmpty()
-      case ("", _) => PassError("You did not fill the first password")
-      case (_, "") => PassError("You did not fill the second password")
-      case (p1, p2) if p1 != p2 => PassError("The passwords don't match !")
-      case (p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple")
-      case _ => PassMatchOk()
-    }
-  }
-
-
-  def oldUserPassChecking(oldPass: String, p1: String, p2: String): PassStatus = (oldPass, p1, p2) match {
-    case ("", "", "") => PassEmpty()
-    case ("", _, _) => PassError("You did not fill the old password")
-    case (p0, "", _) => PassError("You did not fill the first password")
-    case (p0, _, "") => PassError("You did not fill the second password")
-    case (p0, p1, p2) if p1 != p2 => PassError("The passwords don't match !")
-    case (p0, p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple")
-    case _ => PassMatchOk()
-  }
-
   trait PasswordForm {
+
+    implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
+    val passStatus: Var[PassStatus] = Var(PassUndefined())
+
+    val errorToShow = Rx {
+      passStatus() match {
+        case _@(_: PassMatchOk | _: PassUndefined) => false
+        case _: PassStatus => true
+      }
+    }
+
+    val stringError = Rx {
+      passStatus() match {
+        case ps@(_: PassMatchOk | _: PassUndefined) => None
+        case danger: PassStatus => Some(danger.message)
+      }
+    }
+
+    def isStatusOK = status.map { s =>
+      passStatus() = s
+      s match {
+        case ok: PassMatchOk => true
+        case _ => false
+      }
+    }
+
     val passStyle: ModifierSeq = Seq(
       `type` := "password"
     )
@@ -59,6 +69,19 @@ object PassEdition {
       newPassInput2.value = ""
     }
 
+    protected def passChecking: PassStatus = {
+      (newPassInput1.value, newPassInput2.value) match {
+        case ("", "") => PassEmpty()
+        case ("", _) => PassError("You did not fill the first password")
+        case (_, "") => PassError("You did not fill the second password")
+        case (p1, p2) if p1 != p2 => PassError("The passwords don't match !")
+        case (p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple")
+        case _ => PassMatchOk()
+      }
+    }
+
+    protected def status: Future[PassStatus]
+
     def render: HTMLElement
   }
 
@@ -69,63 +92,50 @@ object PassEdition {
         newPassInput2.withLabel("Repeat password")
       )
     ).render
+
+    def status = Future(passChecking)
+
   }
 
   class OldUserPasswordForm extends PasswordForm {
     def render = div(
       bs.vForm(width := "100%")(
-        oldPassInput.withLabel("Password"),
+        oldPassInput.withLabel("Previous password"),
         newPassInput1.withLabel("Password"),
         newPassInput2.withLabel("Repeat password")
       )
     ).render
+
+    def status = Post[Api].isPasswordValid(oldPassInput.value).call().map { passOK =>
+      if (passOK) passChecking
+      else PassError("The old password is not correct.")
+    }
   }
+
 
 }
 
 import PassEdition._
 
-class PassEdition(passChecking: (String, String, String) => PassStatus,
-                  passForm: PasswordForm) {
+class PassEdition(passForm: PasswordForm) {
 
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
-  private lazy val passStatus: Var[PassStatus] = Var(PassUndefined())
-  lazy val stringError: Var[Option[String]] = Var(None)
 
-  def pairOfPasses: PairOfPasses = {
-    updateStatus
-    passStatus.now match {
-      case ok: PassMatchOk => PairOfPasses(Password(Some(passForm.oldPassInput.value)), Password(Some(passForm.newPassInput1.value)), ok)
-      case empty: PassEmpty => PairOfPasses(Password(None), Password(None), empty)
-      case empty: PassUndefined => PairOfPasses(Password(None), Password(None), empty)
-      case err: PassError => PairOfPasses(Password(None), Password(None), err)
-    }
-  }
+  val errorToShow = passForm.errorToShow
 
-  def updateStatus: Unit = {
-    passStatus() = passChecking(passForm.oldPassInput.value, passForm.newPassInput1.value, passForm.newPassInput2.value)
-    stringError() = passStatus.now match {
-      case ok: PassMatchOk => None
-      case danger: PassStatus => Some(danger.message)
-    }
-  }
+  val stringError = passForm.stringError
+
+  def isStatusOK = passForm.isStatusOK
 
   def reset = passForm.reset
 
+
   def newPassword = passForm.newPassInput2.value
-
-  def isStatusOK = passStatus.map { ps =>
-      ps match {
-        case _ @ (_:PassMatchOk | _:PassUndefined) => true
-        case _ => false
-      }
-    }
-
 
   lazy val panel = passForm
 
   lazy val errorPanel = Rx {
-    bs.dangerAlert("", stringError().getOrElse(""))()
+    bs.dangerAlert("", stringError().getOrElse(""), errorToShow)()
   }
 
   lazy val panelWithError = div(

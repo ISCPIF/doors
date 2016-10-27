@@ -174,6 +174,8 @@ object Data {
     def message = "Not authorized to perform this action"
   }
 
-  case class Capacity(authorized: Boolean)
+  case class Capacity(authorized: Boolean) {
+    def ||(otherCapacity: Capacity) = Capacity(authorized || otherCapacity.authorized)
+  }
 
 }

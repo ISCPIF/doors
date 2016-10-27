@@ -33,16 +33,20 @@ trait Api {
 
   def atLeastOneAdminRight(): Capacity
 
-  def canModifyPartialUser(): Capacity
-
-  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit
-
   def canRemoveUser(): Capacity
+
+  def canModifyPartialUser(userID: User.Id): Capacity
+
+  def isPasswordValid(pass: String): Boolean
+
+  def updatePassword(userID: User.Id, pass: String): Unit
+
+  def updatePartialUser(partialUser: PartialUser): Unit
 
   def removeUser(user: User): Unit
 
   //States
- // def addState(userID: User.Id, lockID: Lock.Id, stateID: Chronicle.Id): Unit
+  // def addState(userID: User.Id, lockID: Lock.Id, stateID: Chronicle.Id): Unit
 
   // def isAdmin(userID: User.Id): Boolean
 }

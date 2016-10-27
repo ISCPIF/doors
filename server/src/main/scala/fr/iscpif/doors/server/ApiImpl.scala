@@ -58,9 +58,12 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
 
   def allUsers: Seq[User] = query(users.result)
 
-  def atLeastOneAdminRight: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
+  private def adminCapacity = Capacity(query(isAdmin(quests, loggedUserId)))
 
-  def canRemoveUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
+  def atLeastOneAdminRight: Capacity = adminCapacity
+
+
+  def canRemoveUser: Capacity = adminCapacity
 
   def removeUser(user: User) = canRemoveUser.check {
     query(users.filter {
@@ -68,46 +71,10 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
     }.delete)
   }
 
-  def canModifyPartialUser: Capacity = Capacity(query(isAdmin(quests, loggedUserId)))
+  def canModifyPartialUser(userID: User.Id): Capacity = Capacity(userID == loggedUserId.id) || adminCapacity
 
-  def modifyPartialUser(partialUser: PartialUser, newpass: Password, oldpass: Password): Unit = {
-    def modify = {
-      // 1) modify normal infos
-      updatePartialUser(partialUser)
 
-      // 2) if there is a new pass...
-      newpass.password.foreach {
-        np =>
-          // ... there is also an old pass...
-          oldpass.password.foreach {
-            op =>
-              // ... and we re-check the old pass...
-              val whosThere = query(users.filter {
-                u => u.id === partialUser.id && u.password === Hashing(op)
-              }.result)
-
-              val isAllowed = whosThere.nonEmpty
-
-              // ... before modifying to new pass
-              if (isAllowed) {
-                updatePassword(partialUser.id, np)
-              }
-              else {
-                // TODO client callback: msg "Old password doesn't match: couldn't modify"
-                println("modifyPartialUser(): Old password doesn't match: couldn't modify user '" + partialUser.name + "'")
-              }
-          }
-      }
-    }
-
-    // you can always modify yourself
-    if (partialUser.id == loggedUserId.id) modify
-
-    // you can also modify if you have admin capacity
-    else canModifyPartialUser.check   { modify }
-  }
-
-  private def updatePartialUser(puser: PartialUser): Unit = {
+  def updatePartialUser(puser: PartialUser): Unit = canModifyPartialUser(puser.id).check {
     // slick: query all fields except password in order to update them
     query {
       val q = for {
@@ -117,7 +84,7 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
     }
   }
 
-  private def updatePassword(id: User.Id, password: String): Unit = {
+  def updatePassword(id: User.Id, password: String): Unit = canModifyPartialUser(id).check {
     // idem: query just the password to update it
     query {
       val q = for {
@@ -126,6 +93,10 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
       q.update(Hashing(password))
     }
   }
+
+  def isPasswordValid(pass: String): Boolean = query {
+    users.filter{_.id === loggedUserId.id}.result
+  }.headOption.map{_.password == Hashing(pass)}.getOrElse(false)
 
   //STATES
   // We only add rows in Chronicles and do not do any updates (to keep the history). If the (LockID, stateID)
