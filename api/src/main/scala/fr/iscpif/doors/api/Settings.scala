@@ -69,7 +69,7 @@ object Settings {
 
   def initDB = {
     if (!(defaultLocation / s"$dbName.mv.db").exists) {
-      query((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema ++ versions.schema).create)
+      query((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema ++ versions.schema ++ emailConfirmations.schema).create)
     }
   }
 

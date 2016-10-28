@@ -34,9 +34,7 @@ package object api {
   lazy val userChronicles = TableQuery[UserChronicles]
   lazy val emails = TableQuery[Emails]
   lazy val versions = TableQuery[Versions]
-  /*val userChronicles = for {
-    (u, c) <- users join chronicles
-  } yield (u.id, c.chronicleID)*/
+  lazy val emailConfirmations = TableQuery[EmailConfirmations]
 
   lazy val db = Database.forDriver(
     driver = new org.h2.Driver,
