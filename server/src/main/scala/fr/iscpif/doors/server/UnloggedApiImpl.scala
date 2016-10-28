@@ -23,6 +23,8 @@ import fr.iscpif.doors.ext.Data._
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.H2Driver.api._
 
+import scala.util.{Failure, Success, Try}
+
 class UnloggedApiImpl extends shared.UnloggedApi {
 
   // TODO : consult the email DB
@@ -30,14 +32,17 @@ class UnloggedApiImpl extends shared.UnloggedApi {
     u.email === email
   }.result).isEmpty
 
-  def addUser(partialUser: PartialUser, email: String, pass: Password): Unit = {
+  def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError] = {
     val someUser = Utils.toUser(partialUser, pass)
     val currentTime = System.currentTimeMillis
-    val chronicleID = Utils.uuid
-    someUser.foreach { u =>
+    val userChronicleID = Utils.uuid
+    val emailChronicleID = Utils.uuid
+    val secret = Utils.uuid
+
+    someUser.flatMap { u =>
       val userAndEmailQueries = DBIO.seq(
-        Utils.userAddQueries(u, chronicleID),
-        Utils.emailAddQueries(u.id, email)
+        Utils.userAddQueries(u, userChronicleID),
+        Utils.emailAddQueries(u.id, email, Some(emailChronicleID), Some(secret))
       )
 
       val admins = chronicles.filter { c => c.lock === locks.ADMIN }.result.map(_.size)
@@ -45,13 +50,22 @@ class UnloggedApiImpl extends shared.UnloggedApi {
       val transaction = DBIO.seq(
         userAndEmailQueries,
         admins.flatMap {
-          case 0 => DBIO.seq(Utils.chronicleAddQueries(chronicleID, u.id, locks.ADMIN, States.OPEN))
+          case 0 => DBIO.seq(Utils.chronicleAddQueries(userChronicleID, u.id, locks.ADMIN, States.OPEN))
           case _ => DBIO.seq()
         }
       )
 
-      db.run(transaction.transactionally)
+      Try(
+        query({
+          Utils.sendEmailConfirmation(email, emailChronicleID, secret)
+          transaction.transactionally
+        })
+      ) match {
+        case Success(s) => None
+        case Failure(f) => Some(EmailDeliveringError(f.getStackTrace.mkString("\n")))
+      }
     }
+
   }
 
 }

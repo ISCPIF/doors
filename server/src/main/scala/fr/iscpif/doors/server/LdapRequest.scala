@@ -37,7 +37,7 @@ object LdapRequest {
   }
 
   def search(connection: LdapNetworkConnection, login: String) =
-    connection.search(LdapConstants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, name, email, description)
+    connection.search(Constants.baseDN, s"($uid=$login)", SearchScope.SUBTREE, name, email, description)
 }
 
 import LdapRequest._

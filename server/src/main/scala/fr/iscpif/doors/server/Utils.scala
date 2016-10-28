@@ -1,10 +1,18 @@
 package fr.iscpif.doors.server
 
+import javax.mail.internet.InternetAddress
+
+import courier._
 import fr.iscpif.doors.api._
 import fr.iscpif.doors.ext.Data._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Extraction, Formats}
 import slick.driver.H2Driver.api._
+import scala.concurrent.ExecutionContext.Implicits.global
+
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
+import scala.util._
 
 /*
  * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
@@ -46,6 +54,11 @@ object Utils {
     }
 
 
+  def isEmailConfirmed(secret: String, chronicleID: String): Boolean =
+    !query(emailConfirmations.filter { ec =>
+      ec.chronicleID === chronicleID && ec.secret === secret && ec.deadline >= System.currentTimeMillis
+    }.result).isEmpty
+
   /* def isMatching(user: User, email: String) = (for {
      (e, uc) <- emails join userChronicles on (_.chronicleID === _.chronicleID) if (e.email === email && uc.userID === user.id)
    } yield ()).length > 0*/
@@ -61,17 +74,17 @@ object Utils {
 
 
   // Add email
-  def emailAddQueries(userID: User.Id, email: String) = {
+  def emailAddQueries(userID: User.Id, email: String, chronicleID: Option[Chronicle.Id] = None, secret: Option[String] = None) = {
     val doesEmailExist = query(emails.filter {
       _.email === email
     }.result)
     if (doesEmailExist.isEmpty) {
-      val chronicleID = uuid
+      val cID = chronicleID.getOrElse(uuid)
       DBIO.seq(
-        emails += Email(chronicleID, email),
+        emails += Email(cID, email),
         // On hour to confirm the new email
-        emailConfirmations += EmailConfirmation(chronicleID, uuid, System.currentTimeMillis + 3600000),
-        chronicleAddQueries(chronicleID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
+        emailConfirmations += EmailConfirmation(cID, secret.getOrElse(uuid), System.currentTimeMillis + 3600000),
+        chronicleAddQueries(cID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
       )
     } else DBIO.seq()
   }
@@ -94,6 +107,25 @@ object Utils {
       s.lock === locks.ADMIN
     }.result).length > 0
   }
+
+  def sendEmailConfirmation(to: String, chronicleID: Chronicle.Id, secret: String): Option[EmailDeliveringError] = {
+    val secretURL = s"${Constants.host}:${Constants.port}/emailvalidation?chronicle=$chronicleID&secret=$secret"
+
+    def sending(adminUser: AdminUser) = DoorsMailer.send(
+      Envelope.from(new InternetAddress(adminUser.id)).to(new InternetAddress(to)).
+        subject("DOORS | Email confirmation").
+        content(Text(s"Hi,\nPlease click on the following link to confirm this email address !\n$secretURL\n\nThe DOORS team"))
+    )
+
+    Settings.adminUser.toOption.map { adminUser =>
+      Try(
+        Await.result(sending(adminUser), Duration.Inf)) match {
+        case Success(s) => None
+        case Failure(f) => Some(EmailDeliveringError(f.getStackTrace.mkString("\n")))
+      }
+    }.getOrElse(Some(EmailDeliveringError("The DOORS administrator email adress is not configured")))
+  }
+
 
   def uuid = java.util.UUID.randomUUID.toString
 

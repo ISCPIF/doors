@@ -38,7 +38,7 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
   LdapConnection.connect(authentication)
 
   def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery = {
-    val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
+    val ldap = LdapConnection.fromLogin(Constants.host, authentication.login, authentication.password)
 
     for {
       l <- ldap

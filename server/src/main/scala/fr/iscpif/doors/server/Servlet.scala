@@ -146,6 +146,14 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
     }
   }
 
+  get(s"/emailvalidation") {
+    val chronicleID = params get "chronicle" getOrElse ("")
+    val secret = params get "secret" getOrElse ("")
+
+    println("Confirmed ?" + Utils.isEmailConfirmed(secret, chronicleID))
+
+  }
+
   post(s"/$basePath/*") {
     session.get(USER_ID) match {
       case None =>

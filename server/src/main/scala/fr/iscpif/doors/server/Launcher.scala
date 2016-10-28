@@ -55,9 +55,9 @@ object Launcher {
 
 
   //TEST EMAIL
-   import courier._, Defaults._
+  /* import courier._, Defaults._
 
-    /*DoorsMailer.send(Envelope.from("xxx" `@` "xxx")
+    DoorsMailer.send(Envelope.from("xxx" `@` "xxx")
       .to("xxx" `@` "xxx")
       .subject("Message from DOORS")
       .content(Text("Youhou !"))).onComplete {

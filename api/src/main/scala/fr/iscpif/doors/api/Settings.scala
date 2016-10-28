@@ -43,9 +43,7 @@ object Settings {
   def configFile = defaultLocation / "doors.conf"
 
   def saltConfig = "salt"
-
   def adminLoginConfig = "adminLogin"
-
   def adminPassConfig = "adminPass"
 
   lazy val config = ConfigFactory.parseFile(configFile.toJava)

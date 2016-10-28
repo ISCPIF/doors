@@ -18,7 +18,7 @@
 package fr.iscpif.doors.lab
 
 import fr.iscpif.doors.api._
-import fr.iscpif.doors.server.{Launcher, locks}
+import fr.iscpif.doors.server.{Constants, Launcher, locks}
 import slick.driver.H2Driver.api._
 
 object ISCPIFDoors extends App {
@@ -36,6 +36,6 @@ object ISCPIFDoors extends App {
     )
   }
 
-  Launcher.run(quests, 8989)
+  Launcher.run(quests, Constants.port)
 
 }

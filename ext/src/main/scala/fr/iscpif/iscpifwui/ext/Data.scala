@@ -174,6 +174,8 @@ object Data {
 
   case class UnexceptedError(message: String, stackTrace: String, level: Option[String] = None) extends Error
 
+  case class EmailDeliveringError(message: String) extends Error
+
   case object UnauthorizedError extends Error {
     def message = "Not authorized to perform this action"
   }

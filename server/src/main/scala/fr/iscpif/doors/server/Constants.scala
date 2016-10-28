@@ -17,9 +17,10 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object LdapConstants {
+object Constants {
 
-  //val host = "localhost"
-  val host = "ldap.iscpif.fr"
+  val host = "localhost"
+  val port = 8989
+  //val host = "ldap.iscpif.fr"
   val baseDN = "ou=People,dc=iscpif,dc=fr"
 }

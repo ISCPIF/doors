@@ -55,5 +55,5 @@ trait Api {
 trait UnloggedApi {
   def isEmailUsed(email: String): Boolean
 
-  def addUser(partialUser: PartialUser, email: String, pass: Password): Unit
+  def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError]
 }

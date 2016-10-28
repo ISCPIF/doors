@@ -50,7 +50,7 @@ object LdapConnection {
   }
 
   def connect(authentication: LoginPassword): LDAPUserQuery = {
-    val ldap = LdapConnection.fromLogin(LdapConstants.host, authentication.login, authentication.password)
+    val ldap = LdapConnection.fromLogin(Constants.host, authentication.login, authentication.password)
     LDAPUserQuery(LdapRequest.getUser(ldap, authentication.login))
   }
 
