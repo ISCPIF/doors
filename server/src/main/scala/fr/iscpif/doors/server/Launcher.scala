@@ -10,6 +10,8 @@ import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
 import Utils._
 
+import scala.util.{Failure, Success}
+
 /*
  * Copyright (C) 18/02/16 // mathieu.leclaire@openmole.org
  *
@@ -53,13 +55,16 @@ object Launcher {
 
 
   //TEST EMAIL
-  /*  import courier._, Defaults._
+   import courier._, Defaults._
 
-    DoorsMailer.send(Envelope.from("xxx" `@` "xxx")
-      .to("xxxx" `@` "xxx")
+    /*DoorsMailer.send(Envelope.from("leclairem" `@` "gmail.com")
+      .to("mathieu" `@` "leclaire.re")
       .subject("Message from DOORS")
-      .content(Text("Youhou !"))).onSuccess {
-      case _ => println("message delivered")
+      .content(Text("Youhou !"))).onComplete {
+      case Success(s) => println("message delivered")
+      case Failure(f)=>
+        println("Fail: ")
+        f.printStackTrace
     }*/
 
 

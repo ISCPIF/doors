@@ -4,7 +4,8 @@ import java.util.UUID
 
 import com.typesafe.config.ConfigFactory
 import slick.driver.H2Driver.api._
-import fr.iscpif.doors.ext.Data.Version
+import fr.iscpif.doors.ext.Data.{AdminUser, Version}
+
 import scala.util._
 
 /*
@@ -42,6 +43,10 @@ object Settings {
   def configFile = defaultLocation / "doors.conf"
 
   def saltConfig = "salt"
+
+  def adminLoginConfig = "adminLogin"
+
+  def adminPassConfig = "adminPass"
 
   lazy val config = ConfigFactory.parseFile(configFile.toJava)
 
@@ -82,4 +87,8 @@ object Settings {
         s
     }
   }
+
+  val adminUser: Try[AdminUser] = Try((get(adminLoginConfig), get(adminPassConfig))).map
+    { case (l, p) => AdminUser(l, p) }
+
 }

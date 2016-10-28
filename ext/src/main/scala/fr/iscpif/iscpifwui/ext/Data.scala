@@ -99,6 +99,8 @@ object Data {
 
   case class EmailConfirmation(chronicleID: Chronicle.Id, secret: String, deadline: Long)
 
+  case class AdminUser(id: String, pass: String)
+
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 
 

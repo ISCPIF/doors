@@ -18,13 +18,22 @@ package fr.iscpif.doors.server
  */
 
 import courier._
+import fr.iscpif.doors.api.Settings
+
+import scala.util.{Failure, Success}
 
 object DoorsMailer {
-  private val mailer = Mailer("smtp.gmail.com", 587)
-    .auth(true)
-    .as("xxxx", "xxxx")
-    .startTtls(true)()
-
+  private val mailer = Settings.adminUser match {
+    case Success(au) =>
+      Mailer("smtp.gmail.com", 587)
+      .auth(true)
+      .as(au.id, au.pass)
+      .startTtls(true)
+      .debug(true)()
+    case Failure(f) =>
+      println("In failure")
+      throw (f)
+  }
 
   def send = mailer
 }
