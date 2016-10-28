@@ -69,6 +69,8 @@ object Utils {
       val chronicleID = uuid
       DBIO.seq(
         emails += Email(chronicleID, email),
+        // On hour to confirm the new email
+        emailConfirmations += EmailConfirmation(chronicleID, uuid, System.currentTimeMillis + 3600000),
         chronicleAddQueries(chronicleID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
       )
     } else DBIO.seq()
