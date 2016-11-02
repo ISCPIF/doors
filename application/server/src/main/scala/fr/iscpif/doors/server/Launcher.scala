@@ -48,10 +48,12 @@ object Launcher {
 
     server.setHandler(context)
 
-    Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, "leclairem@gmail.com", "bbppp", "12233")
+    //Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, "leclairem@gmail.com", "bbppp", "12233")
     db.query(database)(users.result).foreach {
       println
     }
+
+    println("Server started")
 
     server.start
     server.join
