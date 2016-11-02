@@ -2,14 +2,14 @@ package fr.iscpif.doors.server
 
 import javax.mail.internet.InternetAddress
 
-import courier._
+import com.github.jurajburian.mailer.Content
 import fr.iscpif.doors.api._
 import fr.iscpif.doors.ext.Data._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Extraction, Formats}
 import slick.driver.H2Driver.api._
-import scala.concurrent.ExecutionContext.Implicits.global
 
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.util._
@@ -37,6 +37,11 @@ object Utils {
   implicit class ToJsonDecorator(x: Any) {
     def toJson = pretty(Extraction.decompose(x))
   }
+
+  implicit def throwableToEmailDeliveringError(t: Throwable): EmailDeliveringError =
+    EmailDeliveringError(t.getMessage, t.getStackTrace.map {
+      _.toString
+    })
 
   def toUser(pUser: PartialUser, pass: Password): Option[User] =
     pass.password.map { p =>
@@ -108,24 +113,24 @@ object Utils {
     }.result).length > 0
   }
 
-  def sendEmailConfirmation(to: String, chronicleID: Chronicle.Id, secret: String): Option[EmailDeliveringError] = {
-    val secretURL = s"${Constants.host}:${Constants.port}/emailvalidation?chronicle=$chronicleID&secret=$secret"
+  def sendEmailConfirmation(sendTo: String, chronicleID: Chronicle.Id, secret: String): Option[EmailDeliveringError] = {
+    val secretURL = s"${Constants.host}:${Constants.port}/emailvalidation?chronicle=$chronicleID&secret=$secret>"
+    val secretLink = s"""<a href=$secretURL>$secretURL</a>"""
 
-    def sending(adminUser: AdminUser) = DoorsMailer.send(
-      Envelope.from(new InternetAddress(adminUser.id)).to(new InternetAddress(to)).
-        subject("DOORS | Email confirmation").
-        content(Text(s"Hi,\nPlease click on the following link to confirm this email address !\n$secretURL\n\nThe DOORS team"))
+    val oo = DoorsMailer.send(
+      "DOORS | Email confirmation",
+      new Content().
+        text(s"Hi,\nPlease click on the following link to confirm this email address !\n $secretURL\n\nThe DOORS team")
+        .html(s"<html><body><h1>Hi,\nPlease click on the following link to confirm this email address ! $secretLink The DOORS team</h1></body></html>"),
+      sendTo
     )
 
-    Settings.adminUser.toOption.map { adminUser =>
-      Try(
-        Await.result(sending(adminUser), Duration.Inf)) match {
-        case Success(s) => None
-        case Failure(f) => Some(EmailDeliveringError(f.getStackTrace.mkString("\n")))
-      }
-    }.getOrElse(Some(EmailDeliveringError("The DOORS administrator email adress is not configured")))
-  }
+    println("SEND ! " + oo.map {
+      _.message
+    })
 
+    oo
+  }
 
   def uuid = java.util.UUID.randomUUID.toString
 
