@@ -19,6 +19,7 @@ package fr.iscpif.doors.server
 
 import fr.iscpif.doors.api._
 import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.server.Utils._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.H2Driver.api._
@@ -61,8 +62,12 @@ class UnloggedApiImpl extends shared.UnloggedApi {
           transaction.transactionally
         })
       ) match {
-        case Success(s) => None
-        case Failure(f) => Some(EmailDeliveringError(f.getStackTrace.mkString("\n")))
+        case Success(s) =>
+          println("SUcces")
+          None
+        case Failure(f) =>
+          println("Error " + f.getStackTrace.mkString("\n"))
+          Some(f)
       }
     }
 

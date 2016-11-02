@@ -99,7 +99,7 @@ object Data {
 
   case class EmailConfirmation(chronicleID: Chronicle.Id, secret: String, deadline: Long)
 
-  case class AdminUser(id: String, pass: String)
+  case class SMTPSettings(host: String, port: Int, login: String, pass: String)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 
@@ -174,7 +174,7 @@ object Data {
 
   case class UnexceptedError(message: String, stackTrace: String, level: Option[String] = None) extends Error
 
-  case class EmailDeliveringError(message: String) extends Error
+  case class EmailDeliveringError(message: String, stack: Seq[String]) extends Error
 
   case object UnauthorizedError extends Error {
     def message = "Not authorized to perform this action"

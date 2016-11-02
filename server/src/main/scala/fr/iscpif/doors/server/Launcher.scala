@@ -53,21 +53,7 @@ object Launcher {
 
     server.setHandler(context)
 
-
-  //TEST EMAIL
-  /* import courier._, Defaults._
-
-    DoorsMailer.send(Envelope.from("xxx" `@` "xxx")
-      .to("xxx" `@` "xxx")
-      .subject("Message from DOORS")
-      .content(Text("Youhou !"))).onComplete {
-      case Success(s) => println("message delivered")
-      case Failure(f)=>
-        println("Fail: ")
-        f.printStackTrace
-    }*/
-
-
+    Utils.sendEmailConfirmation("leclairem@gmail.com", "bbppp", "12233")
     query(users.result).foreach {
       println
     }

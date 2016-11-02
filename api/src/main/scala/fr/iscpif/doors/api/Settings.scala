@@ -3,8 +3,7 @@ package fr.iscpif.doors.api
 import java.util.UUID
 
 import com.typesafe.config.ConfigFactory
-import slick.driver.H2Driver.api._
-import fr.iscpif.doors.ext.Data.{AdminUser, Version}
+import fr.iscpif.doors.ext.Data.{SMTPSettings, Version}
 
 import scala.util._
 
@@ -43,12 +42,18 @@ object Settings {
   def configFile = defaultLocation / "doors.conf"
 
   def saltConfig = "salt"
-  def adminLoginConfig = "adminLogin"
-  def adminPassConfig = "adminPass"
+
+  def adminLogin = "adminLogin"
+
+  def adminPass = "adminPass"
+
+  def smtpHostName = "smtpHostName"
+
+  def smtpPort = "smtpPort"
 
   lazy val config = ConfigFactory.parseFile(configFile.toJava)
 
-  def get(confKey: String) = fromConf(confKey).getOrElse("")
+  def get(confKey: String) = fromConf(confKey)
 
   def fromConf(confKey: String): Try[String] = Try {
     config.getString(confKey)
@@ -77,7 +82,7 @@ object Settings {
   }
 
   def salt: String = {
-    Try(get(saltConfig)) match {
+    get(saltConfig) match {
       case Success(s) => s
       case Failure(_) =>
         val s = UUID.randomUUID.toString
@@ -86,7 +91,13 @@ object Settings {
     }
   }
 
-  val adminUser: Try[AdminUser] = Try((get(adminLoginConfig), get(adminPassConfig))).map
-    { case (l, p) => AdminUser(l, p) }
+  val smtpSettings: Try[SMTPSettings] = for {
+    h <- get(smtpHostName)
+    po <- get(smtpPort)
+    l <- get(adminLogin)
+    pa <- get(adminPass)
+  } yield {
+    SMTPSettings(h, po.toInt, l, pa)
+  }
 
 }
