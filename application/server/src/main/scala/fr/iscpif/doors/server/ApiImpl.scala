@@ -32,9 +32,9 @@ class ApiImpl(settings: Settings, database: db.Database, loggedUserId: UserID) e
   }
 
 
-  //LDAP
-  def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
-  LdapConnection.connect(authentication)
+//  //LDAP
+//  def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
+//  LdapConnection.connect(authentication)
 
 //  def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery = {
 //    val ldap = LdapConnection.fromLogin(settings.host, authentication.login, authentication.password)

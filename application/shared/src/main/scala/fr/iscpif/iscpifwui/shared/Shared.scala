@@ -22,7 +22,7 @@ import fr.iscpif.doors.ext.Data._
 
 trait Api {
   //LDAP
-  def connectToLDAP(authentication: LoginPassword): LDAPUserQuery
+  //def connectToLDAP(authentication: LoginPassword): LDAPUserQuery
 
   //def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
