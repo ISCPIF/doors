@@ -27,7 +27,7 @@ import slick.lifted.TableQuery
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
-import scala.util.Failure
+import scala.util._
 
 
 package object db {
@@ -105,16 +105,25 @@ package object db {
   }
 
   def initDB(location: File) = {
-    val create = !location.exists
 
     lazy val db: Database = Database.forDriver(
       driver = new org.h2.Driver,
       url = s"jdbc:h2:/${location}"
     )
+    def dbWorks =
+      Try { Await.result(db.run(versions.length.result), Duration.Inf) } match {
+        case Failure(_) ⇒ false
+        case Success(_) ⇒ true
+      }
 
-    if (create) {
-      query(db)((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema ++ versions.schema ++ emailConfirmations.schema).create)
-    }
+    if (!dbWorks)
+      query(db)((
+        users.schema ++
+          chronicles.schema ++
+          userChronicles.schema ++
+          emails.schema ++
+          versions.schema ++
+          emailConfirmations.schema).create)
 
     db
   }

@@ -25,5 +25,5 @@ case class Settings(
   publicURL: String,
   salt: String,
   smtp: SMTPSettings,
-  dbLocation: File = homeDir / "h2.mv.db"
+  dbLocation: File = homeDir / "h2"
 )
