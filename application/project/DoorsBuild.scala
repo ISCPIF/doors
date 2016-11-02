@@ -21,7 +21,6 @@ object DoorsBuild extends Build {
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
   )
 
-
   val scalatraVersion = "2.4.+"
   val jettyVersion = "9.3.7.v20160115"
   val json4sVersion = "3.3.0"
@@ -51,8 +50,7 @@ object DoorsBuild extends Build {
     file("ext")) settings (projectSettings: _*) settings (
     libraryDependencies ++= Seq(
       "org.apache.directory.api" % "api-all" % apacheDirectoryVersion
-    )
-    ) enablePlugins (ScalaJSPlugin)
+    )) enablePlugins (ScalaJSPlugin)
 
   lazy val rest = Project(
     "rest",
@@ -108,6 +106,9 @@ object DoorsBuild extends Build {
       )
     )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
+
+  lazy val runLab = taskKey[File]("runlab")
+
   val lab = Project(
     "lab",
     file("lab")
@@ -120,12 +121,15 @@ object DoorsBuild extends Build {
       case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
-    }
-
+    },
+    run := ((run in Runtime) dependsOn runLab).evaluated,
+    runLab :=
+      ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile) map { (js, ressource, classDirectory) =>
+        copy(js, ressource, classDirectory / "webapp").data
+      }).value
     ) dependsOn (server)
 
   lazy val go = taskKey[Unit]("go")
-
   lazy val toJar = taskKey[Unit]("toJar")
 
   lazy val bootstrap = Project(
@@ -140,16 +144,15 @@ object DoorsBuild extends Build {
       IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName + " \"$@\"")
       s.log.info(s"doors has been generated in ${shFile.getParent}")
       s.log.info(s"Now launch ./doors <port>")
-    }
-    ) dependsOn(client, server, lab)
+    }) dependsOn(client, server, lab)
 
 
-  private def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) = {
+  private def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) =
     clientTarget.map { ct =>
       recursiveCopy(new File(resources, "webapp"), webappServerTarget)
       recursiveCopy(ct, new File(webappServerTarget, "js/" + ct.getName))
+      webappServerTarget
     }
-  }
 
   private def recursiveCopy(from: File, to: File): Unit = {
     if (from.isDirectory) {
@@ -159,10 +162,10 @@ object DoorsBuild extends Build {
       } recursiveCopy(f, new File(to, f.getName))
     }
     else if (!to.exists() || from.lastModified() > to.lastModified) {
-      println(s"Copy file $from to $to ")
       from.getParentFile.mkdirs
       IO.copyFile(from, to, preserveLastModified = true)
     }
   }
+
 
 }

@@ -41,7 +41,10 @@ object Launcher {
 
     val context = new WebAppContext()
     context setContextPath "/"
-    context.setResourceBase("webapp")
+
+    val webapp = getClass.getClassLoader.getResource("webapp").toExternalForm
+    context.setResourceBase(webapp)
+
     context.setAttribute(arguments, args)
     context.addEventListener(new ScalatraListener)
     context.addServlet(classOf[Servlet], "/")
