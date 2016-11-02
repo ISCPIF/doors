@@ -24,7 +24,7 @@ trait Api {
   //LDAP
   def connectToLDAP(authentication: LoginPassword): LDAPUserQuery
 
-  def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
+  //def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
   //Database
   def loggedUser(): Option[User]

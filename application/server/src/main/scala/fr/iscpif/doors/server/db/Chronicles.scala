@@ -1,4 +1,4 @@
-package fr.iscpif.doors.api
+package fr.iscpif.doors.server.db
 
 /*
  * Copyright (C) 16/03/16 // mathieu.leclaire@openmole.org

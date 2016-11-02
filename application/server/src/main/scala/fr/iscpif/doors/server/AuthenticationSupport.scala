@@ -1,8 +1,8 @@
 package fr.iscpif.doors.server
 
-import javax.servlet.http.{HttpServletResponse, HttpServletRequest}
+import javax.servlet.http.{HttpServletRequest, HttpServletResponse}
 
-import fr.iscpif.doors.ext.Data.UserID
+import fr.iscpif.doors.ext.Data.{User, UserID}
 import org.scalatra.ScalatraBase
 import org.scalatra.auth.strategy.BasicAuthSupport
 import org.scalatra.auth.{ScentryConfig, ScentrySupport}
@@ -34,15 +34,16 @@ trait AuthenticationSupport extends ScentrySupport[UserID] with BasicAuthSupport
 
   protected val scentryConfig = (new ScentryConfig {}).asInstanceOf[ScentryConfiguration]
 
-
   override protected def configureScentry = {
     scentry.unauthenticated {
       scentry.strategies("Doors").unauthenticated()
     }
   }
 
+  def authenticated(email: String, password: String): Option[UserID]
+
   override protected def registerAuthStrategies = {
-    scentry.register("Doors", app => new DoorsAuthStrategy(app))
+    scentry.register("Doors", app => new DoorsAuthStrategy(app, authenticated))
   }
 
 

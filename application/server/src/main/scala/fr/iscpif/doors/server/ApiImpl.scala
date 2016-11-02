@@ -20,11 +20,10 @@ package fr.iscpif.doors.server
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.ext.Data.LDAPUserQuery._
 import scala.concurrent.ExecutionContext.Implicits.global
-import fr.iscpif.doors.api._
 import slick.driver.H2Driver.api._
-import Utils._
+import db._
 
-class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends shared.Api {
+class ApiImpl(settings: Settings, database: db.Database, loggedUserId: UserID) extends shared.Api {
 
   implicit class Check(capacity: Capacity) {
     def check[T](f: => T): Either[T, Error] =
@@ -37,28 +36,28 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
   def connectToLDAP(authentication: LoginPassword): LDAPUserQuery =
   LdapConnection.connect(authentication)
 
-  def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery = {
-    val ldap = LdapConnection.fromLogin(Constants.host, authentication.login, authentication.password)
-
-    for {
-      l <- ldap
-      u <- LdapRequest.getUser(ldap, authentication.login)
-      request = new LdapRequest(l)
-      p <- request.modify(u.dn, newUser)
-    } yield p
-  }
+//  def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery = {
+//    val ldap = LdapConnection.fromLogin(settings.host, authentication.login, authentication.password)
+//
+//    for {
+//      l <- ldap
+//      u <- LdapRequest.getUser(ldap, authentication.login)
+//      request = new LdapRequest(l)
+//      p <- request.modify(u.dn, newUser)
+//    } yield p
+//  }
 
 
   //DataBase
 
   //USERS
-  def loggedUser: Option[User] = query(users.filter { u =>
+  def loggedUser: Option[User] = query(database)(users.filter { u =>
     u.id === loggedUserId.id
   }.result).headOption
 
-  def allUsers: Seq[User] = query(users.result)
+  def allUsers: Seq[User] = query(database)(users.result)
 
-  private def adminCapacity = Capacity(query(isAdmin(quests, loggedUserId)))
+  private def adminCapacity = Capacity(query(database)(isAdmin(settings.quests, loggedUserId)))
 
   def atLeastOneAdminRight: Capacity = adminCapacity
 
@@ -66,7 +65,7 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
   def canRemoveUser: Capacity = adminCapacity
 
   def removeUser(user: User) = canRemoveUser.check {
-    query(users.filter {
+    query(database)(users.filter {
       _.id === user.id
     }.delete)
   }
@@ -76,7 +75,7 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
 
   def updatePartialUser(puser: PartialUser): Unit = canModifyPartialUser(puser.id).check {
     // slick: query all fields except password in order to update them
-    query {
+    query(database) {
       val q = for {
         u <- users if u.id === puser.id
       } yield (u.name)
@@ -86,17 +85,17 @@ class ApiImpl(quests: Map[String, AccessQuest], loggedUserId: UserID) extends sh
 
   def updatePassword(id: User.Id, password: String): Unit = canModifyPartialUser(id).check {
     // idem: query just the password to update it
-    query {
+    query(database) {
       val q = for {
         u <- users if u.id === id
       } yield u.password
-      q.update(Hashing(password))
+      q.update(Hashing(password, settings.salt))
     }
   }
 
-  def isPasswordValid(pass: String): Boolean = query {
+  def isPasswordValid(pass: String): Boolean = query(database) {
     users.filter{_.id === loggedUserId.id}.result
-  }.headOption.map{_.password == Hashing(pass)}.getOrElse(false)
+  }.headOption.map{_.password == Hashing(pass, settings.salt)}.getOrElse(false)
 
   //STATES
   // We only add rows in Chronicles and do not do any updates (to keep the history). If the (LockID, stateID)

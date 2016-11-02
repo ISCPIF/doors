@@ -20,7 +20,6 @@ package fr.iscpif.doors.server
 import com.roundeights.hasher.Algo
 import fr.iscpif.doors.server.Hashing.{HashingAlgorithm, UnsaltAlgorithm}
 import Utils._
-import fr.iscpif.doors.api.Settings
 
 object Hashing {
 
@@ -37,7 +36,7 @@ object Hashing {
   val currentParameters = PBKDF2(1000, 128)
   val currentParametersJson = currentParameters.toJson
 
-  def apply[T](s: String, hash: T = currentParameters)(implicit hashing: HashingMethod[T]) = (hashing(hash)(Settings.salt)(s))
+  def apply[T](s: String, salt: String, hash: T = currentParameters)(implicit hashing: HashingMethod[T]) = (hashing(hash)(salt)(s))
 }
 
 sealed trait HashingMethod[T] {

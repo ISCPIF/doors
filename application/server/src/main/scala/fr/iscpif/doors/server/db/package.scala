@@ -1,5 +1,5 @@
 /**
-  * Created by Romain Reuillon on 28/04/16.
+  * Created by Romain Reuillon on 02/11/16.
   *
   * This program is free software: you can redistribute it and/or modify
   * it under the terms of the GNU Affero General Public License as published by
@@ -15,19 +15,24 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   *
   */
-package fr.iscpif.doors
+package fr.iscpif.doors.server
 
-import fr.iscpif.doors.ext.Data.{User, UserID}
+
+import better.files.File
+import fr.iscpif.doors.ext.Data._
 import slick.dbio.DBIOAction
-import slick.lifted.TableQuery
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
 import slick.driver.H2Driver.api._
+import slick.lifted.TableQuery
 
+import scala.concurrent.Await
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
 import scala.util.Failure
 
-package object api {
+
+package object db {
+
+  type Database = slick.driver.H2Driver.api.Database
 
   lazy val users = TableQuery[Users]
   lazy val chronicles = TableQuery[Chronicles]
@@ -36,19 +41,11 @@ package object api {
   lazy val versions = TableQuery[Versions]
   lazy val emailConfirmations = TableQuery[EmailConfirmations]
 
-  lazy val db = Database.forDriver(
-    driver = new org.h2.Driver,
-    url = s"jdbc:h2:/${Settings.dbLocation}"
-  )
-
   type DbQuery[T] = DBIOAction[T, slick.dbio.NoStream, scala.Nothing]
 
-  def query[T](f: DbQuery[T]) = Await.result(db.run(f), Duration.Inf)
+  def query[T](db: Database)(f: DbQuery[T]) = Await.result(db.run(f), Duration.Inf)
 
   def failure(s: String) = Failure(new RuntimeException(s))
-
-
-  type Quests = Map[String, AccessQuest]
 
   type Authorized = (Quests, UserID) => DbQuery[Boolean]
 
@@ -64,6 +61,63 @@ package object api {
         _.contains(uid.id)
       }
     }
+
+  lazy val dbVersion = 1
+
+
+  //lazy val dbName = "h2"
+
+
+  //def configFile = defaultLocation / "doors.conf"
+
+  //  def saltConfig = "salt"
+  //
+  //  def adminLogin = "adminLogin"
+  //
+  //  def adminPass = "adminPass"
+  //
+  //  def smtpHostName = "smtpHostName"
+  //
+  //  def smtpPort = "smtpPort"
+
+  //  lazy val config = ConfigFactory.parseFile(configFile.toJava)
+
+  //  def get(confKey: String) = fromConf(confKey)
+  //
+  //  def fromConf(confKey: String): Try[String] = Try {
+  //    config.getString(confKey)
+  //  }
+
+  def updateDB(db: Database) = {
+    val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
+    val v = query(db)(versions.result)
+
+    val updateQuery = {
+      if (v.exists(_.id < dbVersion)) {
+        println("TODO: UPDATE DB")
+        addVersionQuery
+      }
+      else if (v.isEmpty) addVersionQuery
+      else DBIO.seq()
+    }
+
+    db.run(updateQuery)
+  }
+
+  def initDB(location: File) = {
+    val create = !location.exists
+
+    lazy val db: Database = Database.forDriver(
+      driver = new org.h2.Driver,
+      url = s"jdbc:h2:/${location}"
+    )
+
+    if (create) {
+      query(db)((users.schema ++ chronicles.schema ++ userChronicles.schema ++ emails.schema ++ versions.schema ++ emailConfirmations.schema).create)
+    }
+
+    db
+  }
 
 
 }

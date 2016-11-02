@@ -1,7 +1,7 @@
-package fr.iscpif.doors.api
+package fr.iscpif.doors.server.db
 
 /*
- * Copyright (C) 25/10/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 28/10/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -21,12 +21,11 @@ import fr.iscpif.doors.ext.Data._
 import slick.driver.H2Driver.api._
 
 
-class UserChronicles(tag: Tag) extends Table[UserChronicle](tag, "USER_CHRONICLES") {
-  def userID = column[User.Id]("USER_ID")
-  def chronicleID = column[Chronicle.Id]("CHRONICLE")
+class EmailConfirmations(tag: Tag) extends Table[EmailConfirmation](tag, "EMAIL_CONFIRMATIONS") {
+  def chronicleID = column[Chronicle.Id]("CHRONICLE_ID")
+  def secret = column[String]("SECRET")
+  def deadline = column[Long]("DEADLINE")
 
-  def * = (userID, chronicleID) <> ((UserChronicle.apply _).tupled, UserChronicle.unapply)
 
-  def user = foreignKey("USER_FK", userID, users)(_.id)
-
+  def * = (chronicleID, secret, deadline) <> ((EmailConfirmation.apply _).tupled, EmailConfirmation.unapply)
 }

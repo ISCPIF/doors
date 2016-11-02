@@ -22,19 +22,14 @@ package fr.iscpif.doors.server
 import fr.iscpif.doors.ext.Data._
 import org.scalatra._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import upickle._
-import autowire._
-import shared._
-
-import collection.JavaConversions._
 import rx._
+
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
-import fr.iscpif.doors.api.AccessQuest
+import scala.concurrent.ExecutionContext.Implicits.global
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
@@ -42,7 +37,14 @@ object AutowireServer extends autowire.Server[String, upickle.default.Reader, up
   def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 }
 
-class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with AuthenticationSupport {
+object Servlet {
+  case class Arguments(settings: Settings, db: slick.driver.H2Driver.api.Database)
+}
+
+class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with AuthenticationSupport {
+
+  def authenticated(email: String, password: String): Option[UserID] =
+    Utils.connect(arguments.db)(email, password, arguments.settings.salt) map { u => UserID(u.id) }
 
   val basePath = "shared"
 
@@ -67,7 +69,7 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
   )
 
   protected def basicAuth() = {
-    val baReq = new DoorsAuthStrategy(this)
+    val baReq = new DoorsAuthStrategy(this, authenticated)
     val rep = baReq.authenticate()
     rep match {
       case Some(u: UserID) =>
@@ -140,7 +142,7 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
     val login = params get "login" getOrElse ("")
     val pass = params get "password" getOrElse ("")
 
-    Utils.connect(login, pass).headOption match {
+    Utils.connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
       case Some(u: User) => Ok(u.toJson)
       case None => halt(404, (s"User $login not found").toJson)
     }
@@ -150,20 +152,21 @@ class Servlet(quests: Map[String, AccessQuest]) extends ScalatraServlet with Aut
     val chronicleID = params get "chronicle" getOrElse ("")
     val secret = params get "secret" getOrElse ("")
 
-    println("Confirmed ?" + Utils.isEmailConfirmed(secret, chronicleID))
+    println("Confirmed ?" + Utils.isEmailConfirmed(arguments.db)(secret, chronicleID))
 
   }
 
   post(s"/$basePath/*") {
     session.get(USER_ID) match {
       case None =>
-        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl)(
+        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl(arguments.settings, arguments.db))(
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
             upickle.default.read[Map[String, String]](request.body))
         ), Duration.Inf)
         //halt(404, "Not logged in")
       case Some(loggedUserId) =>
-        Await.result(AutowireServer.route[shared.Api](new ApiImpl(quests, loggedUserId.asInstanceOf[UserID]))(
+        Await.result(AutowireServer.route[shared.Api](
+          new ApiImpl(arguments.settings, arguments.db, loggedUserId.asInstanceOf[UserID]))(
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
             upickle.default.read[Map[String, String]](request.body))
         ), Duration.Inf)

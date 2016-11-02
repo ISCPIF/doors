@@ -17,24 +17,25 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.api._
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.server.Utils._
+import fr.iscpif.doors.server.db.States
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.H2Driver.api._
+import db._
 
 import scala.util.{Failure, Success, Try}
 
-class UnloggedApiImpl extends shared.UnloggedApi {
+class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.UnloggedApi {
 
   // TODO : consult the email DB
-  def isEmailUsed(email: String): Boolean = !query(emails.filter { u =>
+  def isEmailUsed(email: String): Boolean = !query(database)(emails.filter { u =>
     u.email === email
   }.result).isEmpty
 
   def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError] = {
-    val someUser = Utils.toUser(partialUser, pass)
+    val someUser = Utils.toUser(partialUser, pass, settings.salt)
     val currentTime = System.currentTimeMillis
     val userChronicleID = Utils.uuid
     val emailChronicleID = Utils.uuid
@@ -43,7 +44,7 @@ class UnloggedApiImpl extends shared.UnloggedApi {
     someUser.flatMap { u =>
       val userAndEmailQueries = DBIO.seq(
         Utils.userAddQueries(u, userChronicleID),
-        Utils.emailAddQueries(u.id, email, Some(emailChronicleID), Some(secret))
+        Utils.emailAddQueries(database)(u.id, email, Some(emailChronicleID), Some(secret))
       )
 
       val admins = chronicles.filter { c => c.lock === locks.ADMIN }.result.map(_.size)
@@ -57,10 +58,10 @@ class UnloggedApiImpl extends shared.UnloggedApi {
       )
 
       Try(
-        query({
-          Utils.sendEmailConfirmation(email, emailChronicleID, secret)
+        query(database) {
+          Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, email, emailChronicleID, secret)
           transaction.transactionally
-        })
+        }
       ) match {
         case Success(s) =>
           println("SUcces")

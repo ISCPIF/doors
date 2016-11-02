@@ -1,4 +1,4 @@
-package fr.iscpif.doors.api
+package fr.iscpif.doors.server
 
 /*
  * Copyright (C) 17/03/16 // mathieu.leclaire@openmole.org
@@ -18,24 +18,26 @@ package fr.iscpif.doors.api
  */
 
 import fr.iscpif.doors.ext.Data._
-import util._
+import fr.iscpif.doors.server.db._
+
+import scala.util._
 
 trait AccessQuest {
-  def promote(requester: User.Id, currentState: State.Id): Try[State.Id]
-  def status(currentState: State.Id):  Try[String]
+  def promote(database: Database)(requester: User.Id, currentState: State.Id): Try[State.Id]
+  def status(database: Database)(currentState: State.Id): Try[String]
 }
 
 case class ManualValidation(validators: DbQuery[Seq[User]]) extends AccessQuest {
 
-  def promote(requester: User.Id, state: State.Id): Try[State.Id] = {
-    val vs = query(validators).map(_.id).toSet
+  def promote(database: Database)(requester: User.Id, state: State.Id): Try[State.Id] = {
+    val vs = query(database)(validators).map(_.id).toSet
     if(vs.isEmpty) failure("validator not set")
     else if(!vs.contains(requester)) failure("you are not a validator")
     else Success(States.OPEN)
   }
 
-  def status(state: State.Id): Try[String] = state match {
-    case States.LOCKED => Try(s"Validation waiting approval of one of the users: ${query(validators).map(_.name).mkString(",")}.")
+  def status(database: Database)(state: State.Id): Try[String] = state match {
+    case States.LOCKED => Try(s"Validation waiting approval of one of the users: ${query(database)(validators).map(_.name).mkString(",")}.")
     case States.OPEN => Success("Approved")
     case x => failure(s"Invalid state $x")
   }

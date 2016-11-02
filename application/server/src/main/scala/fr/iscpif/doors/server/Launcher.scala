@@ -1,16 +1,12 @@
 package fr.iscpif.doors.server
 
-import fr.iscpif.doors.api.{AccessQuest, Settings}
 import fr.iscpif.doors.ext.Data.{PartialUser, Password, User}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
 import org.eclipse.jetty.util.log._
-import fr.iscpif.doors.api._
+import db._
 import slick.driver.H2Driver.api._
-import Utils._
-
-import scala.util.{Failure, Success}
 
 /*
  * Copyright (C) 18/02/16 // mathieu.leclaire@openmole.org
@@ -33,28 +29,27 @@ import scala.util.{Failure, Success}
 object Launcher {
   val arguments = "arguments"
 
-  case class Parameter(quests: Map[String, AccessQuest])
-
   // this is my entry object as specified in sbt project definition
-  def run(quests: => Quests, port: Int) = {
+  def run(settings: Settings) = {
     Log.setLog(null)
 
-    Settings.initDB
-    Settings.updateDB
+    val database = db.initDB(settings.dbLocation)
+    db.updateDB(database)
 
-    val server = new Server(port)
+    val server = new Server(settings.port)
+    val args = new Servlet.Arguments(settings, database)
 
     val context = new WebAppContext()
     context setContextPath "/"
     context.setResourceBase("webapp")
-    context.setAttribute(arguments, Parameter(quests))
+    context.setAttribute(arguments, args)
     context.addEventListener(new ScalatraListener)
     context.addServlet(classOf[Servlet], "/")
 
     server.setHandler(context)
 
-    Utils.sendEmailConfirmation("leclairem@gmail.com", "bbppp", "12233")
-    query(users.result).foreach {
+    Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, "leclairem@gmail.com", "bbppp", "12233")
+    db.query(database)(users.result).foreach {
       println
     }
 

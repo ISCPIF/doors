@@ -101,21 +101,12 @@ object DoorsBuild extends Build {
         "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container;compile",
         "org.json4s" %% "json4s-jackson" % json4sVersion,
         "org.apache.directory.api" % "api-all" % apacheDirectoryVersion,
-        "com.github.jurajburian" %% "mailer" % "1.2.1"
-      )
-    )
-    ) dependsOn(shared, ext, hasher, api) enablePlugins (JettyPlugin)
-
-  val api = Project(
-    "api",
-    file("api")) settings (projectSettings: _*) settings (
-    libraryDependencies ++=
-      Seq(
+        "com.github.jurajburian" %% "mailer" % "1.2.1",
         "com.typesafe.slick" %% "slick" % "3.1.1",
         "com.h2database" % "h2" % "1.4.190",
         "com.github.pathikrit" %% "better-files" % betterFileVersion
       )
-    ) dependsOn (ext)
+    )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
   val lab = Project(
     "lab",

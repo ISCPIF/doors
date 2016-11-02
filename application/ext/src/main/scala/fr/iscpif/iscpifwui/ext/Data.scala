@@ -62,7 +62,7 @@ object Data {
     type Id = String
   }
 
-  object State{
+  object State {
     type Id = String
   }
 
@@ -98,8 +98,6 @@ object Data {
   case class Version(id: Int)
 
   case class EmailConfirmation(chronicleID: Chronicle.Id, secret: String, deadline: Long)
-
-  case class SMTPSettings(host: String, port: Int, login: String, pass: String)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 

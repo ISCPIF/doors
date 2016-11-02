@@ -1,7 +1,7 @@
-package fr.iscpif.doors.api
+package fr.iscpif.doors.server.db
 
 /*
- * Copyright (C) 28/10/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 24/10/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,15 +17,14 @@ package fr.iscpif.doors.api
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.Data.Email
 import slick.driver.H2Driver.api._
 
 
-class EmailConfirmations(tag: Tag) extends Table[EmailConfirmation](tag, "EMAIL_CONFIRMATIONS") {
-  def chronicleID = column[Chronicle.Id]("CHRONICLE_ID")
-  def secret = column[String]("SECRET")
-  def deadline = column[Long]("DEADLINE")
+class Emails(tag: Tag) extends Table[Email](tag, "EMAILS") {
+  def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
+  def email = column[String]("EMAIL")
 
-
-  def * = (chronicleID, secret, deadline) <> ((EmailConfirmation.apply _).tupled, EmailConfirmation.unapply)
+  def * = (chronicleID, email) <> ((Email.apply _).tupled, Email.unapply)
 }

@@ -3,8 +3,8 @@ package fr.iscpif.doors.server
 import javax.mail.internet.InternetAddress
 
 import com.github.jurajburian.mailer.Content
-import fr.iscpif.doors.api._
 import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.server.db.States
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, Extraction, Formats}
 import slick.driver.H2Driver.api._
@@ -13,6 +13,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import scala.util._
+import db._
 
 /*
  * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
@@ -43,24 +44,24 @@ object Utils {
       _.toString
     })
 
-  def toUser(pUser: PartialUser, pass: Password): Option[User] =
+  def toUser(pUser: PartialUser, pass: Password, salt: String): Option[User] =
     pass.password.map { p =>
-      User(pUser.id, Hashing(p), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
+      User(pUser.id, Hashing(p, salt), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
     }
 
-  def connect(email: String, password: String): Option[User] =
-    query(
+  def connect(database: db.Database)(email: String, password: String, salt: String): Option[User] =
+    query(database)(
       (for {
         e <- emails if (e.email === email)
         uc <- userChronicles if (e.chronicleID === uc.chronicleID)
         u <- users if (u.id === uc.userID)
       } yield (u)).result.headOption).filter {
-      _.password == Hashing(password)
+      _.password == Hashing(password, salt: String)
     }
 
 
-  def isEmailConfirmed(secret: String, chronicleID: String): Boolean =
-    !query(emailConfirmations.filter { ec =>
+  def isEmailConfirmed(database: db.Database)(secret: String, chronicleID: String): Boolean =
+    !query(database)(emailConfirmations.filter { ec =>
       ec.chronicleID === chronicleID && ec.secret === secret && ec.deadline >= System.currentTimeMillis
     }.result).isEmpty
 
@@ -75,12 +76,12 @@ object Utils {
     chronicleAddQueries(chronicleID, user.id, locks.REGISTRATION, States.LOCKED)
   )
 
-  def addUser(user: User, chronicleID: Chronicle.Id) = query(userAddQueries(user, chronicleID))
+  def addUser(database: db.Database)(user: User, chronicleID: Chronicle.Id) = query(database)(userAddQueries(user, chronicleID))
 
 
   // Add email
-  def emailAddQueries(userID: User.Id, email: String, chronicleID: Option[Chronicle.Id] = None, secret: Option[String] = None) = {
-    val doesEmailExist = query(emails.filter {
+  def emailAddQueries(database: db.Database)(userID: User.Id, email: String, chronicleID: Option[Chronicle.Id] = None, secret: Option[String] = None) = {
+    val doesEmailExist = query(database)(emails.filter {
       _.email === email
     }.result)
     if (doesEmailExist.isEmpty) {
@@ -94,7 +95,7 @@ object Utils {
     } else DBIO.seq()
   }
 
-  def addEmail(userID: User.Id, email: String) = query(emailAddQueries(userID, email))
+  def addEmail(database: db.Database)(userID: User.Id, email: String) = query(database)(emailAddQueries(database)(userID, email))
 
 
   // Add chronicle
@@ -103,21 +104,28 @@ object Utils {
     userChronicles += UserChronicle(userID, chronicleID)
   )
 
-  def addChronicle(chronicleID: Chronicle.Id, userID: User.Id, lockID: Lock.Id, stateID: State.Id) =
-    query(chronicleAddQueries(chronicleID, userID, lockID, stateID))
+  def addChronicle(database: db.Database)(chronicleID: Chronicle.Id, userID: User.Id, lockID: Lock.Id, stateID: State.Id) =
+    query(database)(chronicleAddQueries(chronicleID, userID, lockID, stateID))
 
 
-  def hasAdmin: Boolean = {
-    query(chronicles.filter { s =>
+  def hasAdmin(database: db.Database): Boolean = {
+    query(database)(chronicles.filter { s =>
       s.lock === locks.ADMIN
     }.result).length > 0
   }
 
-  def sendEmailConfirmation(sendTo: String, chronicleID: Chronicle.Id, secret: String): Option[EmailDeliveringError] = {
-    val secretURL = s"${Constants.host}:${Constants.port}/emailvalidation?chronicle=$chronicleID&secret=$secret>"
+  def sendEmailConfirmation(
+    smtp: SMTPSettings,
+    publicURL: String,
+    sendTo: String,
+    chronicleID: Chronicle.Id,
+    secret: String): Option[EmailDeliveringError] = {
+
+    val secretURL = s"${publicURL}/emailvalidation?chronicle=$chronicleID&secret=$secret>"
     val secretLink = s"""<a href=$secretURL>$secretURL</a>"""
 
     val oo = DoorsMailer.send(
+      smtp,
       "DOORS | Email confirmation",
       new Content().
         text(s"Hi,\nPlease click on the following link to confirm this email address !\n $secretURL\n\nThe DOORS team")

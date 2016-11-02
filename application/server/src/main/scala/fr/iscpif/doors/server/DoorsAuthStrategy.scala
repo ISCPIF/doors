@@ -1,9 +1,8 @@
 package fr.iscpif.doors.server
 
-import fr.iscpif.doors.api._
 import org.scalatra.auth.ScentryStrategy
 import slick.driver.H2Driver.api._
-import fr.iscpif.doors.ext.Data.UserID
+import fr.iscpif.doors.ext.Data.{User, UserID}
 import org.scalatra.ScalatraBase
 
 /*
@@ -23,18 +22,26 @@ import org.scalatra.ScalatraBase
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-class DoorsAuthStrategy(protected override val app: ScalatraBase)
-  extends ScentryStrategy[UserID] {
+class DoorsAuthStrategy(protected override val app: ScalatraBase, authenticated: (String, String) => Option[UserID]) extends ScentryStrategy[UserID] {
 
   def authenticate()(implicit r: javax.servlet.http.HttpServletRequest,
                      response: javax.servlet.http.HttpServletResponse): Option[UserID] = {
     val email = app.params.getOrElse("email", "")
     val password = app.params.getOrElse("password", "")
 
-    val result = Utils.connect(email, password)
+    authenticated(email, password)
 
-    if (result.isEmpty) None
-    else Some(UserID(result.head.id))
+    //val result = Utils.connect(db)(email, password, salt)
+
+//    authenticated(email, password) match {
+//      case true => Some(UserID(result.head.id))
+//      case false => None
+//
+//    }
+//    if(authenticated) Some(erID(result.head.id))
+//
+//    if (result.isEmpty) None
+//    else Some(UserID(result.head.id))
 
   }
 

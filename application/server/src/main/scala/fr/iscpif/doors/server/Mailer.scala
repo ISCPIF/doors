@@ -21,50 +21,38 @@ import javax.mail.Session
 import javax.mail.internet.InternetAddress
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import fr.iscpif.doors.api.Settings
 import fr.iscpif.doors.ext.Data.EmailDeliveringError
 
 import scala.util.{Failure, Success, Try}
 import fr.iscpif.doors.server.Utils._
+import com.github.jurajburian.mailer._
 
 object DoorsMailer {
 
-
-  import com.github.jurajburian.mailer._
-
-  val session = Try(
-    Settings.smtpSettings match {
-      case Success(smtp) =>
-        println(s"CONFIG ${smtp.host} ${smtp.port} ${smtp.login}")
-        (SmtpAddress(smtp.host, smtp.port) :: SessionFactory()).session(Some(smtp.login -> smtp.pass))
-      case Failure(f) =>
-        println("In failure")
-        throw (f)
+  def send(smtp: SMTPSettings, emailSubject: String, content: Content, to: String): Option[EmailDeliveringError] =  {
+    def session = {
+      println(s"CONFIG ${smtp.host} ${smtp.port} ${smtp.login}")
+      (SmtpAddress(smtp.host, smtp.port) :: SessionFactory()).session(Some(smtp.login -> smtp.pass))
     }
-  )
 
-  def send(emailSubject: String, content: Content, to: String): Option[EmailDeliveringError] = session match {
-    case Success(s) =>
-      s: Session
-      val mailer = Mailer(s)
-      try {
-        val msg = Message(
-          from = new InternetAddress(Settings.smtpSettings.get.login),
-          subject = emailSubject,
-          content = content,
-          to = Seq(new InternetAddress(to)))
-        Try(
-          mailer.send(msg)
-        ) match {
-          case Success(_) => None
-          case Failure(f) => Some(f)
-        }
+    val mailer = Mailer(session)
+    try {
+      val msg = Message(
+        from = new InternetAddress(smtp.login),
+        subject = emailSubject,
+        content = content,
+        to = Seq(new InternetAddress(to)))
+      Try(
+        mailer.send(msg)
+      ) match {
+        case Success(_) => None
+        case Failure(f) => Some(f)
       }
-      catch {
-        case e: Throwable => Some(e)
-      } finally {
-        mailer.close
-      }
-    case Failure(f) => Some(f)
+    }
+    catch {
+      case e: Throwable => Some(e)
+    } finally {
+      mailer.close
+    }
   }
 }

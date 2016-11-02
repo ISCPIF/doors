@@ -19,8 +19,8 @@ package fr.iscpif.doors.server
 
 object Constants {
 
-  val host = "localhost"
-  val port = 8989
+  //val host = "localhost"
+  //val port = 8989
   //val host = "ldap.iscpif.fr"
   val baseDN = "ou=People,dc=iscpif,dc=fr"
 }

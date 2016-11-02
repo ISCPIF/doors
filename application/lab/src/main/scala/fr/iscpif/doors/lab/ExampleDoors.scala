@@ -15,22 +15,35 @@
   * along with this program.  If not, see <http://www.gnu.org/licenses/>.
   *
   */
-package fr.iscpif.doors
+package fr.iscpif.doors.lab
 
-import fr.iscpif.doors.ext.Data.PartialUser
-import better.files._
+import fr.iscpif.doors.server._
+import slick.driver.H2Driver.api._
+import fr.iscpif.doors.server.db._
 
-package object server {
-  def partialUser(name: String, email: String) =
-    PartialUser(Utils.uuid, name)
+object ExampleDoors extends App {
 
-  val homeDir = {
-    val dir = System.getProperty("user.home") / ".doors"
-    dir.toJava.mkdirs
-    dir
+  def quests = {
+    def admins =  (for {
+      c <- chronicles if c.lock === locks.ADMIN
+      uc <- userChronicles if uc.chronicleID === c.chronicleID
+      u <- users.filter{_.id === uc.userID}
+    } yield u).result
+
+    Map(
+      locks.SUBSCRIPTION -> ManualValidation(admins)
+    )
   }
 
-  case class SMTPSettings(host: String, port: Int, login: String, pass: String)
+  val settings =
+    Settings (
+      quests = quests,
+      publicURL = "http://localhost:8989/",
+      port = 8989,
+      salt = "yoursalthere",
+      smtp = SMTPSettings("smtp", 465, "login", "password")
+    )
 
-  type Quests = Map[String, AccessQuest]
+  Launcher.run(settings)
+
 }
