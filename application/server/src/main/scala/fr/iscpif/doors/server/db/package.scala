@@ -106,10 +106,12 @@ package object db {
 
   def initDB(location: File) = {
 
+    location.parent.toJava.mkdirs()
     lazy val db: Database = Database.forDriver(
       driver = new org.h2.Driver,
       url = s"jdbc:h2:/${location}"
     )
+    
     def dbWorks =
       Try { Await.result(db.run(versions.length.result), Duration.Inf) } match {
         case Failure(_) ⇒ false

@@ -33,7 +33,6 @@ object Launcher {
   def run(settings: Settings) = {
     Log.setLog(null)
 
-    settings.dbLocation.parent.toJava.mkdirs()
     val database = db.initDB(settings.dbLocation)
     db.updateDB(database)
 
