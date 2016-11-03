@@ -122,6 +122,7 @@ object DoorsBuild extends Build {
         val oldStrategy = (assemblyMergeStrategy in assembly).value
         oldStrategy(x)
     },
+    runMain := ((runMain in Runtime) dependsOn runLab).evaluated,
     run := ((run in Runtime) dependsOn runLab).evaluated,
     runLab :=
       ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile) map { (js, ressource, classDirectory) =>
