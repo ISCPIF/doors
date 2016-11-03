@@ -5,15 +5,11 @@ resolvers in ThisBuild ++= Seq(
   "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
 )
 
-val Organization = "fr.iscpif"
-val Name = "doors"
-val Version = "0.1.0-SNAPSHOT"
-val ScalaVersion = "2.11.8"
 
 def projectSettings = Seq(
-  organization := Organization,
-  version := Version,
-  scalaVersion := ScalaVersion,
+  organization := "fr.iscpif",
+  version := "0.1.0-SNAPSHOT",
+  scalaVersion := "2.11.8",
   libraryDependencies ++= monocle,
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
@@ -26,7 +22,7 @@ val scalatagsVersion = "0.5.4"
 val autowireVersion = "0.2.5"
 val upickleVersion = "0.4.1"
 val apacheDirectoryVersion = "1.0.0-M33"
-val jarName = s"doors$Version.jar"
+def jarName(version: String) = s"doors$version.jar"
 val monocleVersion = "1.2.1"
 val betterFileVersion = "2.15.0"
 
@@ -52,7 +48,6 @@ lazy val ext = Project(
 lazy val rest = Project(
   "rest",
   file("rest")) settings (projectSettings: _*) settings(
-  scalaVersion := ScalaVersion,
   libraryDependencies ++= Seq(
     "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
     "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
@@ -110,7 +105,8 @@ val lab = Project(
   "lab",
   file("lab")
 ) settings (projectSettings: _*) settings(
-  assemblyJarName in assembly := jarName,
+  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+  assemblyJarName in assembly := jarName(version.value),
   assemblyMergeStrategy in assembly := {
     //case _ => MergeStrategy.rename
     case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
@@ -139,7 +135,7 @@ lazy val bootstrap = Project(
   toJar <<= (go, assembly in lab in Compile, target in lab in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
     val shFile = new File(st, s"scala-$version/doors")
     shFile.createNewFile
-    IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName + " \"$@\"")
+    IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName(version) + " \"$@\"")
     s.log.info(s"doors has been generated in ${shFile.getParent}")
     s.log.info(s"Now launch ./doors <port>")
   }) dependsOn(client, server, lab)
