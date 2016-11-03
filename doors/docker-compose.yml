@@ -1,0 +1,16 @@
+doors:
+  build: ./doors
+  volumes:
+    - "./data/doors/home/:/var/doors/.doors/"
+  links:
+    - mail:mail
+  ports:
+    - 8989:8989
+mail:
+  build: ./mail
+  environment:
+    - HOST=doors.iscpif.fr
+  volumes:
+    - "./data/mail/spool:/var/spool/postfix"
+
+

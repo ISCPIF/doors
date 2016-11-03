@@ -111,7 +111,7 @@ package object db {
       driver = new org.h2.Driver,
       url = s"jdbc:h2:/${location}"
     )
-    
+
     def dbWorks =
       Try { Await.result(db.run(versions.length.result), Duration.Inf) } match {
         case Failure(_) ⇒ false
