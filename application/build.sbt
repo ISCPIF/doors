@@ -94,8 +94,8 @@ lazy val server = Project(
       "com.github.jurajburian" %% "mailer" % "1.2.1",
       "com.typesafe.slick" %% "slick" % "3.1.1",
       "com.h2database" % "h2" % "1.4.190",
-      "com.github.pathikrit" %% "better-files" % betterFileVersion
-    )
+      "com.github.pathikrit" %% "better-files" % betterFileVersion,
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value)
   )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
 
@@ -105,7 +105,6 @@ val lab = Project(
   "lab",
   file("lab")
 ) settings (projectSettings: _*) settings(
-  libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value,
   assemblyJarName in assembly := jarName(version.value),
   assemblyMergeStrategy in assembly := {
     //case _ => MergeStrategy.rename

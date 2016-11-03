@@ -17,8 +17,12 @@
   */
 package fr.iscpif.doors
 
+import javax.script.ScriptEngineManager
+
 import fr.iscpif.doors.ext.Data.PartialUser
 import better.files._
+
+import scala.tools.nsc.interpreter.IMain
 
 package object server {
   def partialUser(name: String, email: String) =
@@ -27,4 +31,5 @@ package object server {
   case class SMTPSettings(host: String, port: Int, login: String, pass: String)
 
   type Quests = Map[String, AccessQuest]
+
 }

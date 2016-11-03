@@ -17,13 +17,30 @@
   */
 package fr.iscpif.doors.server
 
+import javax.script.ScriptEngineManager
+
 import better.files._
+
+import scala.tools.nsc.interpreter.IMain
 
 object Settings {
   def defaultDir = {
     val dir = System.getProperty("user.home") / ".doors"
     dir.toJava.mkdirs
     dir
+  }
+
+  def compile(content: String): Settings = {
+    def imports =
+      """
+        |import fr.iscpif.doors.server._
+        |import fr.iscpif.doors.server.db._
+        |import slick.driver.H2Driver.api._
+      """.stripMargin
+
+    val e = new ScriptEngineManager().getEngineByName("scala");
+    e.asInstanceOf[IMain].settings.embeddedDefaults[Settings]
+    e.eval(imports ++ content).asInstanceOf[Settings]
   }
 }
 

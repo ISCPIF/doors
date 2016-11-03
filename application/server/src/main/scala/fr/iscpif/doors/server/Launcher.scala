@@ -56,8 +56,6 @@ object Launcher {
       println
     }
 
-    println("Server started")
-
     server.start
     server.join
   }

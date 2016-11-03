@@ -17,33 +17,39 @@
   */
 package fr.iscpif.doors.lab
 
+import javax.script.{ScriptContext, ScriptEngineManager}
+
 import fr.iscpif.doors.server._
 import slick.driver.H2Driver.api._
 import fr.iscpif.doors.server.db._
 
+import scala.tools.nsc.Global
+import scala.tools.nsc.interpreter.{ILoop, IMain, ReplGlobal}
+
 object ExampleDoors extends App {
 
-  def quests = {
-    def admins =  (for {
-      c <- chronicles if c.lock === locks.ADMIN
-      uc <- userChronicles if uc.chronicleID === c.chronicleID
-      u <- users.filter{_.id === uc.userID}
-    } yield u).result
+  def example = """
+    def quests = {
+      def admins =  (for {
+        c <- chronicles if c.lock === locks.ADMIN
+        uc <- userChronicles if uc.chronicleID === c.chronicleID
+        u <- users.filter{_.id === uc.userID}
+      } yield u).result
 
-    Map(
-      locks.SUBSCRIPTION -> ManualValidation(admins)
-    )
-  }
+      Map(
+        locks.SUBSCRIPTION -> ManualValidation(admins)
+      )
+    }
 
-  val settings =
     Settings (
       quests = quests,
       publicURL = "http://localhost:8989/",
       port = 8989,
       salt = "yoursalthere",
       smtp = SMTPSettings("smtp", 465, "login", "password")
-    )
+    )"""
 
+  val settings = Settings.compile(example)
   Launcher.run(settings)
 
 }
