@@ -19,11 +19,20 @@ package fr.iscpif.doors.server
 
 import better.files._
 
+object Settings {
+  def defaultDir = {
+    val dir = System.getProperty("user.home") / ".doors"
+    dir.toJava.mkdirs
+    dir
+  }
+}
+
+
 case class Settings(
   quests: Quests,
   port: Int,
   publicURL: String,
   salt: String,
   smtp: SMTPSettings,
-  dbLocation: File = homeDir / "h2"
+  dbLocation: File = Settings.defaultDir / "h2"
 )

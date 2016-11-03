@@ -24,12 +24,6 @@ package object server {
   def partialUser(name: String, email: String) =
     PartialUser(Utils.uuid, name)
 
-  val homeDir = {
-    val dir = System.getProperty("user.home") / ".doors"
-    dir.toJava.mkdirs
-    dir
-  }
-
   case class SMTPSettings(host: String, port: Int, login: String, pass: String)
 
   type Quests = Map[String, AccessQuest]
