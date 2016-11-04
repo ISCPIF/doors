@@ -2,7 +2,6 @@ package fr.iscpif.doors.server
 
 import javax.mail.internet.InternetAddress
 
-import com.github.jurajburian.mailer.Content
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.server.db.States
 import org.json4s.jackson.JsonMethods._
@@ -121,23 +120,16 @@ object Utils {
     chronicleID: Chronicle.Id,
     secret: String): Option[EmailDeliveringError] = {
 
-    val secretURL = s"${publicURL}/emailvalidation?chronicle=$chronicleID&secret=$secret>"
-    val secretLink = s"""<a href=$secretURL>$secretURL</a>"""
+    val secretURL = s"${publicURL}/emailvalidation?chronicle=$chronicleID&secret=$secret"
+    val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
 
-    val oo = DoorsMailer.send(
+    println("Email conf")
+    DoorsMailer.send(
       smtp,
       "DOORS | Email confirmation",
-      new Content().
-        text(s"Hi,\nPlease click on the following link to confirm this email address !\n $secretURL\n\nThe DOORS team")
-        .html(s"<html><body><h1>Hi,\nPlease click on the following link to confirm this email address ! $secretLink The DOORS team</h1></body></html>"),
+      s"Hi,<br>Please click on the following link to confirm this email address !<br> $secretLink <br><br>The DOORS team",
       sendTo
     )
-
-    println("SEND ! " + oo.map {
-      _.message
-    })
-
-    oo
   }
 
   def uuid = java.util.UUID.randomUUID.toString

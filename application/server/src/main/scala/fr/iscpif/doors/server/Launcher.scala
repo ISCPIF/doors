@@ -1,5 +1,7 @@
 package fr.iscpif.doors.server
 
+import java.util.Properties
+
 import fr.iscpif.doors.ext.Data.{PartialUser, Password, User}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
@@ -7,6 +9,8 @@ import org.scalatra.servlet.ScalatraListener
 import org.eclipse.jetty.util.log._
 import db._
 import slick.driver.H2Driver.api._
+
+import scala.util.{Failure, Success, Try}
 
 /*
  * Copyright (C) 18/02/16 // mathieu.leclaire@openmole.org
@@ -55,12 +59,14 @@ object Launcher {
 
     server.setHandler(context)
 
-    //Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, "leclairem@gmail.com", "bbppp", "12233")
+    Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, "mathieu@leclaire.re", "112", "223")
     db.query(database)(users.result).foreach {
       println
     }
 
     server.start
     server.join
+
+
   }
 }
