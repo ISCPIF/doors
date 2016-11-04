@@ -15,7 +15,7 @@ def projectSettings = Seq(
 )
 
 val scalatraVersion = "2.4.+"
-val jettyVersion = "9.3.7.v20160115"
+val jettyVersion = "9.4.0.RC1"
 val json4sVersion = "3.3.0"
 val httpComponentsVersion = "4.5.1"
 val scalatagsVersion = "0.5.4"
@@ -102,39 +102,23 @@ lazy val server = Project(
 
 
 lazy val assemble = taskKey[File]("assemble")
+lazy val application = taskKey[File]("application")
 
 lazy val lab = Project(
   "lab",
   file("lab")
-) settings (projectSettings: _*) settings(
-  assemblyJarName in assembly := jarName(version.value),
-  assemblyMergeStrategy in assembly := {
-    case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
-    case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
-    case x =>
-      val oldStrategy = (assemblyMergeStrategy in assembly).value
-      oldStrategy(x)
-  },
+) settings (projectSettings: _*) enablePlugins(JavaAppPackaging) settings(
   runMain := ((runMain in Runtime) dependsOn assemble).evaluated,
   run := ((run in Runtime) dependsOn assemble).evaluated,
   assemble :=
-    ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile) map { (js, ressource, classDirectory) =>
+    ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile, version) map { (js, ressource, classDirectory, version) =>
       copy(js, ressource, classDirectory / "webapp").data
-    }).value
-  ) dependsOn (server)
-
-
-lazy val app = Project("app", file("target/app")) settings (projectSettings: _*) settings(
-    assemble :=
-      ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile, version) map { (js, ressource, classDirectory, version) =>
-        val shFile = classDirectory / "doors"
-        IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName(version) + " \"$@\"")
-        shFile.setExecutable(true)
-        copy(js, ressource, classDirectory / "webapp").data
-        classDirectory
-      }).value
-  ) dependsOn(client, server, lab)
-
+    }).value,
+    (stage in Universal) := ((stage in Universal) dependsOn
+      ((fastOptJS in client in Compile, resourceDirectory in client in Compile, stagingDirectory in Universal) map { (js, webapp, stage) =>
+        copy(js, webapp, stage / "webapp").data
+      })).value
+  ) dependsOn (server, client)
 
 def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) =
   clientTarget.map { ct =>
