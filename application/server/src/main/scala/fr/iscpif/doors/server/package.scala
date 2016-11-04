@@ -25,8 +25,6 @@ import better.files._
 import scala.tools.nsc.interpreter.IMain
 
 package object server {
-  def partialUser(name: String, email: String) =
-    PartialUser(Utils.uuid, name)
 
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false)
 

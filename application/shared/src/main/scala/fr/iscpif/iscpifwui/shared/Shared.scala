@@ -35,11 +35,11 @@ trait Api {
 
   def canRemoveUser(): Capacity
 
-  def canModifyPartialUser(userID: User.Id): Capacity
+  def canModifyPartialUser(userID: UserID): Capacity
 
   def isPasswordValid(pass: String): Boolean
 
-  def updatePassword(userID: User.Id, pass: String): Unit
+  def updatePassword(userID: UserID, pass: String): Unit
 
   def updatePartialUser(partialUser: PartialUser): Unit
 

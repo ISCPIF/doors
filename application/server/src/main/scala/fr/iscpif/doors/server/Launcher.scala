@@ -2,7 +2,7 @@ package fr.iscpif.doors.server
 
 import java.util.Properties
 
-import fr.iscpif.doors.ext.Data.{PartialUser, Password, User}
+import fr.iscpif.doors.ext.Data.{PartialUser, Password, User, UserID}
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
@@ -55,11 +55,12 @@ object Launcher {
 
     server.setHandler(context)
 
-    Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, "mathieu@leclaire.re", "112", "223")
     db.query(database)(users.result).foreach {
       println
     }
 
+    //val api = new UnloggedApiImpl(settings, database)
+    //api.resetPassword(UserID("6e601bad-067c-4721-945d-9c9cccd1eb22"))
     server.start
     server.join
 

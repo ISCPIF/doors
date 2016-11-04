@@ -21,11 +21,33 @@ import fr.iscpif.doors.ext.Data._
 import slick.driver.H2Driver.api._
 
 
-class EmailConfirmations(tag: Tag) extends Table[EmailConfirmation](tag, "EMAIL_CONFIRMATIONS") {
+class Secrets(tag: Tag) extends Table[Secret](tag, "EMAIL_CONFIRMATIONS") {
   def chronicleID = column[Chronicle.Id]("CHRONICLE_ID")
+
   def secret = column[String]("SECRET")
+
   def deadline = column[Long]("DEADLINE")
 
 
-  def * = (chronicleID, secret, deadline) <> ((EmailConfirmation.apply _).tupled, EmailConfirmation.unapply)
+  def * = {
+    val shValues = (chronicleID, secret, deadline).shaped
+    shValues.<>({
+      tuple =>
+        Secret.apply(
+          chronicleID = ChronicleID(tuple._1),
+          secret = tuple._2,
+          deadline = tuple._3
+        )
+    }, {
+      (s: Secret) =>
+        Some((
+          s.chronicleID.id,
+          s.secret,
+          s.deadline
+          )
+        )
+    }
+    )
+  }
+
 }

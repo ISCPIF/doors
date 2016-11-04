@@ -85,7 +85,7 @@ class UserConnection {
             if (personalOK && passOK) {
               Post[UnloggedApi].addUser(
                 PartialUser(
-                  Utils.uuid,
+                  UserID(Utils.uuid),
                   personalEdition.name
                 ),
                 personalEdition.email,

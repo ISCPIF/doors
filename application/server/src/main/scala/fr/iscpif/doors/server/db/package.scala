@@ -39,7 +39,7 @@ package object db {
   lazy val userChronicles = TableQuery[UserChronicles]
   lazy val emails = TableQuery[Emails]
   lazy val versions = TableQuery[Versions]
-  lazy val emailConfirmations = TableQuery[EmailConfirmations]
+  lazy val secrets = TableQuery[Secrets]
 
   type DbQuery[T] = DBIOAction[T, slick.dbio.NoStream, scala.Nothing]
 
@@ -125,7 +125,7 @@ package object db {
           userChronicles.schema ++
           emails.schema ++
           versions.schema ++
-          emailConfirmations.schema).create)
+          secrets.schema).create)
 
     db
   }

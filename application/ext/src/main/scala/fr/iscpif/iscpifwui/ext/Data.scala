@@ -51,7 +51,7 @@ object Data {
       def compare(u1: User, u2: User) = u1.name compare u2.name
     }
 
-    def emptyUser = User(java.util.UUID.randomUUID.toString, "", "", "", "")
+    def emptyUser = User(UserID(java.util.UUID.randomUUID.toString), "", "", "", "")
   }
 
   object Lock {
@@ -66,11 +66,13 @@ object Data {
     type Id = String
   }
 
-  case class Chronicle(chronicle: Chronicle.Id, lock: Lock.Id, state: State.Id, time: Long, increment: Option[Long])
+  case class Chronicle(chronicle: ChronicleID, lock: Lock.Id, state: State.Id, time: Long, increment: Option[Long])
 
   case class UserID(id: User.Id)
 
-  case class PartialUser(id: User.Id, name: String)
+  case class ChronicleID(id: Chronicle.Id)
+
+  case class PartialUser(id: UserID, name: String)
 
   case class Password(password: Option[String])
 
@@ -88,16 +90,16 @@ object Data {
 
   case class PairOfPasses(oldpass: Password, newpass: Password, status: PassStatus)
 
-  case class User(id: String, password: String, name: String, hashAlgorithm: String, hashParameters: String)
+  case class User(id: UserID, password: String, name: String, hashAlgorithm: String, hashParameters: String)
 
 
-  case class Email(id: Chronicle.Id, email: String)
+  case class Email(chronicleID: ChronicleID, email: String)
 
-  case class UserChronicle(userID: User.Id, chronicle: Chronicle.Id)
+  case class UserChronicle(userID: UserID, chronicle: ChronicleID)
 
   case class Version(id: Int)
 
-  case class EmailConfirmation(chronicleID: Chronicle.Id, secret: String, deadline: Long)
+  case class Secret(chronicleID: ChronicleID, secret: String, deadline: Long)
 
   @Lenses case class ErrorData(className: String, code: Int, message: String)
 

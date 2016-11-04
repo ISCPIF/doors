@@ -22,4 +22,5 @@ object locks {
   lazy val REGISTRATION = "registration"
   lazy val SUBSCRIPTION = "subscription"
   lazy val EMAIL_VALIDATION = "emailValidation"
+  lazy val RESET_PASSWORD = "resetPassword"
 }

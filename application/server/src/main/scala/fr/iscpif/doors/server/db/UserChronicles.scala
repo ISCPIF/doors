@@ -25,8 +25,25 @@ class UserChronicles(tag: Tag) extends Table[UserChronicle](tag, "USER_CHRONICLE
   def userID = column[User.Id]("USER_ID")
   def chronicleID = column[Chronicle.Id]("CHRONICLE")
 
-  def * = (userID, chronicleID) <> ((UserChronicle.apply _).tupled, UserChronicle.unapply)
-
   def user = foreignKey("USER_FK", userID, users)(_.id)
+
+  def * = {
+    val shValues = (userID, chronicleID).shaped
+    shValues.<>({
+      tuple =>
+        UserChronicle.apply(
+          userID = UserID(tuple._1),
+          chronicle = ChronicleID(tuple._2)
+        )
+    }, {
+      (uc: UserChronicle) =>
+        Some((
+          uc.userID.id,
+          uc.chronicle.id
+          )
+        )
+    }
+    )
+  }
 
 }

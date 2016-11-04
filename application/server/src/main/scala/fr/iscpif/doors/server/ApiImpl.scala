@@ -66,28 +66,28 @@ class ApiImpl(settings: Settings, database: db.Database, loggedUserId: UserID) e
 
   def removeUser(user: User) = canRemoveUser.check {
     query(database)(users.filter {
-      _.id === user.id
+      _.id === user.id.id
     }.delete)
   }
 
-  def canModifyPartialUser(userID: User.Id): Capacity = Capacity(userID == loggedUserId.id) || adminCapacity
+  def canModifyPartialUser(userID: UserID): Capacity = Capacity(userID.id == loggedUserId.id) || adminCapacity
 
 
   def updatePartialUser(puser: PartialUser): Unit = canModifyPartialUser(puser.id).check {
     // slick: query all fields except password in order to update them
     query(database) {
       val q = for {
-        u <- users if u.id === puser.id
+        u <- users if u.id === puser.id.id
       } yield (u.name)
       q.update((puser.name))
     }
   }
 
-  def updatePassword(id: User.Id, password: String): Unit = canModifyPartialUser(id).check {
+  def updatePassword(id: UserID, password: String): Unit = canModifyPartialUser(id).check {
     // idem: query just the password to update it
     query(database) {
       val q = for {
-        u <- users if u.id === id
+        u <- users if u.id === id.id
       } yield u.password
       q.update(Hashing(password, settings.salt))
     }

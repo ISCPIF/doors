@@ -44,7 +44,7 @@ object Servlet {
 class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with AuthenticationSupport {
 
   def authenticated(email: String, password: String): Option[UserID] =
-    Utils.connect(arguments.db)(email, password, arguments.settings.salt) map { u => UserID(u.id) }
+    Utils.connect(arguments.db)(email, password, arguments.settings.salt) map { u => u.id }
 
   val basePath = "shared"
 
@@ -152,8 +152,16 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     val chronicleID = params get "chronicle" getOrElse ("")
     val secret = params get "secret" getOrElse ("")
 
-    println("Confirmed ?" + Utils.isEmailConfirmed(arguments.db)(secret, chronicleID))
+    println("Confirmed ?" + Utils.isSecretConfirmed(arguments.db)(secret, chronicleID))
 
+  }
+
+  get(s"/resetPassword") {
+    val chronicleID = params get "chronicle" getOrElse ("")
+    val secret = params get "secret" getOrElse ("")
+
+    println("Confirmed ?" + Utils.isSecretConfirmed(arguments.db)(secret, chronicleID))
+    //TODO Redirect to a new html page with PassEdition
   }
 
   post(s"/$basePath/*") {

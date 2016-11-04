@@ -17,15 +17,43 @@ package fr.iscpif.doors.server.db
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data.{User, UserID}
 import slick.driver.H2Driver.api._
 
 class Users(tag: Tag) extends Table[User](tag, "USERS") {
   def id = column[User.Id]("ID", O.PrimaryKey)
+
   def password = column[String]("PASSWORD")
+
   def name = column[String]("NAME")
+
   def hashAlgorithm = column[String]("HASH_ALGORITHM")
+
   def hashParameters = column[String]("HASH_PARAMETERS")
 
-  def * = (id, password, name, hashAlgorithm, hashParameters) <> ((User.apply _).tupled, User.unapply)
+  def * = {
+    val shValues = (id, password, name, hashAlgorithm, hashParameters).shaped
+    shValues.<>({
+      tuple =>
+        User.apply(
+          id = UserID(tuple._1),
+          password = tuple._2,
+          name = tuple._3,
+          hashAlgorithm = tuple._4,
+          hashParameters = tuple._5
+        )
+    }, {
+      (u: User) =>
+        Some((
+          u.id.id,
+          u.password,
+          u.name,
+          u.hashAlgorithm,
+          u.hashParameters
+          )
+        )
+    }
+    )
+  }
+
 }

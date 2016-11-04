@@ -23,13 +23,13 @@ import fr.iscpif.doors.server.db._
 import scala.util._
 
 trait AccessQuest {
-  def promote(database: Database)(requester: User.Id, currentState: State.Id): Try[State.Id]
+  def promote(database: Database)(requester: UserID, currentState: State.Id): Try[State.Id]
   def status(database: Database)(currentState: State.Id): Try[String]
 }
 
 case class ManualValidation(validators: DbQuery[Seq[User]]) extends AccessQuest {
 
-  def promote(database: Database)(requester: User.Id, state: State.Id): Try[State.Id] = {
+  def promote(database: Database)(requester: UserID, state: State.Id): Try[State.Id] = {
     val vs = query(database)(validators).map(_.id).toSet
     if(vs.isEmpty) failure("validator not set")
     else if(!vs.contains(requester)) failure("you are not a validator")

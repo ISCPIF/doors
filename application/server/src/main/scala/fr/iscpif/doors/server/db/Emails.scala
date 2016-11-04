@@ -18,13 +18,32 @@ package fr.iscpif.doors.server.db
  */
 
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.ext.Data.Email
+import fr.iscpif.doors.ext.Data.{ChronicleID, Email}
 import slick.driver.H2Driver.api._
 
 
 class Emails(tag: Tag) extends Table[Email](tag, "EMAILS") {
   def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
+
   def email = column[String]("EMAIL")
 
-  def * = (chronicleID, email) <> ((Email.apply _).tupled, Email.unapply)
+  def * = {
+    val shValues = (chronicleID, email).shaped
+    shValues.<>({
+      tuple =>
+        Email.apply(
+          chronicleID = ChronicleID(tuple._1),
+          email = tuple._2
+        )
+    }, {
+      (e: Email) =>
+        Some((
+          e.chronicleID.id,
+          e.email
+          )
+        )
+    }
+    )
+  }
+
 }

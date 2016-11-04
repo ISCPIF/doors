@@ -59,8 +59,8 @@ object Utils {
     }
 
 
-  def isEmailConfirmed(database: db.Database)(secret: String, chronicleID: String): Boolean =
-    !query(database)(emailConfirmations.filter { ec =>
+  def isSecretConfirmed(database: db.Database)(secret: String, chronicleID: String): Boolean =
+    !query(database)(secrets.filter { ec =>
       ec.chronicleID === chronicleID && ec.secret === secret && ec.deadline >= System.currentTimeMillis
     }.result).isEmpty
 
@@ -70,40 +70,57 @@ object Utils {
 
 
   // Add user
-  def userAddQueries(user: User, chronicleID: Chronicle.Id) = DBIO.seq(
+  def userAddQueries(user: User, chronicleID: ChronicleID) = DBIO.seq(
     users += user,
     chronicleAddQueries(chronicleID, user.id, locks.REGISTRATION, States.LOCKED)
   )
 
-  def addUser(database: db.Database)(user: User, chronicleID: Chronicle.Id) = query(database)(userAddQueries(user, chronicleID))
+  def addUser(database: db.Database)(user: User, chronicleID: ChronicleID) = query(database)(userAddQueries(user, chronicleID))
 
 
   // Add email
-  def emailAddQueries(database: db.Database)(userID: User.Id, email: String, chronicleID: Option[Chronicle.Id] = None, secret: Option[String] = None) = {
+  def emailAddQueries(database: db.Database)(userID: UserID, email: String, chronicleID: Option[ChronicleID] = None, secret: Option[String] = None) = {
     val doesEmailExist = query(database)(emails.filter {
       _.email === email
     }.result)
     if (doesEmailExist.isEmpty) {
-      val cID = chronicleID.getOrElse(uuid)
+      val cID = chronicleID.getOrElse(ChronicleID(uuid))
       DBIO.seq(
         emails += Email(cID, email),
-        // On hour to confirm the new email
-        emailConfirmations += EmailConfirmation(cID, secret.getOrElse(uuid), System.currentTimeMillis + 3600000),
+        // Two days to confirm the new email
+        secrets += Secret(cID, secret.getOrElse(uuid), System.currentTimeMillis + 172800000),
         chronicleAddQueries(cID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
       )
     } else DBIO.seq()
   }
 
-  def addEmail(database: db.Database)(userID: User.Id, email: String) = query(database)(emailAddQueries(database)(userID, email))
+  def addEmail(database: db.Database)(userID: UserID, email: String) = query(database)(emailAddQueries(database)(userID, email))
 
+  def email(database: db.Database)(userID: UserID): Option[String] = query(database)((for {
+      uc <- userChronicles if (uc.userID === userID.id)
+      e <- emails if (uc.chronicleID === e.chronicleID)
+    } yield (e.email)).result.headOption)
+
+  def resetPasswordQueries(userID: UserID, chronicleID: Option[ChronicleID] = None, secret: Option[String] = None) = {
+    val cID = chronicleID.getOrElse(ChronicleID(uuid))
+    //One day to reset the pass
+    DBIO.seq(
+      secrets += Secret(cID, secret.getOrElse(uuid), 86400000),
+      chronicleAddQueries(cID, userID, locks.RESET_PASSWORD, States.LOCKED)
+    )
+  }
+
+  def resetPassword(database: db.Database)(userID: UserID, chronicleID: Option[ChronicleID] = None, secret: Option[String] = None) = {
+    query(database)(resetPasswordQueries(userID, chronicleID, secret))
+  }
 
   // Add chronicle
-  def chronicleAddQueries(chronicleID: Chronicle.Id, userID: User.Id, lockID: Lock.Id, stateID: State.Id) = DBIO.seq(
+  def chronicleAddQueries(chronicleID: ChronicleID, userID: UserID, lockID: Lock.Id, stateID: State.Id) = DBIO.seq(
     chronicles += Chronicle(chronicleID, lockID, stateID, System.currentTimeMillis, None),
     userChronicles += UserChronicle(userID, chronicleID)
   )
 
-  def addChronicle(database: db.Database)(chronicleID: Chronicle.Id, userID: User.Id, lockID: Lock.Id, stateID: State.Id) =
+  def addChronicle(database: db.Database)(chronicleID: ChronicleID, userID: UserID, lockID: Lock.Id, stateID: State.Id) =
     query(database)(chronicleAddQueries(chronicleID, userID, lockID, stateID))
 
 
@@ -114,21 +131,39 @@ object Utils {
   }
 
   def sendEmailConfirmation(
-    smtp: SMTPSettings,
-    publicURL: String,
-    sendTo: String,
-    chronicleID: Chronicle.Id,
-    secret: String): Option[EmailDeliveringError] = {
+                             smtp: SMTPSettings,
+                             publicURL: String,
+                             sendTo: String,
+                             chronicleID: ChronicleID,
+                             secret: String): Option[EmailDeliveringError] = {
 
-    val secretURL = s"${publicURL}/emailvalidation?chronicle=$chronicleID&secret=$secret"
+    val secretURL = s"${publicURL}/emailvalidation?chronicle=${chronicleID.id}&secret=$secret"
     val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
 
-    println("Email conf")
     DoorsMailer.send(
       smtp,
       "DOORS | Email confirmation",
       s"Hi,<br>Please click on the following link to confirm this email address !<br> $secretLink <br><br>The DOORS team",
       sendTo
+    )
+  }
+
+  def sendResetPasswordEmail(
+    smtp: SMTPSettings,
+    publicURL: String,
+    email: String,
+    chronicleID: ChronicleID,
+    secret: String) = {
+
+    val secretURL = s"${publicURL}/resetPassword?chronicle=${chronicleID.id}&secret=$secret"
+    val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
+
+
+    DoorsMailer.send(
+      smtp,
+      "DOORS | Reset password",
+      s"Hi,<br>Please click on the following link to reset your password !<br> $secretLink <br><br>The DOORS team",
+      email
     )
   }
 

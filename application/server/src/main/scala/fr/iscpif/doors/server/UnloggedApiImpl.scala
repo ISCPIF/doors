@@ -37,8 +37,8 @@ class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.
   def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError] = {
     val someUser = Utils.toUser(partialUser, pass, settings.salt)
     val currentTime = System.currentTimeMillis
-    val userChronicleID = Utils.uuid
-    val emailChronicleID = Utils.uuid
+    val userChronicleID = ChronicleID(Utils.uuid)
+    val emailChronicleID = ChronicleID(Utils.uuid)
     val secret = Utils.uuid
 
     someUser.flatMap { u =>
@@ -63,15 +63,21 @@ class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.
           transaction.transactionally
         }
       ) match {
-        case Success(s) =>
-          println("SUcces")
-          None
-        case Failure(f) =>
-          println("Error " + f.getStackTrace.mkString("\n"))
-          Some(f)
+        case Success(s) => None
+        case Failure(f) => Some(f)
       }
     }
 
+  }
+
+  def resetPassword(userID: UserID) = {
+    val chronicleID = ChronicleID(Utils.uuid)
+    val secret = Utils.uuid
+    Utils.resetPassword(database)(userID)
+    Utils.email(database)(userID).foreach { email =>
+      println("SEnd to " + email)
+      Utils.sendResetPasswordEmail(settings.smtp, settings.publicURL, email, chronicleID, secret)
+    }
   }
 
 }

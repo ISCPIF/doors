@@ -18,6 +18,7 @@ package fr.iscpif.doors.server.db
  */
 
 import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.Data.{Chronicle, ChronicleID}
 import slick.driver.H2Driver.api._
 
 object States {
@@ -26,12 +27,35 @@ object States {
 }
 
 
-class Chronicles(tag: Tag) extends Table[Data.Chronicle](tag, "CHRONICLES") {
+class Chronicles(tag: Tag) extends Table[Chronicle](tag, "CHRONICLES") {
   def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
   def lock = column[Data.Lock.Id]("LOCK")
   def state = column[Data.State.Id]("STATE")
   def time = column[Long]("TIME")
   def increment = column[Long]("INCREMENT", O.AutoInc)
 
-  def * = (chronicleID, lock, state, time, increment.?) <> ((Data.Chronicle.apply _).tupled, Data.Chronicle.unapply)
+  def * = {
+    val shValues = (chronicleID, lock, state, time, increment).shaped
+    shValues.<>({
+      tuple =>
+        Chronicle.apply(
+          ChronicleID(tuple._1),
+          tuple._2,
+          tuple._3,
+          tuple._4,
+          Some(tuple._5)
+        )
+    }, {
+      (c: Chronicle) =>
+        Some((
+          c.chronicle.id,
+          c.lock,
+          c.state,
+          c.time,
+          c.increment.getOrElse(0L)
+          )
+        )
+    }
+    )
+  }
 }
