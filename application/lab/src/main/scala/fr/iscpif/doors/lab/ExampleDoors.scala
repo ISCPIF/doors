@@ -43,10 +43,10 @@ object ExampleDoors extends App {
 
     Settings (
       quests = quests,
-      publicURL = "http://localhost:8989/",
+      publicURL = "http://localhost:8989",
       port = 8989,
       salt = "yoursalthere",
-      smtp = SMTPSettings("smtp", 465, "login", "password")
+      smtp = SMTPSettings("smtp", 587, "xx@xx.xx", "xxx", true, true)
     )"""
 
   val settings = Settings.compile(example)

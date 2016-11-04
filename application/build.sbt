@@ -91,7 +91,7 @@ lazy val server = Project(
       "org.eclipse.jetty" % "jetty-webapp" % jettyVersion % "container;compile",
       "org.json4s" %% "json4s-jackson" % json4sVersion,
       "org.apache.directory.api" % "api-all" % apacheDirectoryVersion,
-      "com.github.jurajburian" %% "mailer" % "1.2.1",
+      "com.sun.mail" % "javax.mail" % "1.5.6",
       "com.typesafe.slick" %% "slick" % "3.1.1",
       "com.h2database" % "h2" % "1.4.190",
       "com.github.pathikrit" %% "better-files" % betterFileVersion,
