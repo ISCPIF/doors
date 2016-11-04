@@ -26,7 +26,7 @@ import fr.iscpif.doors.server.db._
 import scala.tools.nsc.Global
 import scala.tools.nsc.interpreter.{ILoop, IMain, ReplGlobal}
 
-object ExampleDoors extends App {
+object Doors extends App {
 
   def example = """
     def quests = {

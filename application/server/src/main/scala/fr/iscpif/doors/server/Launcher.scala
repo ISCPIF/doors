@@ -46,7 +46,11 @@ object Launcher {
     val context = new WebAppContext()
     context setContextPath "/"
 
+
     val webapp = getClass.getClassLoader.getResource("webapp").toExternalForm
+
+    println(webapp)
+    
     context.setResourceBase(webapp)
 
     context.setAttribute(arguments, args)

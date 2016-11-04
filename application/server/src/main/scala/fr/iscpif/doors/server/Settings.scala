@@ -38,8 +38,9 @@ object Settings {
         |import slick.driver.H2Driver.api._
       """.stripMargin
 
-    val e = new ScriptEngineManager().getEngineByName("scala");
+    val e = new ScriptEngineManager().getEngineByName("scala")
     e.asInstanceOf[IMain].settings.embeddedDefaults[Settings]
+    e.asInstanceOf[IMain].settings.usejavacp.value = true
     e.eval(imports ++ content).asInstanceOf[Settings]
   }
 }
