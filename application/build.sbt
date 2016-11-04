@@ -26,8 +26,10 @@ def jarName(version: String) = s"doors$version.jar"
 val monocleVersion = "1.2.1"
 val betterFileVersion = "2.15.0"
 
-lazy val hasher =
-  ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
+
+lazy val doors = project in file(".") settings(projectSettings) aggregate(ext, rest, server, client)
+
+lazy val hasher = ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
 
 def monocle = Seq(
   "com.github.julien-truffaut" %% "monocle-core" % monocleVersion,
@@ -99,45 +101,39 @@ lazy val server = Project(
   )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
 
-lazy val runLab = taskKey[File]("runlab")
+lazy val assemble = taskKey[File]("assemble")
 
-val lab = Project(
+lazy val lab = Project(
   "lab",
   file("lab")
 ) settings (projectSettings: _*) settings(
   assemblyJarName in assembly := jarName(version.value),
   assemblyMergeStrategy in assembly := {
-    //case _ => MergeStrategy.rename
     case PathList("JS_DEPENDENCIES") => MergeStrategy.rename
     case PathList("OSGI-INF", "bundle.info") => MergeStrategy.rename
     case x =>
       val oldStrategy = (assemblyMergeStrategy in assembly).value
       oldStrategy(x)
   },
-  runMain := ((runMain in Runtime) dependsOn runLab).evaluated,
-  run := ((run in Runtime) dependsOn runLab).evaluated,
-  runLab :=
+  runMain := ((runMain in Runtime) dependsOn assemble).evaluated,
+  run := ((run in Runtime) dependsOn assemble).evaluated,
+  assemble :=
     ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile) map { (js, ressource, classDirectory) =>
       copy(js, ressource, classDirectory / "webapp").data
     }).value
   ) dependsOn (server)
 
-lazy val go = taskKey[Unit]("go")
-lazy val toJar = taskKey[Unit]("toJar")
 
-lazy val bootstrap = Project(
-  "bootstrap",
-  file("target/bootstrap")) settings (projectSettings: _*) settings(
-  go <<= (fastOptJS in client in Compile, resourceDirectory in client in Compile, target in lab in Compile, scalaBinaryVersion) map { (ct, r, st, version) =>
-    copy(ct, r, new File(st, s"scala-$version/webapp"))
-  },
-  toJar <<= (go, assembly in lab in Compile, target in lab in Compile, scalaBinaryVersion, streams) map { (_, _, st, version, s) =>
-    val shFile = new File(st, s"scala-$version/doors")
-    shFile.createNewFile
-    IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName(version) + " \"$@\"")
-    s.log.info(s"doors has been generated in ${shFile.getParent}")
-    s.log.info(s"Now launch ./doors <port>")
-  }) dependsOn(client, server, lab)
+lazy val app = Project("app", file("target/app")) settings (projectSettings: _*) settings(
+    assemble :=
+      ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile, version) map { (js, ressource, classDirectory, version) =>
+        val shFile = classDirectory / "doors"
+        IO.write(shFile, "#!/bin/sh\njava -Xmx256M -jar " + jarName(version) + " \"$@\"")
+        shFile.setExecutable(true)
+        copy(js, ressource, classDirectory / "webapp").data
+        classDirectory
+      }).value
+  ) dependsOn(client, server, lab)
 
 
 def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) =
