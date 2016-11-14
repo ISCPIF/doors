@@ -20,8 +20,8 @@ package fr.iscpif.doors.server
 
 
 import fr.iscpif.doors.ext.Data._
+import shared.UnloggedApi
 import org.scalatra._
-
 import rx._
 
 import scala.concurrent.duration._
@@ -29,6 +29,7 @@ import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
@@ -144,6 +145,7 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     }
 
 
+  // API route to login
   post(s"/api/user") {
     // make Map from json POST body
     val incomingData = upickle.json.read(request.body).obj
@@ -158,11 +160,72 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
       case None => ""
     }
 
-    Utils.connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
-      case Some(u: User) => Ok(u.toJson)
+    connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
+      case Some(u: User) => {
+        val userJson = u.toJson
+        Ok("""
+            "status":"login ok" ,
+            "userInfo": $userJson
+           """)
+      }
       case None => halt(404, (s"User $login not found").toJson)
     }
   }
+
+  // API route to register /!\ do not leave as is in production because can spam the DB
+  post(s"/api/register") {
+    val incomingData = upickle.json.read(request.body).obj
+
+    val loginEmail : String = incomingData.get("login") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val name : String = incomingData.get("name") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val pass : String = incomingData.get("password") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val myApi = new UnloggedApiImpl(arguments.settings, arguments.db)
+
+    myApi.isEmailUsed(loginEmail) match {
+      // the user exists, we just log him in
+      case true => connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
+        case Some(u: User) => {
+          // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
+          Ok("""
+            "status":"login ok" ,
+            "userInfo": $userJson
+             """)
+        }
+        // should never happen at this point
+        case None => halt(404, (s"User $loginEmail not found").toJson)
+      }
+        // Ok, the email is not used, proceed with registration
+      case false => {
+        // TODO catch error if db says loginEmail is not unique
+        myApi.addUser(
+          PartialUser(UserID(uuid), name),
+          loginEmail,
+          Password(Some(pass))
+        )
+
+        val userJson = u.toJson
+
+        // TODO idem verif protocole de statuts
+        Ok("""
+            "status":"registration ok" ,
+            "userInfo": $userJson
+          """)
+      }
+    }
+  }
+
 
   get(s"/emailvalidation") {
     val chronicleID = params get "chronicle" getOrElse ("")
