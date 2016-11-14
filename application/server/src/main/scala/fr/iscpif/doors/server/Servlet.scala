@@ -41,7 +41,7 @@ object Servlet {
   case class Arguments(settings: Settings, db: slick.driver.H2Driver.api.Database)
 }
 
-class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with AuthenticationSupport {
+class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with AuthenticationSupport with CorsSupport {
 
   def authenticated(email: String, password: String): Option[UserID] =
     Utils.connect(arguments.db)(email, password, arguments.settings.salt) map { u => u.id }
@@ -80,6 +80,12 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
         redirect("/connection")
     }
   }
+
+  // méthode OPTIONS pour permettre l'initialisation de l'échange CORS
+    options("/*"){
+      response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"));
+    }
+
 
   get("/") {
     redirect("/app")
@@ -138,9 +144,19 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     }
 
 
-  post("/api/user") {
-    val login = params get "login" getOrElse ("")
-    val pass = params get "password" getOrElse ("")
+  post(s"/api/user") {
+    // make Map from json POST body
+    val incomingData = upickle.json.read(request.body).obj
+
+    val login : String = incomingData.get("login") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val pass : String = incomingData.get("password") match {
+      case Some(s) => s.str
+      case None => ""
+    }
 
     Utils.connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
       case Some(u: User) => Ok(u.toJson)
