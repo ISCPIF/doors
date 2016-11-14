@@ -5,14 +5,10 @@ The project aims at providing services around an LDAP authentication.
 ## Build & Run##
 First, build the javascript:
 ```sh
-$ cd doors
+$ cd doors/application
 $ sbt
-> toJar // Build the client JS files and move them in lab/target/scala-2.11/doorsX.X.X-SNAPSHOT.jar
-```
-
-Then, start the server:
-```sh
-> jetty:start // Start the server
+> project lab    // selects the parent project
+> run            // creates the .war file and runs
 ```
 
 ## Run it ! ##
