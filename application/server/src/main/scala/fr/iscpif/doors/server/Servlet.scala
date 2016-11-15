@@ -63,8 +63,8 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
       tags.script(tags.`type` := "text/javascript", tags.src := "js/client-fastopt.js")
 
-        // bootstrap-native.js loader at the end thanks to loadBootstrap
-        // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
+      // bootstrap-native.js loader at the end thanks to loadBootstrap
+      // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
     ),
     tags.body(tags.onload := javascritMethod)
   )
@@ -82,14 +82,6 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     }
   }
 
-  // HTTP OPTIONS method allows setting up the CORS exchange
-  // cf developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
-//    options("/*"){
-//      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-//      response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"));
-//    }
-
-
   get("/") {
     redirect("/app")
   }
@@ -97,18 +89,13 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
   get("/connection") {
     if (isLoggedIn) redirect("/app")
     else {
-      response.setHeader("Access-Control-Allow-Origin", "*")
-      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-      response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
+
       contentType = "text/html"
       connection
     }
   }
 
   post("/connection") {
-    response.setHeader("Access-Control-Allow-Origin", "*")
-    response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-    response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
     basicAuth.status.code match {
       case 200 => redirect("/app")
       case _ => redirect("/connection")
@@ -147,6 +134,14 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     }
 
 
+  // HTTP OPTIONS method allows setting up the CORS exchange
+  // cf www.scalatra.org/guides/web-services/cors.html
+  // cf groups.google.com/forum/#!searchin/scalatra-user/405%7Csort:relevance/scalatra-user/aNV1yj401Z8/zsymZ3FA-YcJ
+  // cf developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
+  options("/api/*"){
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+  }
+
   // API route to login
   post(s"/api/user") {
     // make Map from json POST body
@@ -165,10 +160,10 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
       case Some(u: User) => {
         val userJson = u.toJson
-        Ok("""
-            "status":"login ok" ,
-            "userInfo": $userJson
-           """)
+        Ok("""{
+                "status":"login ok" ,
+                "userInfo": $userJson
+           }""")
       }
       case None => halt(404, (s"User $login not found").toJson)
     }
@@ -200,10 +195,10 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
       case true => connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
         case Some(u: User) => {
           // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
-          Ok("""
-            "status":"login ok" ,
-            "userInfo": $userJson
-             """)
+          Ok("""{
+                  "status":"login ok" ,
+                  "userInfo": $userJson
+             }""")
         }
         // should never happen at this point
         case None => halt(404, (s"User $loginEmail not found").toJson)
@@ -220,10 +215,10 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
         val userJson = u.toJson
 
         // TODO idem verif protocole de statuts
-        Ok("""
+        Ok("""{
             "status":"registration ok" ,
             "userInfo": $userJson
-          """)
+          }""")
       }
     }
   }
