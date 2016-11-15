@@ -82,10 +82,12 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     }
   }
 
-  // méthode OPTIONS pour permettre l'initialisation de l'échange CORS
-    options("/*"){
-      response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"));
-    }
+  // HTTP OPTIONS method allows setting up the CORS exchange
+  // cf developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
+//    options("/*"){
+//      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
+//      response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"));
+//    }
 
 
   get("/") {
