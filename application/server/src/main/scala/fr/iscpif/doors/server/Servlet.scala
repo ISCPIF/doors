@@ -159,8 +159,8 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
 
     connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
       case Some(u: User) => {
-        val userJson = u.toJson
-        Ok("""{
+        val userJson = u.toJson.toString
+        Ok(s"""{
                 "status":"login ok" ,
                 "userInfo": $userJson
            }""")
@@ -195,7 +195,8 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
       case true => connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
         case Some(u: User) => {
           // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
-          Ok("""{
+          val userJson = u.toJson.toString
+          Ok(s"""{
                   "status":"login ok" ,
                   "userInfo": $userJson
              }""")
@@ -212,10 +213,10 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
           Password(Some(pass))
         )
 
-        val userJson = u.toJson
+        val userJson = u.toJson.toString
 
         // TODO idem verif protocole de statuts
-        Ok("""{
+        Ok(s"""{
             "status":"registration ok" ,
             "userInfo": $userJson
           }""")
