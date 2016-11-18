@@ -217,14 +217,23 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
           Password(Some(pass))
         )
 
-        val userJson = u.toJson
-
-        // TODO idem verif protocole de statuts
-        // NB json combine as strings but could also be done with json4s.JsonDSL
-        Ok(s"""{
-            "status":"registration ok" ,
-            "userInfo": $userJson
-          }""")
+        // now connect to get the new user object
+        // TODO check (feels heavy) ------------------------------->8---------------------------
+        connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
+          case Some(u: User) => {
+            // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
+            val userJson = u.toJson
+            // TODO idem verif protocole de statuts
+            // NB json combine as strings but could also be done with json4s.JsonDSL
+            Ok(s"""{
+                    "status":"registration ok" ,
+                    "userInfo": $userJson
+              }""")
+          }
+          // should never happen at this point
+          case None => halt(404, (s"User $loginEmail not found").toJson)
+        }
+        // ------------------------------------------------------>8---------------------------
       }
     }
   }
