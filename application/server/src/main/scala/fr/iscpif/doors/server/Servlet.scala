@@ -252,8 +252,27 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     val secret = params get "secret" getOrElse ("")
 
     println("Confirmed ?" + Utils.isSecretConfirmed(arguments.db)(secret, chronicleID))
-    //TODO Redirect to a new html page with PassEdition
+
+    redirect(s"/okPleaseSetPass?chronicle=$chronicleID" )
   }
+
+  get(s"/okPleaseSetPass") {
+    contentType = "text/html"
+
+    val chronicleID = params get "chronicle" getOrElse ("")
+
+    val userId = userIdOfChronicle(arguments.db)(chronicleID)
+
+    println(s"found userId $userId from chronicle $chronicleID")
+
+    // val userId : Option[String] = Some("526097ec-b73f-4b08-b0a6-343b8ee045ef")
+
+    userId match {
+      case Some(uid:String) => html(s"Client().okPleaseSetPass('$uid');")
+      case None =>  halt(404, "")
+    }
+  }
+
 
   post(s"/$basePath/*") {
     session.get(USER_ID) match {

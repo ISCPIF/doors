@@ -44,11 +44,26 @@ object Utils {
     })
 
   // TODO add function to get user from DB with uuid !!
+  //  def getUser(database: db.Database, userID: String): Option[User] = {
+  //
+  //  }
+
 
   def toUser(pUser: PartialUser, pass: Password, salt: String): Option[User] =
     pass.password.map { p =>
       User(pUser.id, Hashing(p, salt), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
     }
+
+  def userIdOfChronicle(database: db.Database)(chronicleID: String): Option[UserID] = {
+    query(database)(
+      (for {
+        uc <- userChronicles if (uc.chronicleID == chronicleID)
+      } yield uc).result.headOption
+    ) match {
+      case Some(uc) => Some(uc.userID)
+      case None     => None
+    }
+  }
 
   def connect(database: db.Database)(email: String, password: String, salt: String): Option[User] =
     query(database)(

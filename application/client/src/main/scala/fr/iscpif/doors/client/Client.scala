@@ -29,6 +29,7 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
+import fr.iscpif.doors.ext.Data.UserID
 import bs._
 import sheet._
 import scalatags.JsDom.tags
@@ -76,6 +77,22 @@ object Client {
     }
   }
 
+  @JSExport
+  def setPass(userId: String): Unit = {
+
+//    println("setPass: got userId "+userId)
+
+//    val simplePassEdition = new PassEdition( new PassEdition.OldUserPasswordForm)
+//
+//    simplePassEdition.isStatusOK.foreach { pOK =>
+//      if (pOK)
+//        Post[Api].updatePassword(UserID(userId), simplePassEdition.newPassword).call().foreach { p =>
+//          println("setPass: pass updated for " + userId)
+//        }
+//    }
+//
+//    simplePassEdition.panel.render
+  }
 }
 
 object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {
