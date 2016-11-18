@@ -30,6 +30,8 @@ import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
 
+
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
@@ -159,7 +161,9 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
 
     connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
       case Some(u: User) => {
-        val userJson = u.toJson.toString
+        val userJson = u.toJson
+
+
         Ok(s"""{
                 "status":"login ok" ,
                 "userInfo": $userJson
@@ -195,7 +199,7 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
       case true => connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
         case Some(u: User) => {
           // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
-          val userJson = u.toJson.toString
+          val userJson = u.toJson
           Ok(s"""{
                   "status":"login ok" ,
                   "userInfo": $userJson
@@ -213,9 +217,10 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
           Password(Some(pass))
         )
 
-        val userJson = u.toJson.toString
+        val userJson = u.toJson
 
         // TODO idem verif protocole de statuts
+        // NB json combine as strings but could also be done with json4s.JsonDSL
         Ok(s"""{
             "status":"registration ok" ,
             "userInfo": $userJson
