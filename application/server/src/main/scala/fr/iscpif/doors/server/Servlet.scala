@@ -144,6 +144,25 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
+  // API route to check if email exists
+  post(s"/api/userExists") {
+    // make Map from json POST body
+    val incomingData = upickle.json.read(request.body).obj
+
+    val loginEmail : String = incomingData.get("login") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val myApi = new UnloggedApiImpl(arguments.settings, arguments.db)
+
+    myApi.isEmailUsed(loginEmail) match {
+      case true => Ok("""{"status":"login exists"}""")
+      case false => Ok("""{"status":"login available"}""")
+    }
+  }
+
+
   // API route to login
   post(s"/api/user") {
     // make Map from json POST body
