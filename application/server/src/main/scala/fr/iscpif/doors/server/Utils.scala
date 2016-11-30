@@ -43,6 +43,8 @@ object Utils {
       _.toString
     })
 
+  // TODO add function to get user from DB with uuid !!
+
   def toUser(pUser: PartialUser, pass: Password, salt: String): Option[User] =
     pass.password.map { p =>
       User(pUser.id, Hashing(p, salt), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)

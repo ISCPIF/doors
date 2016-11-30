@@ -20,8 +20,8 @@ package fr.iscpif.doors.server
 
 
 import fr.iscpif.doors.ext.Data._
+import shared.UnloggedApi
 import org.scalatra._
-
 import rx._
 
 import scala.concurrent.duration._
@@ -29,6 +29,9 @@ import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
+
+
+
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
@@ -41,7 +44,7 @@ object Servlet {
   case class Arguments(settings: Settings, db: slick.driver.H2Driver.api.Database)
 }
 
-class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with AuthenticationSupport {
+class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with AuthenticationSupport with CorsSupport {
 
   def authenticated(email: String, password: String): Option[UserID] =
     Utils.connect(arguments.db)(email, password, arguments.settings.salt) map { u => u.id }
@@ -62,8 +65,8 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
       tags.script(tags.`type` := "text/javascript", tags.src := "js/client-fastopt.js")
 
-        // bootstrap-native.js loader at the end thanks to loadBootstrap
-        // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
+      // bootstrap-native.js loader at the end thanks to loadBootstrap
+      // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
     ),
     tags.body(tags.onload := javascritMethod)
   )
@@ -88,18 +91,13 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
   get("/connection") {
     if (isLoggedIn) redirect("/app")
     else {
-      response.setHeader("Access-Control-Allow-Origin", "*")
-      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-      response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
+
       contentType = "text/html"
       connection
     }
   }
 
   post("/connection") {
-    response.setHeader("Access-Control-Allow-Origin", "*")
-    response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-    response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
     basicAuth.status.code match {
       case 200 => redirect("/app")
       case _ => redirect("/connection")
@@ -138,15 +136,127 @@ class Servlet(arguments: Servlet.Arguments) extends ScalatraServlet with Authent
     }
 
 
-  post("/api/user") {
-    val login = params get "login" getOrElse ("")
-    val pass = params get "password" getOrElse ("")
+  // HTTP OPTIONS method allows setting up the CORS exchange
+  // cf www.scalatra.org/guides/web-services/cors.html
+  // cf groups.google.com/forum/#!searchin/scalatra-user/405%7Csort:relevance/scalatra-user/aNV1yj401Z8/zsymZ3FA-YcJ
+  // cf developer.mozilla.org/en/docs/Web/HTTP/Access_control_CORS#Preflighted_requests
+  options("/api/*"){
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+  }
 
-    Utils.connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
-      case Some(u: User) => Ok(u.toJson)
+  // API route to check if email exists
+  post(s"/api/userExists") {
+    // make Map from json POST body
+    val incomingData = upickle.json.read(request.body).obj
+
+    val loginEmail : String = incomingData.get("login") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val myApi = new UnloggedApiImpl(arguments.settings, arguments.db)
+
+    myApi.isEmailUsed(loginEmail) match {
+      case true => Ok("""{"status":"login exists"}""")
+      case false => Ok("""{"status":"login available"}""")
+    }
+  }
+
+
+  // API route to login
+  post(s"/api/user") {
+    // make Map from json POST body
+    val incomingData = upickle.json.read(request.body).obj
+
+    val login : String = incomingData.get("login") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val pass : String = incomingData.get("password") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    connect(arguments.db)(login, pass, arguments.settings.salt).headOption match {
+      case Some(u: User) => {
+        val userJson = u.toJson
+
+
+        Ok(s"""{
+                "status":"login ok" ,
+                "userInfo": $userJson
+           }""")
+      }
       case None => halt(404, (s"User $login not found").toJson)
     }
   }
+
+  // API route to register /!\ do not leave as is in production because can spam the DB
+  post(s"/api/register") {
+    val incomingData = upickle.json.read(request.body).obj
+
+    val loginEmail : String = incomingData.get("login") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val name : String = incomingData.get("name") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val pass : String = incomingData.get("password") match {
+      case Some(s) => s.str
+      case None => ""
+    }
+
+    val myApi = new UnloggedApiImpl(arguments.settings, arguments.db)
+
+    myApi.isEmailUsed(loginEmail) match {
+      // the user exists, we just log him in
+      case true => connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
+        case Some(u: User) => {
+          // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
+          val userJson = u.toJson
+          Ok(s"""{
+                  "status":"login ok" ,
+                  "userInfo": $userJson
+             }""")
+        }
+        // should never happen at this point
+        case None => halt(404, (s"User $loginEmail not found").toJson)
+      }
+        // Ok, the email is not used, proceed with registration
+      case false => {
+        // TODO catch error if db says loginEmail is not unique
+        myApi.addUser(
+          PartialUser(UserID(uuid), name),
+          loginEmail,
+          Password(Some(pass))
+        )
+
+        // now connect to get the new user object
+        // TODO check (feels heavy) ------------------------------->8---------------------------
+        connect(arguments.db)(loginEmail, pass, arguments.settings.salt).headOption match {
+          case Some(u: User) => {
+            // TODO verif protocole de statuts (passer en méthode plus transactionnelle?)
+            val userJson = u.toJson
+            // TODO idem verif protocole de statuts
+            // NB json combine as strings but could also be done with json4s.JsonDSL
+            Ok(s"""{
+                    "status":"registration ok" ,
+                    "userInfo": $userJson
+              }""")
+          }
+          // should never happen at this point
+          case None => halt(404, (s"User $loginEmail not found").toJson)
+        }
+        // ------------------------------------------------------>8---------------------------
+      }
+    }
+  }
+
 
   get(s"/emailvalidation") {
     val chronicleID = params get "chronicle" getOrElse ("")

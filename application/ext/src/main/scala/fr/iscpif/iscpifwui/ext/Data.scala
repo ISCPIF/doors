@@ -52,6 +52,8 @@ object Data {
     }
 
     def emptyUser = User(UserID(java.util.UUID.randomUUID.toString), "", "", "", "")
+
+    // TODO fix "hashParameters" format in u.toJson (raw string with '\n' instead of json merge)
   }
 
   object Lock {

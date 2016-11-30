@@ -17,7 +17,8 @@
   */
 package fr.iscpif.doors.server
 
-import javax.script.ScriptEngineManager
+import java.io.StringWriter
+import javax.script.{ScriptEngineManager, SimpleScriptContext}
 
 import better.files._
 
@@ -36,12 +37,16 @@ object Settings {
         |import fr.iscpif.doors.server._
         |import fr.iscpif.doors.server.db._
         |import slick.driver.H2Driver.api._
+        |
       """.stripMargin
 
     val e = new ScriptEngineManager().getEngineByName("scala")
+
     e.asInstanceOf[IMain].settings.embeddedDefaults[Settings]
-    e.asInstanceOf[IMain].settings.usejavacp.value = true
-    e.eval(imports ++ content).asInstanceOf[Settings]
+    //e.asInstanceOf[IMain].settings.usejavacp.value = true
+    val settings = e.eval(imports ++ content).asInstanceOf[Settings]
+
+    settings
   }
 }
 
