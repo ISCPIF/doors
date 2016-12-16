@@ -39,6 +39,7 @@ object Utils {
     def toJson = pretty(Extraction.decompose(x))
   }
 
+
   def fromJSON[T: Manifest](s: String) = parse(s).extract[T]
 
 //
