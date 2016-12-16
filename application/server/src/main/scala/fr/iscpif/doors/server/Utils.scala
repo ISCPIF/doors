@@ -95,18 +95,7 @@ object Utils {
 //
 //
 //
-//  def resetPasswordQueries(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
-//    val cID = chronicleID.getOrElse(LockID(uuid))
-//    //One day to reset the pass
-//    DBIO.seq(
-//      secrets += Secret(cID, secret.getOrElse(uuid), 86400000),
-//      chronicleAddQueries(cID, userID, locks.RESET_PASSWORD, States.LOCKED)
-//    )
-//  }
-//
-//  def resetPassword(database: db.Database)(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
-//    runQuery(database)(resetPasswordQueries(userID, chronicleID, secret))
-//  }
+
 //
 //  // Add chronicle
 //  def chronicleAddQueries(chronicleID: LockID, userID: UserID, lockID: Lock.Id, stateID: State.Id) = DBIO.seq(
@@ -163,8 +152,8 @@ object Utils {
 //
 //
 
-  def secretLink(publicURL: String, secret: String, lock: Data.LockID) = {
-    val secretURL = s"${publicURL}/emailvalidation?lock=${lock.id}&$secret=$secret"
+  def secretLink(publicURL: String, secret: String) = {
+    val secretURL = s"${publicURL}/emailvalidation?secret=$secret"
      s"<a href=${secretURL}>${secretURL}</a>"
   }
 

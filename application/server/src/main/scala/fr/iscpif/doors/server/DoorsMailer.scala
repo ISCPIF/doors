@@ -18,22 +18,21 @@ package fr.iscpif.doors.server
  */
 
 import javax.mail._
-import javax.mail.internet.MimeMessage
+import javax.mail.internet._
 import java.util.Properties
-
-
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 
 object DoorsMailer {
 
 
   def send(smtp: SMTPSettings, emailSubject: String, content: String, to: String): Try[Unit] = {
+println("SEND EMAIL " + emailSubject)
 
     val props = new Properties
-    props.put("mail.smtp.auth", "true")
-    props.put("mail.smtp.starttls.enable", "true")
-    props.put("mail.smtp.host", "smtp.gmail.com")
-    props.put("mail.smtp.port", "587")
+    props.put("mail.smtp.auth", smtp.auth.toString)
+    props.put("mail.smtp.starttls.enable", smtp.enableTTLS.toString)
+    props.put("mail.smtp.host", smtp.host)
+    props.put("mail.smtp.port", smtp.port.toString)
 
     val session = Session.getInstance(props,
       new Authenticator() {
@@ -44,6 +43,9 @@ object DoorsMailer {
 
     Try {
       val message = new MimeMessage(session)
+      smtp.sender.foreach { s =>
+        message.setSender(new InternetAddress(s.name, s.address.value))
+      }
       message.setRecipients(Message.RecipientType.TO, to)
       message.setSubject(emailSubject)
       message.setText(content, "utf-8", "html")

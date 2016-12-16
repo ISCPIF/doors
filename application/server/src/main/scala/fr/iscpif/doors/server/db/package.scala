@@ -51,10 +51,15 @@ package object db {
 
   trait DBScheme {
     def users: TableQuery[Users]
+
     def locks: TableQuery[Locks]
+
     def userLocks: TableQuery[UserLocks]
+
     def emails: TableQuery[Emails]
+
     def versions: TableQuery[Versions]
+
     def secrets: TableQuery[Secrets]
   }
 
@@ -80,6 +85,7 @@ package object db {
     }
 
     def pure[T](t: T): DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], DBScheme, T] { _ => DBIOAction.successful(t) }
+
     def apply[T, D](dbEffect: fr.iscpif.doors.server.db.DBScheme => D)(implicit toDB: ConvertToDB[D, T]): DB[T] =
       Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T] { (s: fr.iscpif.doors.server.db.DBScheme) =>
         toDB.toDB(dbEffect(s))
@@ -90,6 +96,7 @@ package object db {
 
   implicit def dbIOActionIsMonad = new Monad[DBIOAction[?, NoStream, Effect.All]] {
     override def pure[A](x: A): DBIOAction[A, NoStream, Effect.All] = DBIOAction.successful(x)
+
     override def flatMap[A, B](fa: DBIOAction[A, NoStream, Effect.All])(f: (A) => DBIOAction[B, NoStream, Effect.All]): DBIOAction[B, NoStream, Effect.All] =
       for {
         a <- fa
@@ -103,115 +110,120 @@ package object db {
       }
   }
 
-//  implicit def dbIsMonad = new Monad[DB] {
-//    override def pure[A](x: A): DB[A] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, A] { _ => dbIOActionIsMonad.pure(x) }
-//
-//  }
+  //  implicit def dbIsMonad = new Monad[DB] {
+  //    override def pure[A](x: A): DB[A] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, A] { _ => dbIOActionIsMonad.pure(x) }
+  //
+  //  }
 
   type DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T]
-  def runTransaction[T](f: DB[T], db: Database) = Await.result(db.run(f(dbScheme).transactionally), Duration.Inf)
+
+  def runTransaction[T](f: DB[T], db: Database): Try[T] =
+    Try { Await.result(db.run(f(dbScheme).transactionally), Duration.Inf) }
 
 
-//
-//  def failure(s: String) = Failure(new RuntimeException(s))
+  //
+  //  def failure(s: String) = Failure(new RuntimeException(s))
 
-//  type Authorized = (Quests, UserID) => Action[Boolean]
-//
-//  def isAdmin(dBScheme: DBScheme): Authorized =
-//    (quests: Quests, uid: UserID) => {
-//      def adminUsers =
-//        for {
-//          c <- dBScheme.locks if c.id === "admin"
-//          uc <- dBScheme.userLocks.filter { uc=> uc.userID === uid.id && uc.lockID === c.chronicleID }
-//        } yield uc.userID
-//
-//      adminUsers.result.map {
-//        _.contains(uid.id)
-//      }
-//    }
+  //  type Authorized = (Quests, UserID) => Action[Boolean]
+  //
+  //  def isAdmin(dBScheme: DBScheme): Authorized =
+  //    (quests: Quests, uid: UserID) => {
+  //      def adminUsers =
+  //        for {
+  //          c <- dBScheme.locks if c.id === "admin"
+  //          uc <- dBScheme.userLocks.filter { uc=> uc.userID === uid.id && uc.lockID === c.chronicleID }
+  //        } yield uc.userID
+  //
+  //      adminUsers.result.map {
+  //        _.contains(uid.id)
+  //      }
+  //    }
 
   lazy val dbVersion = 1
 
   case class User(id: UserID, name: String, password: Password, hashAlgorithm: HashingAlgorithm)
+
   case class Lock(id: LockID, state: StateID, time: Time, increment: Option[Long])
 
   sealed trait EmailStatus
+
   object EmailStatus {
+
     case object Contact extends EmailStatus
+
     case object Other extends EmailStatus
+
     case object Deprecated extends EmailStatus
+
   }
 
   case class Email(lockID: LockID, address: EmailAddress, status: EmailStatus)
+
   case class UserLock(userID: UserID, lock: LockID)
+
   case class Version(id: Int)
+
   case class Secret(lockID: LockID, secret: String, deadline: Long)
 
 
-  //lazy val dbName = "h2"
+  lazy val dbName = "h2"
 
 
-  //def configFile = defaultLocation / "doors.conf"
+  def saltConfig = "salt"
 
-  //  def saltConfig = "salt"
+  def adminLogin = "adminLogin"
+
+  def adminPass = "adminPass"
+
+  def smtpHostName = "smtpHostName"
+
+  def smtpPort = "smtpPort"
+
+  //    def updateDB(db: Database) = {
+  //      val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
+  //      val v = runQuery(db)(versions.result)
   //
-  //  def adminLogin = "adminLogin"
+  //      val updateQuery = {
+  //        if (v.exists(_.id < dbVersion)) {
+  //          println("TODO: UPDATE DB")
+  //          addVersionQuery
+  //        }
+  //        else if (v.isEmpty) addVersionQuery
+  //        else DBIO.seq()
+  //      }
   //
-  //  def adminPass = "adminPass"
-  //
-  //  def smtpHostName = "smtpHostName"
-  //
-  //  def smtpPort = "smtpPort"
+  //      db.run(updateQuery)
+  //    }
 
-  //  lazy val config = ConfigFactory.parseFile(configFile.toJava)
+  def initDB(location: File) = {
 
-  //  def get(confKey: String) = fromConf(confKey)
-  //
-  //  def fromConf(confKey: String): Try[String] = Try {
-  //    config.getString(confKey)
-  //  }
+    location.parent.toJava.mkdirs()
+    lazy val db: Database = Database.forDriver(
+      driver = new org.h2.Driver,
+      url = s"jdbc:h2:/${location}"
+    )
 
-//  def updateDB(db: Database) = {
-//    val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
-//    val v = runQuery(db)(versions.result)
-//
-//    val updateQuery = {
-//      if (v.exists(_.id < dbVersion)) {
-//        println("TODO: UPDATE DB")
-//        addVersionQuery
-//      }
-//      else if (v.isEmpty) addVersionQuery
-//      else DBIO.seq()
-//    }
-//
-//    db.run(updateQuery)
-//  }
-//
-//  def initDB(location: File) = {
-//
-//    location.parent.toJava.mkdirs()
-//    lazy val db: Database = Database.forDriver(
-//      driver = new org.h2.Driver,
-//      url = s"jdbc:h2:/${location}"
-//    )
-//
-//    def dbWorks =
-//      Try { Await.result(db.run(versions.length.result), Duration.Inf) } match {
-//        case Failure(_) ⇒ false
-//        case Success(_) ⇒ true
-//      }
-//
-//    if (!dbWorks)
-//      runQuery(db)((
-//        users.schema ++
-//          chronicles.schema ++
-//          userChronicles.schema ++
-//          emails.schema ++
-//          versions.schema ++
-//          secrets.schema).create)
-//
-//    db
-//  }
+    def dbWorks =
+      Try {
+        Await.result(db.run(dbScheme.versions.length.result), Duration.Inf)
+      } match {
+        case Failure(_) ⇒ false
+        case Success(_) ⇒ true
+      }
+
+    if (!dbWorks)
+      runTransaction(DB(
+        scheme =>
+          (scheme.users.schema ++
+            scheme.locks.schema ++
+            scheme.userLocks.schema ++
+            scheme.emails.schema ++
+            scheme.versions.schema ++
+            scheme.secrets.schema).create
+      ), db)
+
+    db
+  }
 
 
 }

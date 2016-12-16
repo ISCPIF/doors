@@ -54,16 +54,17 @@ object Settings {
 
 
 case class Settings(
-  port: Int,
-  publicURL: String,
-  salt: String,
-  smtp: SMTPSettings,
-  emailValidation: String => lock.EmailValidation = url => lock.EmailValidation()(url),
-  dbLocation: File = Settings.defaultDir / "h2",
-  hashingAlgorithm: HashingAlgorithm = HashingAlgorithm.default
+                     port: Int,
+                     publicURL: String,
+                     salt: String,
+                     smtp: SMTPSettings,
+                     emailValidation: String => lock.EmailSettings = url => lock.EmailSettings()(url),
+                     dbLocation: File = Settings.defaultDir / "h2",
+                     hashingAlgorithm: HashingAlgorithm = HashingAlgorithm.default
 ) {
 
   def emailValidationInstance = emailValidation(publicURL)
+  def resetPassword = lock.ResetPassword()(publicURL)
 
   //def lock[T](id: LockID): Some[T]
 }

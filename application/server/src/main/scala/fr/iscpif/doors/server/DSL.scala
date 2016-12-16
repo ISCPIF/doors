@@ -99,15 +99,25 @@ object DSL {
 
   object Executable {
 
+    def tryToDSLError[T](t: util.Try[T]): Either[freedsl.dsl.DSLError, T] =
+      t match {
+        case util.Success(r) => Right[freedsl.dsl.DSLError, T](r)
+        case util.Failure(e) => Left[freedsl.dsl.DSLError, T](SignalError.ErrorOccured(e))
+      }
+
+
     implicit def dbIsExecutable[U] = new Executable[db.DB[U], U] {
-      override def execute(t: DB[U], settings: Settings, database: Database)= Right(db.runTransaction(t, database))
+      override def execute(t: DB[U], settings: Settings, database: Database): Either[freedsl.dsl.DSLError, U] =
+        tryToDSLError(db.runTransaction(t, database))
     }
 
     implicit def dbAndSide[T, U] = new Executable[DBAndSide[T, U, dsl.M], U] {
       override def execute(t: DBAndSide[T, U, dsl.M], settings: Settings, database: Database) = {
-        val dbRes: T = db.runTransaction(t.db, database)
-        val effect: dsl.M[U] = t.sideEffect.run(dbRes)
-        dsl.result(effect, interpreter(settings)): Either[freedsl.dsl.DSLError, U]
+        for {
+          dbRes <- tryToDSLError(db.runTransaction(t.db, database))
+          effect: dsl.M[U] = t.sideEffect.run(dbRes)
+          res <- dsl.result(effect, interpreter(settings)): Either[freedsl.dsl.DSLError, U]
+        } yield res
       }
     }
   }

@@ -28,10 +28,8 @@ import scala.util.{Failure, Success, Try}
 
 class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.UnloggedApi {
 
-//  // TODO : consult the email DB
-//  def isEmailUsed(email: String): Boolean =
-//    DSL.emailTable.exists(email).
-//      interpret(DSL.interpreter(settings.smtp, database))
+  // TODO : consult the email DB
+  def isEmailUsed(email: String) =  db.query.email.exists(email) execute(settings, database)
 
   def addUser(name: String, email: EmailAddress, pass: Password) = {
     import DSL.dsl._
@@ -39,14 +37,10 @@ class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.
       { uid => settings.emailValidationInstance.start[M](uid, email) } execute(settings, database)
   }
 
-//  def resetPassword(userID: UserID) = {
-//    val chronicleID = LockID(Utils.uuid)
-//    val secret = Utils.uuid
-//    Utils.resetPassword(database)(userID)
-//    Utils.email(database)(userID).foreach { email =>
-//      println("SEnd to " + email)
-//      Utils.sendResetPasswordEmail(settings.smtp, settings.publicURL, email, chronicleID, secret)
-//    }
-//  }
+  //TODO: take the first validated email or the primary one
+  def resetPassword(userID: UserID) = {
+    import DSL.dsl._
+    settings.resetPassword.start[M](userID)
+  }
 
 }

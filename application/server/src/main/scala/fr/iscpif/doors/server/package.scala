@@ -19,14 +19,15 @@ package fr.iscpif.doors
 
 import javax.script.ScriptEngineManager
 
-import fr.iscpif.doors.ext.Data.PartialUser
+import fr.iscpif.doors.ext.Data.{EmailAddress, PartialUser}
 import better.files._
 
 import scala.tools.nsc.interpreter.IMain
 
 package object server {
 
-  case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false)
+  case class EmailSender(name: String, address: EmailAddress)
+  case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false, sender: Option[EmailSender] = None)
 
 //  type Quests = Map[String, AccessQuest]
 
