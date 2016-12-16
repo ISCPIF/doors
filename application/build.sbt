@@ -1,16 +1,16 @@
 import org.scalatra.sbt.ScalatraPlugin
 
-resolvers in ThisBuild ++= Seq(
-  Resolver.sonatypeRepo("snapshots"),
-  "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
-)
-
 
 def projectSettings = Seq(
   organization := "fr.iscpif",
   version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.11.8",
   libraryDependencies ++= monocle,
+  resolvers += Resolver.sonatypeRepo("snapshots"),
+  resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven",
+  resolvers += Resolver.bintrayRepo("projectseptemberinc", "maven"),
+  addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3"),
+  addCompilerPlugin("com.milessabin" % "si2712fix-plugin" % "1.2.0" cross CrossVersion.full),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 
@@ -97,7 +97,10 @@ lazy val server = Project(
       "com.typesafe.slick" %% "slick" % "3.1.1",
       "com.h2database" % "h2" % "1.4.190",
       "com.github.pathikrit" %% "better-files" % betterFileVersion,
-      "org.scala-lang" % "scala-compiler" % scalaVersion.value)
+      "org.scala-lang" % "scala-compiler" % scalaVersion.value,
+      "fr.iscpif.freedsl" %% "dsl" % "0.1",
+      "com.squants"  %% "squants"  % "0.7.1-SNAPSHOT"
+    )
   )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
 

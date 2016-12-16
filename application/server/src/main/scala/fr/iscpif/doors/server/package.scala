@@ -28,6 +28,6 @@ package object server {
 
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false)
 
-  type Quests = Map[String, AccessQuest]
+//  type Quests = Map[String, AccessQuest]
 
 }

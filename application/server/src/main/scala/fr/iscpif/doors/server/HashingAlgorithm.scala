@@ -1,7 +1,7 @@
-package fr.iscpif.doors.ext
+package fr.iscpif.doors.server
 
 /*
- * Copyright (C) 05/09/15 // mathieu.leclaire@openmole.org
+ * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,17 +17,28 @@ package fr.iscpif.doors.ext
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package object ldap {
+import com.roundeights.hasher.Algo
+import Utils._
 
+object HashingAlgorithm {
+  val PBKDF2_METHOD = "PBKDF2"
+  def apply(name: String, json: String): HashingAlgorithm =
+    name match {
+      case PBKDF2_METHOD => fromJSON[PBKDF2](json)
+    }
 
-  type LdapAttribute = String
-
-  val email: LdapAttribute = "mail"
-  val givenName: LdapAttribute = "givenName"
-  val description: LdapAttribute = "description"
-  val name: LdapAttribute = "name"
-  val surname: LdapAttribute = "sn"
-  val uid: LdapAttribute = "uid"
-  val dn: LdapAttribute = "dn"
-
+  val default = PBKDF2(1000, 128)
 }
+
+
+sealed trait HashingAlgorithm {
+  def apply(salt: String, s: String): String
+  def name: String
+}
+
+case class PBKDF2(iterations: Int, keyLenght: Int) extends HashingAlgorithm {
+  def name = HashingAlgorithm.PBKDF2_METHOD
+  def apply(salt: String, s: String) = Algo.pbkdf2(salt, iterations, keyLenght)(s)
+}
+
+

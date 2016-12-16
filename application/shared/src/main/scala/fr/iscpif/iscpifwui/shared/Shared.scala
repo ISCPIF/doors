@@ -26,24 +26,24 @@ trait Api {
 
   //def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
-  //Database
-  def loggedUser(): Option[User]
-
-  def allUsers(): Seq[User]
-
-  def atLeastOneAdminRight(): Capacity
-
-  def canRemoveUser(): Capacity
-
-  def canModifyPartialUser(userID: UserID): Capacity
-
-  def isPasswordValid(pass: String): Boolean
-
-  def updatePassword(userID: UserID, pass: String): Unit
-
-  def updatePartialUser(partialUser: PartialUser): Unit
-
-  def removeUser(user: User): Unit
+//  //Database
+//  def loggedUser(): Option[User]
+//
+//  def allUsers(): Seq[User]
+//
+//  def atLeastOneAdminRight(): Capacity
+//
+//  def canRemoveUser(): Capacity
+//
+//  def canModifyPartialUser(userID: UserID): Capacity
+//
+//  def isPasswordValid(pass: String): Boolean
+//
+//  def updatePassword(userID: UserID, pass: String): Unit
+//
+//  def updatePartialUser(partialUser: PartialUser): Unit
+//
+//  def removeUser(user: User): Unit
 
   //States
   // def addState(userID: User.Id, lockID: Lock.Id, stateID: Chronicle.Id): Unit
@@ -53,7 +53,7 @@ trait Api {
 
 
 trait UnloggedApi {
-  def isEmailUsed(email: String): Boolean
-
-  def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError]
+//  def isEmailUsed(email: String): Boolean
+//
+//  def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError]
 }

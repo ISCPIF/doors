@@ -18,40 +18,33 @@ package fr.iscpif.doors.server.db
  */
 
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.ext.Data.{Chronicle, ChronicleID}
+import fr.iscpif.doors.ext.Data._
 import slick.driver.H2Driver.api._
-
-object States {
-  val LOCKED = "LOCKED"
-  val OPEN = "OPEN"
-}
+import squants.time.TimeConversions._
 
 
-class Chronicles(tag: Tag) extends Table[Chronicle](tag, "CHRONICLES") {
-  def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
-  def lock = column[Data.Lock.Id]("LOCK")
-  def state = column[Data.State.Id]("STATE")
+class Locks(tag: Tag) extends Table[Lock](tag, "LOCKS") {
+  def id = column[String]("ID")
+  def state = column[String]("STATE")
   def time = column[Long]("TIME")
   def increment = column[Long]("INCREMENT", O.AutoInc)
 
   def * = {
-    val shValues = (chronicleID, lock, state, time, increment).shaped
+    val shValues = (id, state, time, increment).shaped
     shValues.<>({
       tuple =>
-        Chronicle.apply(
-          ChronicleID(tuple._1),
-          tuple._2,
-          tuple._3,
-          tuple._4,
-          Some(tuple._5)
+        Lock.apply(
+          Data.LockID(tuple._1),
+          Data.StateID(tuple._2),
+          tuple._3 milliseconds,
+          Some(tuple._4)
         )
     }, {
-      (c: Chronicle) =>
+      (c: Lock) =>
         Some((
-          c.chronicle.id,
-          c.lock,
-          c.state,
-          c.time,
+          c.id.id,
+          c.state.id,
+          c.time.toMillis,
           c.increment.getOrElse(0L)
           )
         )

@@ -17,7 +17,6 @@ package fr.iscpif.doors.server.db
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data.Version
 import slick.driver.H2Driver.api._
 
 class Versions(tag: Tag) extends Table[Version](tag, "VERSIONS") {

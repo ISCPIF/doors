@@ -20,30 +20,21 @@ package fr.iscpif.doors.server.db
 import fr.iscpif.doors.ext.Data._
 import slick.driver.H2Driver.api._
 
+class UserLocks(tag: Tag) extends Table[UserLock](tag, "USER_LOCKS") {
+  def userID = column[String]("USER_ID")
+  def lockID = column[String]("LOCK")
 
-class UserChronicles(tag: Tag) extends Table[UserChronicle](tag, "USER_CHRONICLES") {
-  def userID = column[User.Id]("USER_ID")
-  def chronicleID = column[Chronicle.Id]("CHRONICLE")
-
-  def user = foreignKey("USER_FK", userID, users)(_.id)
+  def user = foreignKey("USER_FK", userID, dbScheme.users)(_.id)
 
   def * = {
-    val shValues = (userID, chronicleID).shaped
+    val shValues = (userID, lockID).shaped
     shValues.<>({
       tuple =>
-        UserChronicle.apply(
+        UserLock(
           userID = UserID(tuple._1),
-          chronicle = ChronicleID(tuple._2)
+          lock = LockID(tuple._2)
         )
-    }, {
-      (uc: UserChronicle) =>
-        Some((
-          uc.userID.id,
-          uc.chronicle.id
-          )
-        )
-    }
-    )
+    }, (uc: UserLock) => Some((uc.userID.id, uc.lock.id)))
   }
 
 }

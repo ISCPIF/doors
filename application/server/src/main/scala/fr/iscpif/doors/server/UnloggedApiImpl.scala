@@ -18,66 +18,35 @@ package fr.iscpif.doors.server
  */
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.doors.server.Utils._
-import fr.iscpif.doors.server.db.States
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import slick.driver.H2Driver.api._
-import db._
+import cats.implicits._
+import fr.iscpif.doors.server.DSL._
 
 import scala.util.{Failure, Success, Try}
 
 class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.UnloggedApi {
 
-  // TODO : consult the email DB
-  def isEmailUsed(email: String): Boolean = !query(database)(emails.filter { u =>
-    u.email === email
-  }.result).isEmpty
+//  // TODO : consult the email DB
+//  def isEmailUsed(email: String): Boolean =
+//    DSL.emailTable.exists(email).
+//      interpret(DSL.interpreter(settings.smtp, database))
 
-  def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError] = {
-    val someUser = Utils.toUser(partialUser, pass, settings.salt)
-    val currentTime = System.currentTimeMillis
-    val userChronicleID = ChronicleID(Utils.uuid)
-    val emailChronicleID = ChronicleID(Utils.uuid)
-    val secret = Utils.uuid
-
-    someUser.flatMap { u =>
-      val userAndEmailQueries = DBIO.seq(
-        Utils.userAddQueries(u, userChronicleID),
-        Utils.emailAddQueries(database)(u.id, email, Some(emailChronicleID), Some(secret))
-      )
-
-      val admins = chronicles.filter { c => c.lock === locks.ADMIN }.result.map(_.size)
-
-      val transaction = DBIO.seq(
-        userAndEmailQueries,
-        admins.flatMap {
-          case 0 => DBIO.seq(Utils.chronicleAddQueries(userChronicleID, u.id, locks.ADMIN, States.OPEN))
-          case _ => DBIO.seq()
-        }
-      )
-
-      Try(
-        query(database) {
-          Utils.sendEmailConfirmation(settings.smtp, settings.publicURL, email, emailChronicleID, secret)
-          transaction.transactionally
-        }
-      ) match {
-        case Success(s) => None
-        case Failure(f) => Some(f)
-      }
-    }
-
+  def addUser(name: String, email: EmailAddress, pass: Password) = {
+    import DSL.dsl._
+    db.query.user.add(name, pass, settings.hashingAlgorithm) chain
+      { uid => settings.emailValidationInstance.start[M](uid, email) } execute(settings, database)
   }
 
-  def resetPassword(userID: UserID) = {
-    val chronicleID = ChronicleID(Utils.uuid)
-    val secret = Utils.uuid
-    Utils.resetPassword(database)(userID)
-    Utils.email(database)(userID).foreach { email =>
-      println("SEnd to " + email)
-      Utils.sendResetPasswordEmail(settings.smtp, settings.publicURL, email, chronicleID, secret)
-    }
-  }
+//  def resetPassword(userID: UserID) = {
+//    val chronicleID = LockID(Utils.uuid)
+//    val secret = Utils.uuid
+//    Utils.resetPassword(database)(userID)
+//    Utils.email(database)(userID).foreach { email =>
+//      println("SEnd to " + email)
+//      Utils.sendResetPasswordEmail(settings.smtp, settings.publicURL, email, chronicleID, secret)
+//    }
+//  }
 
 }

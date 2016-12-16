@@ -19,50 +19,133 @@ package fr.iscpif.doors.server
 
 
 import better.files.File
+import cats.{Applicative, Monad}
+import cats.data.{Ior, Kleisli}
 import fr.iscpif.doors.ext.Data._
 import slick.dbio.DBIOAction
+import slick.driver.H2Driver
 import slick.driver.H2Driver.api._
-import slick.lifted.TableQuery
+import slick.lifted.{Query, QueryBase, TableQuery}
+import slick.profile.{FixedSqlAction, SqlAction}
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.Duration
 import scala.util._
+import squants.time._
+
+import scala.Either
 
 
 package object db {
 
+  private[server] lazy val dbScheme = new db.DBScheme {
+    lazy val users = TableQuery[db.Users]
+    lazy val locks = TableQuery[db.Locks]
+    lazy val userLocks = TableQuery[db.UserLocks]
+    lazy val emails = TableQuery[db.Emails]
+    lazy val versions = TableQuery[db.Versions]
+    lazy val secrets = TableQuery[db.Secrets]
+  }
   type Database = slick.driver.H2Driver.api.Database
 
-  lazy val users = TableQuery[Users]
-  lazy val chronicles = TableQuery[Chronicles]
-  lazy val userChronicles = TableQuery[UserChronicles]
-  lazy val emails = TableQuery[Emails]
-  lazy val versions = TableQuery[Versions]
-  lazy val secrets = TableQuery[Secrets]
+  trait DBScheme {
+    def users: TableQuery[Users]
+    def locks: TableQuery[Locks]
+    def userLocks: TableQuery[UserLocks]
+    def emails: TableQuery[Emails]
+    def versions: TableQuery[Versions]
+    def secrets: TableQuery[Secrets]
+  }
 
-  type DbQuery[T] = DBIOAction[T, slick.dbio.NoStream, scala.Nothing]
 
-  def query[T](db: Database)(f: DbQuery[T]) = Await.result(db.run(f), Duration.Inf)
+  object DB {
 
-  def failure(s: String) = Failure(new RuntimeException(s))
+    object ConvertToDB {
+      implicit def action[U] = new ConvertToDB[DBIOAction[U, NoStream, Effect.All], U] {
+        def toDB(t: DBIOAction[U, NoStream, Effect.All]) = t
+      }
 
-  type Authorized = (Quests, UserID) => DbQuery[Boolean]
+      implicit def query[U] = new ConvertToDB[QueryBase[U], U] {
+        def toDB(t: QueryBase[U]): DBIOAction[U, NoStream, Effect.All] = t.result
+      }
 
-  def isAdmin: Authorized =
-    (quests: Quests, uid: UserID) => {
-      def adminUsers =
-        for {
-          c <- chronicles if c.lock === "admin"
-          uc <- userChronicles.filter { uc=> uc.userID === uid.id && uc.chronicleID === c.chronicleID }
-        } yield uc.userID
-
-      adminUsers.result.map {
-        _.contains(uid.id)
+      implicit def rep[U] = new ConvertToDB[Rep[U], U] {
+        def toDB(t: Rep[U]): DBIOAction[U, NoStream, Effect.All] = t.result
       }
     }
 
+    trait ConvertToDB[-T, U] {
+      def toDB(t: T): DBIOAction[U, NoStream, Effect.All]
+    }
+
+    def pure[T](t: T): DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], DBScheme, T] { _ => DBIOAction.successful(t) }
+    def apply[T, D](dbEffect: fr.iscpif.doors.server.db.DBScheme => D)(implicit toDB: ConvertToDB[D, T]): DB[T] =
+      Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T] { (s: fr.iscpif.doors.server.db.DBScheme) =>
+        toDB.toDB(dbEffect(s))
+      }
+
+  }
+
+
+  implicit def dbIOActionIsMonad = new Monad[DBIOAction[?, NoStream, Effect.All]] {
+    override def pure[A](x: A): DBIOAction[A, NoStream, Effect.All] = DBIOAction.successful(x)
+    override def flatMap[A, B](fa: DBIOAction[A, NoStream, Effect.All])(f: (A) => DBIOAction[B, NoStream, Effect.All]): DBIOAction[B, NoStream, Effect.All] =
+      for {
+        a <- fa
+        b <- f(a)
+      } yield b
+
+    override def tailRecM[A, B](a: A)(f: (A) => DBIOAction[Either[A, B], NoStream, Effect.All]): DBIOAction[B, NoStream, Effect.All] =
+      flatMap(f(a)) {
+        case Right(b) => pure(b)
+        case Left(nextA) => tailRecM(nextA)(f)
+      }
+  }
+
+//  implicit def dbIsMonad = new Monad[DB] {
+//    override def pure[A](x: A): DB[A] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, A] { _ => dbIOActionIsMonad.pure(x) }
+//
+//  }
+
+  type DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T]
+  def runTransaction[T](f: DB[T], db: Database) = Await.result(db.run(f(dbScheme).transactionally), Duration.Inf)
+
+
+//
+//  def failure(s: String) = Failure(new RuntimeException(s))
+
+//  type Authorized = (Quests, UserID) => Action[Boolean]
+//
+//  def isAdmin(dBScheme: DBScheme): Authorized =
+//    (quests: Quests, uid: UserID) => {
+//      def adminUsers =
+//        for {
+//          c <- dBScheme.locks if c.id === "admin"
+//          uc <- dBScheme.userLocks.filter { uc=> uc.userID === uid.id && uc.lockID === c.chronicleID }
+//        } yield uc.userID
+//
+//      adminUsers.result.map {
+//        _.contains(uid.id)
+//      }
+//    }
+
   lazy val dbVersion = 1
+
+  case class User(id: UserID, name: String, password: Password, hashAlgorithm: HashingAlgorithm)
+  case class Lock(id: LockID, state: StateID, time: Time, increment: Option[Long])
+
+  sealed trait EmailStatus
+  object EmailStatus {
+    case object Contact extends EmailStatus
+    case object Other extends EmailStatus
+    case object Deprecated extends EmailStatus
+  }
+
+  case class Email(lockID: LockID, address: EmailAddress, status: EmailStatus)
+  case class UserLock(userID: UserID, lock: LockID)
+  case class Version(id: Int)
+  case class Secret(lockID: LockID, secret: String, deadline: Long)
 
 
   //lazy val dbName = "h2"
@@ -88,47 +171,47 @@ package object db {
   //    config.getString(confKey)
   //  }
 
-  def updateDB(db: Database) = {
-    val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
-    val v = query(db)(versions.result)
-
-    val updateQuery = {
-      if (v.exists(_.id < dbVersion)) {
-        println("TODO: UPDATE DB")
-        addVersionQuery
-      }
-      else if (v.isEmpty) addVersionQuery
-      else DBIO.seq()
-    }
-
-    db.run(updateQuery)
-  }
-
-  def initDB(location: File) = {
-
-    location.parent.toJava.mkdirs()
-    lazy val db: Database = Database.forDriver(
-      driver = new org.h2.Driver,
-      url = s"jdbc:h2:/${location}"
-    )
-
-    def dbWorks =
-      Try { Await.result(db.run(versions.length.result), Duration.Inf) } match {
-        case Failure(_) ⇒ false
-        case Success(_) ⇒ true
-      }
-
-    if (!dbWorks)
-      query(db)((
-        users.schema ++
-          chronicles.schema ++
-          userChronicles.schema ++
-          emails.schema ++
-          versions.schema ++
-          secrets.schema).create)
-
-    db
-  }
+//  def updateDB(db: Database) = {
+//    val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
+//    val v = runQuery(db)(versions.result)
+//
+//    val updateQuery = {
+//      if (v.exists(_.id < dbVersion)) {
+//        println("TODO: UPDATE DB")
+//        addVersionQuery
+//      }
+//      else if (v.isEmpty) addVersionQuery
+//      else DBIO.seq()
+//    }
+//
+//    db.run(updateQuery)
+//  }
+//
+//  def initDB(location: File) = {
+//
+//    location.parent.toJava.mkdirs()
+//    lazy val db: Database = Database.forDriver(
+//      driver = new org.h2.Driver,
+//      url = s"jdbc:h2:/${location}"
+//    )
+//
+//    def dbWorks =
+//      Try { Await.result(db.run(versions.length.result), Duration.Inf) } match {
+//        case Failure(_) ⇒ false
+//        case Success(_) ⇒ true
+//      }
+//
+//    if (!dbWorks)
+//      runQuery(db)((
+//        users.schema ++
+//          chronicles.schema ++
+//          userChronicles.schema ++
+//          emails.schema ++
+//          versions.schema ++
+//          secrets.schema).create)
+//
+//    db
+//  }
 
 
 }

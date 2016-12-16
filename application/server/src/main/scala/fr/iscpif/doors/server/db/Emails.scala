@@ -18,29 +18,39 @@ package fr.iscpif.doors.server.db
  */
 
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.ext.Data.{ChronicleID, Email}
 import slick.driver.H2Driver.api._
 
 
 class Emails(tag: Tag) extends Table[Email](tag, "EMAILS") {
-  def chronicleID = column[Data.Chronicle.Id]("CHRONICLE_ID")
+  def lockID = column[String]("LOCK_ID")
+  def address = column[String]("ADDRESS")
+  def status = column[String]("STATUS")
 
-  def email = column[String]("EMAIL")
+  def emailIndex = index("emailIndex", address, unique = true)
 
   def * = {
-    val shValues = (chronicleID, email).shaped
+    val shValues = (lockID, address, status).shaped
     shValues.<>({
       tuple =>
-        Email.apply(
-          chronicleID = ChronicleID(tuple._1),
-          email = tuple._2
+        Email(
+          lockID = Data.LockID(tuple._1),
+          address = Data.EmailAddress(tuple._2),
+          status = tuple._3 match {
+            case "Contact" => EmailStatus.Contact
+            case "Other" => EmailStatus.Other
+            case "Deprecated" => EmailStatus.Deprecated
+          }
         )
     }, {
       (e: Email) =>
         Some((
-          e.chronicleID.id,
-          e.email
-          )
+          e.lockID.id,
+          e.address.value,
+          e.status match {
+            case EmailStatus.Contact => "Contact"
+            case EmailStatus.Other => "Other"
+            case EmailStatus.Deprecated => "Deprecated"
+          })
         )
     }
     )

@@ -17,11 +17,13 @@ package fr.iscpif.doors.server.db
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fr.iscpif.doors.ext.Data.{User, UserID}
+import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.server.HashingAlgorithm
 import slick.driver.H2Driver.api._
+import fr.iscpif.doors.server.Utils._
 
 class Users(tag: Tag) extends Table[User](tag, "USERS") {
-  def id = column[User.Id]("ID", O.PrimaryKey)
+  def id = column[String]("ID", O.PrimaryKey)
 
   def password = column[String]("PASSWORD")
 
@@ -37,19 +39,18 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
       tuple =>
         User.apply(
           id = UserID(tuple._1),
-          password = tuple._2,
+          password = Password(tuple._2),
           name = tuple._3,
-          hashAlgorithm = tuple._4,
-          hashParameters = tuple._5
+          hashAlgorithm = HashingAlgorithm(tuple._4, tuple._5)
         )
     }, {
       (u: User) =>
         Some((
           u.id.id,
-          u.password,
+          u.password.value,
           u.name,
-          u.hashAlgorithm,
-          u.hashParameters
+          u.hashAlgorithm.name,
+          u.hashAlgorithm.toJson
           )
         )
     }

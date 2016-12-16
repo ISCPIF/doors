@@ -21,14 +21,13 @@ import javax.mail._
 import javax.mail.internet.MimeMessage
 import java.util.Properties
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import fr.iscpif.doors.ext.Data.EmailDeliveringError
+
 import scala.util.{Failure, Success, Try}
 
 object DoorsMailer {
 
 
-  def send(smtp: SMTPSettings, emailSubject: String, content: String, to: String): Option[EmailDeliveringError] = {
+  def send(smtp: SMTPSettings, emailSubject: String, content: String, to: String): Try[Unit] = {
 
     val props = new Properties
     props.put("mail.smtp.auth", "true")
@@ -44,18 +43,11 @@ object DoorsMailer {
       })
 
     Try {
-
       val message = new MimeMessage(session)
       message.setRecipients(Message.RecipientType.TO, to)
       message.setSubject(emailSubject)
       message.setText(content, "utf-8", "html")
       Transport.send(message)
-
-    } match {
-      case Success(_) => None
-      case Failure(f) => Some(EmailDeliveringError(f.getMessage, f.getStackTrace.map {
-        _.toString
-      }))
     }
   }
 }

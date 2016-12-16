@@ -1,0 +1,151 @@
+package fr.iscpif.doors.server.db
+
+import java.util.UUID
+
+import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.Data.UserID
+import fr.iscpif.doors.server.{HashingAlgorithm, Utils, db}
+import squants.time.TimeConversions._
+
+object query {
+
+  import slick.driver.H2Driver.api._
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import fr.iscpif.doors.ext.Data
+
+  object lock {
+
+    def exists(email: Data.EmailAddress, lockId: Data.LockID) = DB { scheme =>
+      (scheme.emails.filter(e => e.address === email.value && e.lockID === lockId.id).size > 0)
+    }
+
+    // FIXME side effect current time
+    def create(userId: Data.UserID, lockId: Data.LockID, statusId: Data.StateID = Data.LockState.locked) = DB { scheme =>
+      val lockId = Data.LockID(Utils.uuid)
+      for {
+        _ <- scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
+        _ <- scheme.userLocks += db.UserLock(userId, lockId)
+      } yield lockId
+    }
+
+    def progress(lockId: Data.LockID, statusId: Data.StateID) = DB { scheme =>
+      scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
+    }
+
+    //
+    //      Utils.emails(database)(userId) match {
+    //              case Seq() => EmailStatus.Contact
+    //              case _ => EmailStatus.Other
+    //            }
+    //
+    //          db.query(database)(db.emails += Data.Email(chronic, email, status))
+
+  }
+
+  object email {
+    def get(userId: Data.UserID) = DB { scheme =>
+      def request =
+        for {
+          uc <- scheme.userLocks.filter(_.userID === userId.id)
+          e <- scheme.emails.filter(_.lockID === uc.lockID)
+        } yield e
+      request.result
+    }
+
+
+    def add(userId: Data.UserID, email: Data.EmailAddress, lockId: Data.LockID) =
+      for {
+        es <- query.email.get(userId)
+        emailStatus = if (es.isEmpty) db.EmailStatus.Contact else db.EmailStatus.Other
+        lockId <- lock.create(userId, lockId)
+        _ <- DB { _.emails += db.Email(lockId, email, emailStatus) }
+      } yield lockId
+
+  }
+
+  object secret {
+
+    // FIXME side effect
+    def add(lockId: Data.LockID, deadLine: Long) = DB { scheme =>
+      val secret = Utils.uuid
+      for {
+        _ <- scheme.secrets += db.Secret(lockId, secret, deadLine)
+      } yield secret
+    }
+
+    def email(secret: String) = DB { scheme =>
+      def request =
+        for {
+          lockId <- scheme.secrets.filter(s => s.secret === secret)
+          e <- scheme.emails.filter(e => e.lockID === lockId.lockID)
+        } yield e
+      request.result
+    }
+
+    def deadline(secret: String, lockId: Data.LockID) = DB { scheme =>
+      scheme.secrets.filter(s => s.secret === secret && s.lockID === lockId.id).map(_.deadline).result.headOption.map(_.map(_ milliseconds))
+    }
+
+
+    //    object SecretTable {
+    //      def interpreter(database: Database) = new Interpreter[Id] {
+    //        def interpret[_] = {
+    //          case setSecret(email, chronic, deadLine, secret) =>
+    //            db.runQuery(database)(db.secrets += Data.Secret(chronic, secret, deadLine))
+    //            ()
+    //          case checkSecret(secret, chronic) =>
+    //            Utils.isSecretConfirmed(database)(secret, chronic.id)
+    //        }
+    //      }
+    //    }
+    //
+    //
+    //    @dsl trait SecretTable[M[_]] {
+    //      def generateSecret: M[String]
+    //      def setSecret(email: String, chronic: Data.ChronicleID, deadLine: Long, secret: String): M[Unit]
+    //      def checkSecret(secret: String, chronic: Data.ChronicleID): M[Boolean]
+    //    }
+
+
+  }
+
+  object user {
+
+    def add(name: String, password: Data.Password, hashAlgorithm: HashingAlgorithm) = {
+      val user = User(UserID(Utils.uuid), name, password, hashAlgorithm)
+      for {
+        _ <- DB { _.users += user }
+        lockId <- lock.create(user.id, fr.iscpif.doors.server.lock.registration, Data.LockState.locked)
+        _ <- lock.progress(lockId, Data.LockState.unlocked)
+      } yield user.id
+    }
+
+    //      DBIO.seq(
+    //      scheme.users += user,
+    //
+    //      chronicleAddQueries(chronicleID, user.id, locks.REGISTRATION, States.LOCKED)
+    //    )
+  }
+
+
+
+  //          db.query(database)(q.result.headOption).map(ChronicleID(_))
+  //        case add(userId, email, chronic) =>
+  //          def status =
+  //            Utils.emails(database)(userId) match {
+  //              case Seq() => EmailStatus.Contact
+  //              case _ => EmailStatus.Other
+  //            }
+  //
+  //          db.query(database)(db.emails += Data.Email(chronic, email, status))
+  //          ()
+  //        case emailForChronic(chronic) =>
+  //          db.query(database)(db.emails.filter(_.chronicleID === chronic.id).result.headOption)
+  //        case exists(email) =>
+  //          !db.query(database)(db.emails.filter { e => e.email === email }.result).isEmpty
+  //      }
+  //    }
+  //  }
+
+
+}

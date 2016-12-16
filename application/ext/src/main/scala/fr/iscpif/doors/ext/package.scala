@@ -1,7 +1,7 @@
-package fr.iscpif.doors.server
+package fr.iscpif.doors
 
 /*
- * Copyright (C) 19/07/16 // mathieu.leclaire@openmole.org
+ * Copyright (C) 05/09/15 // mathieu.leclaire@openmole.org
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -17,10 +17,19 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-object locks {
-  lazy val ADMIN = "admin"
-  lazy val REGISTRATION = "registration"
-  lazy val SUBSCRIPTION = "subscription"
-  lazy val EMAIL_VALIDATION = "emailValidation"
-  lazy val RESET_PASSWORD = "resetPassword"
+package object ext {
+
+//
+//  type LdapAttribute = String
+//
+//  val email: LdapAttribute = "mail"
+//  val givenName: LdapAttribute = "givenName"
+//  val description: LdapAttribute = "description"
+//  val name: LdapAttribute = "name"
+//  val surname: LdapAttribute = "sn"
+//  val uid: LdapAttribute = "uid"
+//  val dn: LdapAttribute = "dn"
+
+
+
 }

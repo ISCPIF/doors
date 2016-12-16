@@ -21,6 +21,8 @@ import java.io.StringWriter
 import javax.script.{ScriptEngineManager, SimpleScriptContext}
 
 import better.files._
+import fr.iscpif.doors.ext.Data
+import com.roundeights.hasher.Hasher
 
 import scala.tools.nsc.interpreter.IMain
 
@@ -52,10 +54,16 @@ object Settings {
 
 
 case class Settings(
-  quests: Quests,
   port: Int,
   publicURL: String,
   salt: String,
   smtp: SMTPSettings,
-  dbLocation: File = Settings.defaultDir / "h2"
-)
+  emailValidation: String => lock.EmailValidation = url => lock.EmailValidation()(url),
+  dbLocation: File = Settings.defaultDir / "h2",
+  hashingAlgorithm: HashingAlgorithm = HashingAlgorithm.default
+) {
+
+  def emailValidationInstance = emailValidation(publicURL)
+
+  //def lock[T](id: LockID): Some[T]
+}
