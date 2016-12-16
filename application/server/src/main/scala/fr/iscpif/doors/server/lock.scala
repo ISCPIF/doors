@@ -134,7 +134,7 @@ object lock {
   //     (ManualValidation(validator = query(firstName = "Alexandre", famillyName = "Delanoe"), id = "GargantextMailValditaion"))
   //
 
-  case class EmailSettings(
+  case class EmailValidation(
                               lockId: Data.EmailAddress => Data.LockID = e => Data.LockID(s"validate:${e.value}"),
                               confirmationDelay: Time = Days(2),
                               generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.defaultEmail)(publicURL: String) {

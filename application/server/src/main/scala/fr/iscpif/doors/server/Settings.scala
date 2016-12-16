@@ -58,7 +58,7 @@ case class Settings(
                      publicURL: String,
                      salt: String,
                      smtp: SMTPSettings,
-                     emailValidation: String => lock.EmailSettings = url => lock.EmailSettings()(url),
+                     emailValidation: String => lock.EmailValidation = url => lock.EmailValidation()(url),
                      dbLocation: File = Settings.defaultDir / "h2",
                      hashingAlgorithm: HashingAlgorithm = HashingAlgorithm.default
 ) {
