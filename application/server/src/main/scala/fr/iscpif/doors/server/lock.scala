@@ -135,22 +135,18 @@ object lock {
   //
 
   case class EmailValidation(
-                              lockId: Data.EmailAddress => Data.LockID = e => Data.LockID(s"validate:${e.value}"),
-                              confirmationDelay: Time = Days(2),
-                              generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.defaultEmail)(publicURL: String) {
-
+    lockId: Data.EmailAddress => Data.LockID = e => Data.LockID(s"validate:${e.value}"),
+    confirmationDelay: Time = Days(2),
+    generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.defaultEmail)(publicURL: String) {
 
     def start[M[_] : Monad](uid: Data.UserID, emailAddress: Data.EmailAddress)(implicit mailM: DSL.Email[M]) = {
-
       for {
         _ <- Email.insert(uid, emailAddress, lockId)
         secret <- Secret.add(emailAddress, lockId, confirmationDelay)
       } yield secret
     } effect { secret => Email.send(publicURL, emailAddress, generateEmail, secret) }
 
-
-    def unlock[M[_] : Monad](lockId: Data.EmailAddress => Data.LockID)(secret: String)(implicit errorM: DSL.SignalError[M]) = Secret.unlock[M](lockId)(secret)
-
+    def unlock[M[_] : Monad](secret: String)(implicit errorM: DSL.SignalError[M]) = Secret.unlock[M](lockId)(secret)
   }
 
 

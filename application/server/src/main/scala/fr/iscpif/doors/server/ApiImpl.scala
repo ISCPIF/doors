@@ -24,9 +24,8 @@ import slick.driver.H2Driver.api._
 import db._
 import db.DB._
 import DSL._
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 
-class ApiImpl(loggedUserId: UserID, dBAndSettings: DBAndSettings) extends shared.Api {
+class ApiImpl(loggedUserId: UserID, settings: Settings, database: db.Database) extends shared.Api {
 
   implicit class Check(capacity: Capacity) {
     def check[T](f: => T): ApiRep[T] =
@@ -67,18 +66,15 @@ class ApiImpl(loggedUserId: UserID, dBAndSettings: DBAndSettings) extends shared
       (for {
         u <- scheme.users if u.id === loggedUserId.id
       } yield (u)).result
-    }.execute(dBAndSettings)
+    }.execute(settings, database)
 
 
-  def allUsers: Seq[User] = db.DB { scheme =>
-    scheme.users.result
-  }.execute(dBAndSettings)
+  def allUsers: Seq[User] =
+    db.DB { scheme => scheme.users.result }.execute(settings, database)
 
-
-  private def adminCapacity = Capacity(query.user.isAdmin(loggedUserId)(dBAndSettings))
+  private def adminCapacity = Capacity(query.user.isAdmin(loggedUserId)(settings, database))
 
   def atLeastOneAdminRight: Capacity = adminCapacity
-
 
   def canRemoveUser: Capacity = adminCapacity
 
@@ -87,7 +83,7 @@ class ApiImpl(loggedUserId: UserID, dBAndSettings: DBAndSettings) extends shared
       scheme.users.filter {
         _.id === user.id.id
       }.delete
-    }.execute(dBAndSettings)
+    }.execute(settings, database)
   }
 
   def canModifyPartialUser(userID: UserID): Capacity = Capacity(userID.id == loggedUserId.id) || adminCapacity
@@ -99,7 +95,7 @@ class ApiImpl(loggedUserId: UserID, dBAndSettings: DBAndSettings) extends shared
         u <- scheme.users if u.id === puser.id.id
       } yield (u.name)
       q.update((puser.name))
-    }.execute(dBAndSettings)
+    }.execute(settings, database)
   }
 
   def updatePassword(id: UserID, password: String): Unit = canModifyPartialUser(id).check {
@@ -108,7 +104,7 @@ class ApiImpl(loggedUserId: UserID, dBAndSettings: DBAndSettings) extends shared
       val q = for {
         u <- scheme.users if u.id === id.id
       } yield u.password
-      q.update(HashingAlgorithm.default(dBAndSettings.settings.salt, password))
+      q.update(HashingAlgorithm.default(settings.salt, password))
     }
   }
 
@@ -117,8 +113,8 @@ class ApiImpl(loggedUserId: UserID, dBAndSettings: DBAndSettings) extends shared
       scheme.users.filter {
         _.id === loggedUserId.id
       }.result
-    }.execute(dBAndSettings).headOption.map {
-      _.password == HashingAlgorithm.default(dBAndSettings.settings.salt, pass)
+    }.execute(settings, database).headOption.map {
+      _.password == HashingAlgorithm.default(settings.salt, pass)
     }.getOrElse(false)
 
   //STATES

@@ -17,20 +17,22 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import DSL._
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.doors.server.Servlet.DBAndSettings
+import fr.iscpif.doors.server.db.Database
 
-class UnloggedApiImpl(dbAndSettings: DBAndSettings) extends shared.UnloggedApi {
+class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
+
+  import DSL._
+  import dsl._
+  import dsl.implicits._
 
   // TODO : consult the email DB
-  def isEmailUsed(email: String): ApiRep[Boolean] =  db.query.email.exists(email) execute(dbAndSettings)
+  def isEmailUsed(email: String): ApiRep[Boolean] =  db.query.email.exists(email) execute(settings, database)
 
-  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[Unit] = {
-    import DSL.dsl._
-    db.query.user.add(name, pass, dbAndSettings.settings.hashingAlgorithm) chain
-      { uid => dbAndSettings.settings.emailValidationInstance.start[M](uid, email) } execute(dbAndSettings)
-  }
+  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[Unit] =
+   db.query.user.add(name, pass, settings.hashingAlgorithm) chain { uid =>
+     settings.emailValidationInstance.start[M](uid, email) } execute(settings, database)
+
 
   //TODO: take the first validated email or the primary one
   //def resetPassword(userID: UserID) = {

@@ -7,7 +7,6 @@ package fr.iscpif.doors.server
 import fr.iscpif.doors.ext.Data
 import fr.iscpif.doors.ext.Data.ApiRep
 import fr.iscpif.doors.server
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 //import fr.iscpif.doors.server.db.States
 import org.json4s.jackson.JsonMethods._
 import org.json4s._
@@ -57,19 +56,19 @@ object Utils {
   //  def toUser(pUser: PartialUser, pass: Password, salt: String): User =
   //    User(pUser.id, Password(Hashing(pass.password, salt)), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
   //
-  def connect(dBAndSettings: DBAndSettings)(email: String, password: String): ApiRep[db.User] = {
+  def connect(settings: Settings, database: Database)(email: String, password: String): ApiRep[db.User] = {
     db.DB { scheme =>
       (for {
         e <- scheme.emails if (e.address === email)
         ul <- scheme.userLocks if (e.lockID === ul.lockID)
-        u <- scheme.users if (u.id === ul.userID && u.password === HashingAlgorithm.default(dBAndSettings.settings.salt, password))
+        u <- scheme.users if (u.id === ul.userID && u.password === HashingAlgorithm.default(settings.salt, password))
       } yield (u)
         ).result.headOption
 
         /*.headOption.filter {
         _.password == HashingAlgorithm.default(password, dBAndSettings.settings.salt)*/
       //}
-    }.execute(dBAndSettings)
+    }.execute(settings, database)
 
    // server.db.runTransaction(database, query)
   }

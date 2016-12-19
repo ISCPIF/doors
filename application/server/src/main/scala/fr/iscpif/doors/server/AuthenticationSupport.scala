@@ -1,7 +1,6 @@
 package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 import fr.iscpif.doors.server.db.Database
 import org.scalatra.ScalatraBase
 import org.scalatra.auth.strategy.BasicAuthSupport
@@ -29,7 +28,9 @@ trait AuthenticationSupport extends ScentrySupport[Data.UserID] with BasicAuthSu
 
   val realm = "Doors authentication"
 
-  protected def dbAndSettings: DBAndSettings
+  def settings: Settings
+  def database: Database
+
   protected def fromSession = { case id: String => Data.UserID(id)  }
   protected def toSession   = { case usr: Data.UserID => usr.id }
 
@@ -44,7 +45,7 @@ trait AuthenticationSupport extends ScentrySupport[Data.UserID] with BasicAuthSu
   def authenticated(email: String, password: String): Option[Data.UserID]
 
   override protected def registerAuthStrategies = {
-    scentry.register("Doors", app => new DoorsAuthStrategy(app, dbAndSettings, authenticated))
+    scentry.register("Doors", app => new DoorsAuthStrategy(app, settings, database, authenticated))
   }
 
 }

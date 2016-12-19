@@ -2,7 +2,6 @@ package fr.iscpif.doors.server
 
 import org.scalatra.auth.ScentryStrategy
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 import fr.iscpif.doors.server.db.Database
 import org.scalatra.ScalatraBase
 import DSL._
@@ -25,17 +24,16 @@ import DSL._
  */
 
 class DoorsAuthStrategy(protected override val app: ScalatraBase,
-                        dBAndSettings: DBAndSettings,
+                        settings: Settings,
+                        database: Database,
                         authenticated: (String, String) => Option[Data.UserID]) extends ScentryStrategy[Data.UserID] {
 
   def authenticate()(implicit r: javax.servlet.http.HttpServletRequest,
                      response: javax.servlet.http.HttpServletResponse): Option[Data.UserID] = {
     val email = app.params.getOrElse("email", "")
     val password = app.params.getOrElse("password", "")
-
     authenticated(email, password)
-
-   Utils.connect(dBAndSettings)(email, password).map {_.id}
+    Utils.connect(settings, database)(email, password).map {_.id}
   }
 
   protected def getUserId(user: Data.UserID)(

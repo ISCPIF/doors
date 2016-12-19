@@ -25,7 +25,6 @@ import slick.driver.H2Driver.api._
 import freek._
 import db.dbIOActionIsMonad
 import fr.iscpif.doors.ext.Data.{ApiRep, DSLError}
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 import fr.iscpif.doors.server.db.DB
 
 object DSL {
@@ -64,13 +63,11 @@ object DSL {
 
   implicit class DBDecorator[T](db: DB[T]) {
     def effect[M[_], U](side: SideEffect[M, T, U]) = DBAndSide(db, side)
-
     def effect[M[_], U](f: T => M[U]) = DBAndSide(db, SideEffect(f))
-
     def chain[M[_], S, U](dbAndSide: DBAndSide[S, U, M]) = compose(db, dbAndSide)
-
     def chain[M[_], S, U](dbAndSide: T => DBAndSide[S, U, M]) = compose(db, dbAndSide)
   }
+
 
 
   object SideEffect {
@@ -100,10 +97,13 @@ object DSL {
     DBAndSide(newDB, newSide)
   }
 
-
-  case class DBAndSide[T, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], sideEffect: SideEffect[M, T, U])
+  case class DBAndSide[T, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], sideEffect: SideEffect[M, T, U]) {
+    def chain[V](effect: SideEffect[M, U, V])(implicit monad: Monad[M]) = DBAndSide(db, sideEffect andThen effect)
+  }
 
   object Executable {
+    import dsl._
+    import dsl.implicits._
 
     def tryToDSLError[T](t: util.Try[T]): Either[freedsl.dsl.DSLError, T] =
       t match {
@@ -117,11 +117,11 @@ object DSL {
         tryToDSLError(db.runTransaction(t, database))
     }
 
-    implicit def dbAndSide[T, U] = new Executable[DBAndSide[T, U, dsl.M], U] {
-      override def execute(t: DBAndSide[T, U, dsl.M], settings: Settings, database: Database) = {
+    implicit def dbAndSide[T, U] = new Executable[DBAndSide[T, U, M], U] {
+      override def execute(t: DBAndSide[T, U, M], settings: Settings, database: Database) = {
         for {
           dbRes <- tryToDSLError(db.runTransaction(t.db, database))
-          effect: dsl.M[U] = t.sideEffect.run(dbRes)
+          effect: M[U] = t.sideEffect.run(dbRes)
           res <- dsl.result(effect, interpreter(settings)): Either[freedsl.dsl.DSLError, U]
         } yield res
       }
@@ -129,11 +129,11 @@ object DSL {
   }
 
   trait Executable[T, U] {
-    def execute(t: T, arguments: DBAndSettings): Either[freedsl.dsl.DSLError, U]
+    def execute(t: T, settings: Settings, database: Database): Either[freedsl.dsl.DSLError, U]
   }
 
   implicit class ExecuteDecorator[T, U](t: T)(implicit executable: Executable[T, U]) {
-    def execute(arguments: DBAndSettings) = executable.execute(t, arguments)
+    def execute(settings: Settings, database: Database) = executable.execute(t, settings, database)
   }
 
   implicit def eitherToOption[T](either: Either[_, Seq[T]]): Option[T] = eitherToSeq(either).headOption

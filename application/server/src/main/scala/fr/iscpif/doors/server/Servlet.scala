@@ -28,24 +28,36 @@ import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
-
   def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 }
 
+
+
 object Servlet {
-  case class DBAndSettings(db: slick.driver.H2Driver.api.Database, settings: Settings)
+  val arguments = "arguments"
+  case class Arguments(settings: Settings, database: db.Database)
+
+  class GUIBootstrap extends LifeCycle {
+    override def init(context: javax.servlet.ServletContext) {
+      val args = context.get(arguments).get.asInstanceOf[Arguments]
+      context mount (new Servlet(args.settings, args.database), "/*")
+    }
+  }
 }
 
-class Servlet(dbS: DBAndSettings) extends ScalatraServlet with AuthenticationSupport {
 
-  override def dbAndSettings = dbS
+class Servlet(val settings: Settings, val database: db.Database) extends ScalatraServlet with AuthenticationSupport {
+
+  import DSL._
+  import dsl._
+  import dsl.implicits._
+
   def authenticated(email: String, password: String): Option[UserID] =
-    Utils.connect(dbAndSettings)(email, password) map { u => u.id }
+    Utils.connect(settings, database)(email, password) map { u => u.id }
 
   val basePath = "shared"
 
@@ -70,7 +82,7 @@ class Servlet(dbS: DBAndSettings) extends ScalatraServlet with AuthenticationSup
   )
 
   protected def basicAuth() = {
-    val baReq = new DoorsAuthStrategy(this, dbAndSettings, authenticated)
+    val baReq = new DoorsAuthStrategy(this, settings, database, authenticated)
     val rep = baReq.authenticate()
     rep match {
       case Some(u: UserID) =>
@@ -143,26 +155,27 @@ class Servlet(dbS: DBAndSettings) extends ScalatraServlet with AuthenticationSup
     val login = params get "login" getOrElse ("")
     val pass = params get "password" getOrElse ("")
 
-    Utils.connect(dbAndSettings)(login, pass) match {
+    Utils.connect(settings, database)(login, pass) match {
       case Right(u: db.User) => Ok(u.toJson)
       case _ => halt(404, (s"User $login not found").toJson)
     }
   }
 
   get(s"/emailvalidation") {
-    val lockID = params get "lock" getOrElse ("")
-    val secret = params get "secret" getOrElse ("")
+    val validate =
+      for {
+        lockID <- params get "lock"
+        secret <- params get "secret"
+      } yield settings.emailValidation(settings.publicURL).unlock[M](secret)
 
-
-    import fr.iscpif.doors.server.DSL.dsl.implicits._
-    dbAndSettings.settings.emailValidation(dbAndSettings.settings.publicURL).unlock(
-      (e: EmailAddress)=> LockID(lockID))(secret)
-   /* dbAndSettings.settings.lock[lock.EmailValidation](lockID) match {
-      case None => halt(404, (s"Error....").toJson)
-      case Some(l) =>
-        l.unlock(secret)
-        Ok()
-    }*/
+    validate match {
+      case None => halt(404, "Wrong arguments")
+      case Some(e) =>
+        e.execute(settings, database) match {
+          case Left(e) => halt(404, (s"Error....").toJson)
+          case Right(_) => Ok()
+        }
+    }
   }
 
   get(s"/resetPassword") {
@@ -178,14 +191,14 @@ class Servlet(dbS: DBAndSettings) extends ScalatraServlet with AuthenticationSup
   post(s"/$basePath/*") {
     session.get(USER_ID) match {
       case None =>
-        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl(dbAndSettings))(
+        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl(settings, database))(
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
             upickle.default.read[Map[String, String]](request.body))
         ), Duration.Inf)
         //halt(404, "Not logged in")
       case Some(loggedUserId) =>
         Await.result(AutowireServer.route[shared.Api](
-          new ApiImpl(loggedUserId.asInstanceOf[UserID], dbAndSettings))(
+          new ApiImpl(loggedUserId.asInstanceOf[UserID], settings, database))(
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
             upickle.default.read[Map[String, String]](request.body))
         ), Duration.Inf)

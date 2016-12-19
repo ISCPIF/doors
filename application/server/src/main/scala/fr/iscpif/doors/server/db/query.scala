@@ -4,10 +4,10 @@ import java.util.UUID
 
 import fr.iscpif.doors.ext.Data
 import fr.iscpif.doors.ext.Data.{LockID, UserID}
-import fr.iscpif.doors.server.Servlet.DBAndSettings
-import fr.iscpif.doors.server.{HashingAlgorithm, Utils, db}
+import fr.iscpif.doors.server.{HashingAlgorithm, Settings, Utils, db}
 import squants.time.TimeConversions._
 import fr.iscpif.doors.server.DSL._
+
 import scala.concurrent.duration.Deadline
 
 object query {
@@ -149,13 +149,13 @@ object query {
       } yield user
     }
 
-    def isAdmin(uid: UserID)(dbAndSettings: DBAndSettings): Boolean = {
+    def isAdmin(uid: UserID)(settings: Settings, database: db.Database): Boolean = {
       def adminUsers: Seq[String] = DB { scheme =>
         (for {
           l <- scheme.locks if l.id === "admin"
           uc <- scheme.userLocks if (uc.userID === uid.id && uc.lockID === l.id)
         } yield uc.userID).result
-      }.execute(dbAndSettings)
+      }.execute(settings, database)
 
       adminUsers.contains(uid.id)
     }

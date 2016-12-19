@@ -6,7 +6,6 @@ import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
 import org.eclipse.jetty.util.log._
 import DSL._
-import fr.iscpif.doors.server.Servlet.DBAndSettings
 import slick.driver.H2Driver.api._
 
 
@@ -29,14 +28,12 @@ import slick.driver.H2Driver.api._
 
 
 object Launcher {
-  val arguments = "arguments"
 
   // this is my entry object as specified in sbt project definition
   def run(settings: Settings) = {
     Log.setLog(null)
 
     val database = db.initDB(settings.dbLocation)
-    val dbAndSettings = DBAndSettings(database, settings)
     db.updateDB(database)
 
     val server = new Server(settings.port)
@@ -51,17 +48,12 @@ object Launcher {
 
     context.setResourceBase(webapp)
 
-    context.setAttribute(arguments, dbAndSettings)
+    context.setAttribute(Servlet.arguments, Servlet.Arguments(settings, database))
     context.addEventListener(new ScalatraListener)
-    context.addServlet(classOf[Servlet], "/")
-
+    context.setInitParameter(ScalatraListener.LifeCycleKey, classOf[Servlet.GUIBootstrap].getCanonicalName)
     server.setHandler(context)
 
-
-
-    db.DB { scheme =>
-      scheme.users.result
-    }.execute(dbAndSettings).right.foreach{ println }
+    db.DB { scheme => scheme.users.result }.execute(settings, database).right.foreach{ println }
 
 
     //val api = new UnloggedApiImpl(settings, database)
