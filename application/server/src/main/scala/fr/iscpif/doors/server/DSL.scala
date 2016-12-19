@@ -24,75 +24,81 @@ import cats.implicits._
 import slick.driver.H2Driver.api._
 import freek._
 import db.dbIOActionIsMonad
+import fr.iscpif.doors.ext.Data.{ApiRep, DSLError}
+import fr.iscpif.doors.server.Servlet.DBAndSettings
 import fr.iscpif.doors.server.db.DB
 
 object DSL {
 
-//
-//    implicit def pureIsFunctor = new Functor[Pure] {
-//      override def map[A, B](fa: Pure[A])(f: (A) => B): Pure[B] = Pure(() => f(fa.f()))
-//    }
+  //
+  //    implicit def pureIsFunctor = new Functor[Pure] {
+  //      override def map[A, B](fa: Pure[A])(f: (A) => B): Pure[B] = Pure(() => f(fa.f()))
+  //    }
 
-//    implicit def DBAndSideIsFunctor[S, T] = new Functor[DBAndSide[S, T, ?]] {
-//      override def map[A, B](fa: DBAndSide[S, T, A])(f: (A) => B): DBAndSide[T, B] =
-//        DBAndSide[S, T, B](fa.dbEffect, (t: T) => f(fa.sideEffect(t)))
-//    }
-//
-//    implicit def DBIsMonad = new Monad[DB] {
-//      override def pure[A](x: A): DB[A] = DB[A]((scheme: fr.iscpif.doors.server.db.DBScheme) => DBIOAction.successful(x))
-//      override def flatMap[A, B](fa: DB[A])(f: (A) => DB[B]): DB[B] = {
-//        def newDBEffect =
-//          (scheme: fr.iscpif.doors.server.db.DBScheme) =>
-//            for {
-//              a <- fa.dbEffect(scheme)
-//              b <- f(a)
-//            } yield b
-//
-//        DB(newDBEffect)
-//      }
+  //    implicit def DBAndSideIsFunctor[S, T] = new Functor[DBAndSide[S, T, ?]] {
+  //      override def map[A, B](fa: DBAndSide[S, T, A])(f: (A) => B): DBAndSide[T, B] =
+  //        DBAndSide[S, T, B](fa.dbEffect, (t: T) => f(fa.sideEffect(t)))
+  //    }
+  //
+  //    implicit def DBIsMonad = new Monad[DB] {
+  //      override def pure[A](x: A): DB[A] = DB[A]((scheme: fr.iscpif.doors.server.db.DBScheme) => DBIOAction.successful(x))
+  //      override def flatMap[A, B](fa: DB[A])(f: (A) => DB[B]): DB[B] = {
+  //        def newDBEffect =
+  //          (scheme: fr.iscpif.doors.server.db.DBScheme) =>
+  //            for {
+  //              a <- fa.dbEffect(scheme)
+  //              b <- f(a)
+  //            } yield b
+  //
+  //        DB(newDBEffect)
+  //      }
 
-//      //TODO make this monad tailRec
-//      override def tailRecM[A, B](a: A)(f: (A) => DB[Either[A, B]]): DB[B] =
-//        flatMap(f(a)) {
-//          case Right(b) => pure(b)
-//          case Left(nextA) => tailRecM(nextA)(f)
-//        }
-//    }
-
-
-    implicit class DBDecorator[T](db: DB[T]) {
-      def effect[M[_], U](side: SideEffect[M, T, U]) = DBAndSide(db, side)
-      def effect[M[_], U](f: T => M[U]) = DBAndSide(db, SideEffect(f))
-      def chain[M[_], S, U](dbAndSide: DBAndSide[S, U, M]) = compose(db, dbAndSide)
-      def chain[M[_], S, U](dbAndSide: T => DBAndSide[S, U, M]) = compose(db, dbAndSide)
-    }
+  //      //TODO make this monad tailRec
+  //      override def tailRecM[A, B](a: A)(f: (A) => DB[Either[A, B]]): DB[B] =
+  //        flatMap(f(a)) {
+  //          case Right(b) => pure(b)
+  //          case Left(nextA) => tailRecM(nextA)(f)
+  //        }
+  //    }
 
 
-    object SideEffect {
-      def apply[M[_], T, U](f: T => M[U]) = Kleisli(f)
-    }
+  implicit class DBDecorator[T](db: DB[T]) {
+    def effect[M[_], U](side: SideEffect[M, T, U]) = DBAndSide(db, side)
 
-    type SideEffect[M[_], T, U] = Kleisli[M, T, U]
+    def effect[M[_], U](f: T => M[U]) = DBAndSide(db, SideEffect(f))
 
-    def compose[T, S, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], dBAndSide: DBAndSide[S, U, M]) =
-        dBAndSide.copy(
-          db =
-            for {
-              _ <- db
-              r <- dBAndSide.db
-            } yield r
-        )
+    def chain[M[_], S, U](dbAndSide: DBAndSide[S, U, M]) = compose(db, dbAndSide)
 
-    def compose[T, S, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], dBAndSide: T => DBAndSide[S, U, M]) = {
-      def newDB =
+    def chain[M[_], S, U](dbAndSide: T => DBAndSide[S, U, M]) = compose(db, dbAndSide)
+  }
+
+
+  object SideEffect {
+    def apply[M[_], T, U](f: T => M[U]) = Kleisli(f)
+  }
+
+  type SideEffect[M[_], T, U] = Kleisli[M, T, U]
+
+  def compose[T, S, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], dBAndSide: DBAndSide[S, U, M]) =
+    dBAndSide.copy(
+      db =
         for {
-          t <- db
-         s <- dBAndSide(t).db
-        } yield (t, s)
+          _ <- db
+          r <- dBAndSide.db
+        } yield r
+    )
 
-      def newSide = Kleisli[M, (T, S), U] { ts => dBAndSide(ts._1).sideEffect.run(ts._2) }
-      DBAndSide(newDB, newSide)
-    }
+  def compose[T, S, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], dBAndSide: T => DBAndSide[S, U, M]) = {
+    def newDB =
+      for {
+        t <- db
+        s <- dBAndSide(t).db
+      } yield (t, s)
+
+    def newSide = Kleisli[M, (T, S), U] { ts => dBAndSide(ts._1).sideEffect.run(ts._2) }
+
+    DBAndSide(newDB, newSide)
+  }
 
 
   case class DBAndSide[T, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], sideEffect: SideEffect[M, T, U])
@@ -123,26 +129,55 @@ object DSL {
   }
 
   trait Executable[T, U] {
-    def execute(t: T, settings: Settings, database: Database): Either[freedsl.dsl.DSLError, U]
+    def execute(t: T, arguments: DBAndSettings): Either[freedsl.dsl.DSLError, U]
   }
 
   implicit class ExecuteDecorator[T, U](t: T)(implicit executable: Executable[T, U]) {
-    def execute(settings: Settings, database: Database) = executable.execute(t, settings, database)
+    def execute(arguments: DBAndSettings) = executable.execute(t, arguments)
   }
+
+  implicit def eitherToOption[T](either: Either[_, Seq[T]]): Option[T] = eitherToSeq(either).headOption
+
+  implicit def apiRepToOption[T](apiRep: ApiRep[T]): Option[T] = apiRep match {
+    case Right(t)=> Some(t)
+    case _=> None
+  }
+
+  implicit def eitherToSeq[T](either: Either[_, Seq[T]]): Seq[T] = either.right.toSeq.flatten
+
+  implicit def eitherToBoolean(either: Either[_, Boolean]): Boolean = either match {
+    case Right(r) => r
+    case _ => false
+  }
+
+  implicit def eitherToApiRep[T](either: Either[freedsl.dsl.DSLError, T]): ApiRep[T] = either match {
+    case Right(t) => Right(t)
+    case Left(l) => Left(DSLError)
+  }
+
+  implicit def eitherOptionToApiRep[T](either: Either[freedsl.dsl.DSLError, Option[T]]): ApiRep[T] = either match {
+    case Right(t) => t match {
+      case Some(t)=> Right(t)
+      case None=> Left(DSLError)
+    }
+    case Left(l) => Left(DSLError)
+  }
+
 
   object Email {
     def interpreter(smtp: SMTPSettings) = new Interpreter[Id] {
-       def interpret[_] = {
-         case send(address, subject, content) =>
-           DoorsMailer.send(smtp, subject, content, address) match {
-             case util.Failure(e) => Left(SendMailError(e))
-             case util.Success(_) => Right(())
-           }
+      def interpret[_] = {
+        case send(address, subject, content) =>
+          DoorsMailer.send(smtp, subject, content, address) match {
+            case util.Failure(e) => Left(SendMailError(e))
+            case util.Success(_) => Right(())
+          }
 
-       }
-     }
+      }
+    }
 
     case class SendMailError(e: Throwable) extends Error
+
   }
 
   @dsl trait Email[M[_]] {
@@ -151,11 +186,11 @@ object DSL {
 
 
   object Date {
-     def interpreter = new Interpreter[Id] {
-       def interpret[_] = {
-         case now() => Right(System.currentTimeMillis())
-       }
-     }
+    def interpreter = new Interpreter[Id] {
+      def interpret[_] = {
+        case now() => Right(System.currentTimeMillis())
+      }
+    }
   }
 
   @dsl trait Date[M[_]] {
@@ -170,6 +205,7 @@ object DSL {
     }
 
     case class ErrorOccured[T](t: T) extends Error
+
   }
 
   @dsl trait SignalError[M[_]] {
@@ -182,7 +218,6 @@ object DSL {
     Email.interpreter(settings.smtp) :&:
       Date.interpreter :&:
       SignalError.interpreter
-
 
 
 }

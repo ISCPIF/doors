@@ -22,6 +22,7 @@ import better.files.File
 import cats.{Applicative, Monad}
 import cats.data.{Ior, Kleisli}
 import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.server.DSL.Executable
 import slick.dbio.DBIOAction
 import slick.driver.H2Driver
 import slick.driver.H2Driver.api._
@@ -118,26 +119,10 @@ package object db {
   type DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T]
 
   def runTransaction[T](f: DB[T], db: Database): Try[T] =
-    Try { Await.result(db.run(f(dbScheme).transactionally), Duration.Inf) }
+    Try {
+      Await.result(db.run(f(dbScheme).transactionally), Duration.Inf)
+    }
 
-
-  //
-  //  def failure(s: String) = Failure(new RuntimeException(s))
-
-  //  type Authorized = (Quests, UserID) => Action[Boolean]
-  //
-  //  def isAdmin(dBScheme: DBScheme): Authorized =
-  //    (quests: Quests, uid: UserID) => {
-  //      def adminUsers =
-  //        for {
-  //          c <- dBScheme.locks if c.id === "admin"
-  //          uc <- dBScheme.userLocks.filter { uc=> uc.userID === uid.id && uc.lockID === c.chronicleID }
-  //        } yield uc.userID
-  //
-  //      adminUsers.result.map {
-  //        _.contains(uid.id)
-  //      }
-  //    }
 
   lazy val dbVersion = 1
 
@@ -179,21 +164,19 @@ package object db {
 
   def smtpPort = "smtpPort"
 
-  //    def updateDB(db: Database) = {
-  //      val addVersionQuery = DBIO.seq(versions += Version(dbVersion))
-  //      val v = runQuery(db)(versions.result)
-  //
-  //      val updateQuery = {
-  //        if (v.exists(_.id < dbVersion)) {
-  //          println("TODO: UPDATE DB")
-  //          addVersionQuery
-  //        }
-  //        else if (v.isEmpty) addVersionQuery
-  //        else DBIO.seq()
-  //      }
-  //
-  //      db.run(updateQuery)
-  //    }
+  def updateDB(db: Database) = {
+    def max(s: Seq[Int]): Option[Int] = if(s.isEmpty) None else Some(s.max)
+
+    runTransaction(
+      DB { scheme =>
+        for {
+          v <- scheme.versions.result
+        //TODO: UPDATE DB
+          _ <- scheme.versions += Version(dbVersion) if max(v.map{_.id}).getOrElse(-1) < dbVersion
+        } yield ()
+      }, db
+    )
+  }
 
   def initDB(location: File) = {
 

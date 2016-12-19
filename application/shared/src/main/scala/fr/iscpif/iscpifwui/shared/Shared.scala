@@ -26,10 +26,10 @@ trait Api {
 
   //def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
-//  //Database
-//  def loggedUser(): Option[User]
+  //Database
+//  def loggedUser(): Option[db.User]
 //
-//  def allUsers(): Seq[User]
+//  def allUsers(): Seq[Data.User]
 //
 //  def atLeastOneAdminRight(): Capacity
 //
@@ -44,16 +44,16 @@ trait Api {
 //  def updatePartialUser(partialUser: PartialUser): Unit
 //
 //  def removeUser(user: User): Unit
-
-  //States
-  // def addState(userID: User.Id, lockID: Lock.Id, stateID: Chronicle.Id): Unit
-
-  // def isAdmin(userID: User.Id): Boolean
+//
+//  // States
+//  //def addState(userID: User.Id, lockID: Lock.Id, stateID: Chronicle.Id): Unit
+//
+//  def isAdmin(userID: User.Id): Boolean
 }
 
 
 trait UnloggedApi {
-//  def isEmailUsed(email: String): Boolean
-//
-//  def addUser(partialUser: PartialUser, email: String, pass: Password): Option[EmailDeliveringError]
+  def isEmailUsed(email: String): ApiRep[Boolean]
+
+  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[Unit]
 }

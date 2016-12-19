@@ -4,9 +4,10 @@ import java.util.UUID
 
 import fr.iscpif.doors.ext.Data
 import fr.iscpif.doors.ext.Data.{LockID, UserID}
+import fr.iscpif.doors.server.Servlet.DBAndSettings
 import fr.iscpif.doors.server.{HashingAlgorithm, Utils, db}
 import squants.time.TimeConversions._
-
+import fr.iscpif.doors.server.DSL._
 import scala.concurrent.duration.Deadline
 
 object query {
@@ -71,7 +72,9 @@ object query {
           e <- sheme.emails.filter(_.address === emailAddress)
         } yield e
 
-        request.result.map {_.size > 0}
+        request.result.map {
+          _.size > 0
+        }
       }
 
 
@@ -146,6 +149,16 @@ object query {
       } yield user
     }
 
+    def isAdmin(uid: UserID)(dbAndSettings: DBAndSettings): Boolean = {
+      def adminUsers: Seq[String] = DB { scheme =>
+        (for {
+          l <- scheme.locks if l.id === "admin"
+          uc <- scheme.userLocks if (uc.userID === uid.id && uc.lockID === l.id)
+        } yield uc.userID).result
+      }.execute(dbAndSettings)
+
+      adminUsers.contains(uid.id)
+    }
 
     //  def resetPasswordQueries(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
     //    val cID = chronicleID.getOrElse(LockID(uuid))

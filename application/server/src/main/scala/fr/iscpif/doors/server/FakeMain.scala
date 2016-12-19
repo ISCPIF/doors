@@ -20,19 +20,21 @@ package fr.iscpif.doors.server
 import better.files._
 import fr.iscpif.doors.ext.Data
 import fr.iscpif.doors.ext.Data.{EmailAddress, UserID}
+import fr.iscpif.doors.server.Servlet.DBAndSettings
 
 object FakeMain extends App {
 
   val database = db.initDB(File("/tmp/db"))
   val api = new UnloggedApiImpl(
-    Settings(23,"","", SMTPSettings("smtp.gmail.com", 587, "xx@yyy.com", "xxxx", auth = true, enableTTLS = true, sender = Some(EmailSender("DOORS", EmailAddress("noreply@iscpif.fr"))))),
-    database
+    DBAndSettings(
+      database,
+      Settings(23,"","", SMTPSettings("smtp.gmail.com", 587, "xx@yyy.com", "xxxx", auth = true, enableTTLS = true, sender = Some(EmailSender("DOORS", EmailAddress("noreply@iscpif.fr")))))
+    )
   )
 
  //println("RES:: " + api.addUser("Peter", Data.EmailAddress("mathieu@leclaire.re"), Data.Password("toto")))
   println("Exists " + api.isEmailUsed("xxx@yyyy.com"))
   println("Exists " + api.isEmailUsed("unknown@nothing.com"))
-  println(("RESET " + api.resetPassword(UserID("5c87a86c-0040-41df-b813-3bf79466542f"))))
 
 
 }

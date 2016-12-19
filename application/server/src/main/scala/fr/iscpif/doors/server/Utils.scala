@@ -1,13 +1,19 @@
 package fr.iscpif.doors.server
+
 //
 //import javax.mail.internet.InternetAddress
 //import javax.naming.OperationNotSupportedException
 //
 import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.Data.ApiRep
+import fr.iscpif.doors.server
+import fr.iscpif.doors.server.Servlet.DBAndSettings
 //import fr.iscpif.doors.server.db.States
 import org.json4s.jackson.JsonMethods._
 import org.json4s._
-//import slick.driver.H2Driver.api._
+import db.DB._
+import DSL._
+import slick.driver.H2Driver.api._
 //
 //import scala.concurrent.ExecutionContext.Implicits.global
 //import scala.concurrent.{Await, Future}
@@ -42,122 +48,131 @@ object Utils {
 
   def fromJSON[T: Manifest](s: String) = parse(s).extract[T]
 
-//
-//  implicit def throwableToEmailDeliveringError(t: Throwable): EmailDeliveringError =
-//    EmailDeliveringError(t.getMessage, t.getStackTrace.map {
-//      _.toString
-//    })
-//
-//  def toUser(pUser: PartialUser, pass: Password, salt: String): User =
-//    User(pUser.id, Password(Hashing(pass.password, salt)), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
-//
-//  def connect(database: db.Database)(email: String, password: String, salt: String): Option[User] =
-//    runQuery(database)(
-//      (for {
-//        e <- emails if (e.email === email)
-//        uc <- userChronicles if (e.chronicleID === uc.chronicleID)
-//        u <- users if (u.id === uc.userID)
-//      } yield (u)).result.headOption).filter {
-//      _.password == Hashing(password, salt: String)
-//    }
-//
-//
-////  def isSecretConfirmed(database: db.Database)(secret: String, chronicleID: String): Boolean =
-////    !runQuery(database)(secrets.filter { ec =>
-////      ec.chronicleID === chronicleID && ec.secret === secret && ec.deadline >= System.currentTimeMillis
-////    }.result).isEmpty
-//
-//  /* def isMatching(user: User, email: String) = (for {
-//     (e, uc) <- emails join userChronicles on (_.chronicleID === _.chronicleID) if (e.email === email && uc.userID === user.id)
-//   } yield ()).length > 0*/
-//
-//
-//  // Add user
-//
-//
-//  // Add email
-////  def emailAddQueries(database: db.Database)(userID: UserID, email: String, chronicleID: Option[ChronicleID] = None, secret: Option[String] = None) = {
-////    val doesEmailExist = query(database)(emails.filter {
-////      _.email === email
-////    }.result)
-////    if (doesEmailExist.isEmpty) {
-////      val cID = chronicleID.getOrElse(ChronicleID(uuid))
-////      DBIO.seq(
-////        emails += Email(cID, email),
-////        // Two days to confirm the new email
-////        secrets += Secret(cID, secret.getOrElse(uuid), System.currentTimeMillis + 172800000),
-////        chronicleAddQueries(cID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
-////      )
-////    } else DBIO.seq()
-////  }
-//
-//  //def addEmail(database: db.Database)(userID: UserID, email: String) = query(database)(emailAddQueries(database)(userID, email))
-//
-//
-//
+  //
+  //  implicit def throwableToEmailDeliveringError(t: Throwable): EmailDeliveringError =
+  //    EmailDeliveringError(t.getMessage, t.getStackTrace.map {
+  //      _.toString
+  //    })
+  //
+  //  def toUser(pUser: PartialUser, pass: Password, salt: String): User =
+  //    User(pUser.id, Password(Hashing(pass.password, salt)), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
+  //
+  def connect(dBAndSettings: DBAndSettings)(email: String, password: String): ApiRep[db.User] = {
+    db.DB { scheme =>
+      (for {
+        e <- scheme.emails if (e.address === email)
+        ul <- scheme.userLocks if (e.lockID === ul.lockID)
+        u <- scheme.users if (u.id === ul.userID && u.password === HashingAlgorithm.default(dBAndSettings.settings.salt, password))
+      } yield (u)
+        ).result.headOption
 
-//
-//  // Add chronicle
-//  def chronicleAddQueries(chronicleID: LockID, userID: UserID, lockID: Lock.Id, stateID: State.Id) = DBIO.seq(
-//    chronicles += Lock(chronicleID, lockID, stateID, System.currentTimeMillis, None),
-//    userChronicles += UserLock(userID, chronicleID)
-//  )
-//
-//  def addChronicle(database: db.Database)(chronicleID: LockID, userID: UserID, lockID: Lock.Id, stateID: State.Id) =
-//    runQuery(database)(chronicleAddQueries(chronicleID, userID, lockID, stateID))
-//
-//
-//  def hasAdmin(database: db.Database): Boolean = {
-//    runQuery(database)(chronicles.filter { s =>
-//      s.lock === locks.ADMIN
-//    }.result).length > 0
-//  }
-//
-//
+        /*.headOption.filter {
+        _.password == HashingAlgorithm.default(password, dBAndSettings.settings.salt)*/
+      //}
+    }.execute(dBAndSettings)
 
-//
-////  def sendEmailConfirmation[M[_]](
-////    publicURL: String,
-////    to: String,
-////    chronicleID: ChronicleID,
-////    secret: String)(implicit emailM: DSL.Email[M]): M[Unit] = {
-////
-////    val secretURL = s"${publicURL}/emailvalidation?chronicle=${chronicleID.id}&secret=$secret"
-////    val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
-////
-////    emailM.send(
-////      to,
-////      "[DOORS] Email confirmation",
-////      s"Hi,<br>Please click on the following link to confirm this email address !<br> $secretLink <br><br>The DOORS team")
-////  }
-//
-////  def sendResetPasswordEmail(
-////    smtp: SMTPSettings,
-////    publicURL: String,
-////    email: String,
-////    chronicleID: ChronicleID,
-////    secret: String) = {
-////
-////    val secretURL = s"${publicURL}/resetPassword?chronicle=${chronicleID.id}&secret=$secret"
-////    val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
-////
-////
-////    DoorsMailer.send(
-////      smtp,
-////      "DOORS | Reset password",
-////      s"Hi,<br>Please click on the following link to reset your password !<br> $secretLink <br><br>The DOORS team",
-////      email
-////    )
-////  }
-//
-//
+   // server.db.runTransaction(database, query)
+  }
+
+  //
+  //
+  ////  def isSecretConfirmed(database: db.Database)(secret: String, chronicleID: String): Boolean =
+  ////    !runQuery(database)(secrets.filter { ec =>
+  ////      ec.chronicleID === chronicleID && ec.secret === secret && ec.deadline >= System.currentTimeMillis
+  ////    }.result).isEmpty
+  //
+  //  /* def isMatching(user: User, email: String) = (for {
+  //     (e, uc) <- emails join userChronicles on (_.chronicleID === _.chronicleID) if (e.email === email && uc.userID === user.id)
+  //   } yield ()).length > 0*/
+  //
+  //
+  //  // Add user
+  //
+  //
+  //  // Add email
+  ////  def emailAddQueries(database: db.Database)(userID: UserID, email: String, chronicleID: Option[ChronicleID] = None, secret: Option[String] = None) = {
+  ////    val doesEmailExist = query(database)(emails.filter {
+  ////      _.email === email
+  ////    }.result)
+  ////    if (doesEmailExist.isEmpty) {
+  ////      val cID = chronicleID.getOrElse(ChronicleID(uuid))
+  ////      DBIO.seq(
+  ////        emails += Email(cID, email),
+  ////        // Two days to confirm the new email
+  ////        secrets += Secret(cID, secret.getOrElse(uuid), System.currentTimeMillis + 172800000),
+  ////        chronicleAddQueries(cID, userID, locks.EMAIL_VALIDATION, States.LOCKED)
+  ////      )
+  ////    } else DBIO.seq()
+  ////  }
+  //
+  //  //def addEmail(database: db.Database)(userID: UserID, email: String) = query(database)(emailAddQueries(database)(userID, email))
+  //
+  //
+  //
+
+  //
+  //  // Add chronicle
+  //  def chronicleAddQueries(chronicleID: LockID, userID: UserID, lockID: Lock.Id, stateID: State.Id) = DBIO.seq(
+  //    chronicles += Lock(chronicleID, lockID, stateID, System.currentTimeMillis, None),
+  //    userChronicles += UserLock(userID, chronicleID)
+  //  )
+  //
+  //  def addChronicle(database: db.Database)(chronicleID: LockID, userID: UserID, lockID: Lock.Id, stateID: State.Id) =
+  //    runQuery(database)(chronicleAddQueries(chronicleID, userID, lockID, stateID))
+  //
+  //
+  //  def hasAdmin(database: db.Database): Boolean = {
+  //    runQuery(database)(chronicles.filter { s =>
+  //      s.lock === locks.ADMIN
+  //    }.result).length > 0
+  //  }
+  //
+  //
+
+  //
+  ////  def sendEmailConfirmation[M[_]](
+  ////    publicURL: String,
+  ////    to: String,
+  ////    chronicleID: ChronicleID,
+  ////    secret: String)(implicit emailM: DSL.Email[M]): M[Unit] = {
+  ////
+  ////    val secretURL = s"${publicURL}/emailvalidation?chronicle=${chronicleID.id}&secret=$secret"
+  ////    val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
+  ////
+  ////    emailM.send(
+  ////      to,
+  ////      "[DOORS] Email confirmation",
+  ////      s"Hi,<br>Please click on the following link to confirm this email address !<br> $secretLink <br><br>The DOORS team")
+  ////  }
+  //
+  ////  def sendResetPasswordEmail(
+  ////    smtp: SMTPSettings,
+  ////    publicURL: String,
+  ////    email: String,
+  ////    chronicleID: ChronicleID,
+  ////    secret: String) = {
+  ////
+  ////    val secretURL = s"${publicURL}/resetPassword?chronicle=${chronicleID.id}&secret=$secret"
+  ////    val secretLink = s"<a href=${secretURL}>${secretURL}</a>"
+  ////
+  ////
+  ////    DoorsMailer.send(
+  ////      smtp,
+  ////      "DOORS | Reset password",
+  ////      s"Hi,<br>Please click on the following link to reset your password !<br> $secretLink <br><br>The DOORS team",
+  ////      email
+  ////    )
+  ////  }
+  //
+  //
 
   def secretLink(publicURL: String, secret: String) = {
     val secretURL = s"${publicURL}/emailvalidation?secret=$secret"
-     s"<a href=${secretURL}>${secretURL}</a>"
+    s"<a href=${secretURL}>${secretURL}</a>"
   }
 
   def uuid = java.util.UUID.randomUUID.toString
+
   def now = System.currentTimeMillis()
 
 }

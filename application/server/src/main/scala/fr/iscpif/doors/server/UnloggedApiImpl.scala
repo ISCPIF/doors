@@ -17,30 +17,25 @@ package fr.iscpif.doors.server
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+import DSL._
 import fr.iscpif.doors.ext.Data._
+import fr.iscpif.doors.server.Servlet.DBAndSettings
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import slick.driver.H2Driver.api._
-import cats.implicits._
-import fr.iscpif.doors.server.DSL._
-
-import scala.util.{Failure, Success, Try}
-
-class UnloggedApiImpl(settings: Settings, database: db.Database) extends shared.UnloggedApi {
+class UnloggedApiImpl(dbAndSettings: DBAndSettings) extends shared.UnloggedApi {
 
   // TODO : consult the email DB
-  def isEmailUsed(email: String) =  db.query.email.exists(email) execute(settings, database)
+  def isEmailUsed(email: String): ApiRep[Boolean] =  db.query.email.exists(email) execute(dbAndSettings)
 
-  def addUser(name: String, email: EmailAddress, pass: Password) = {
+  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[Unit] = {
     import DSL.dsl._
-    db.query.user.add(name, pass, settings.hashingAlgorithm) chain
-      { uid => settings.emailValidationInstance.start[M](uid, email) } execute(settings, database)
+    db.query.user.add(name, pass, dbAndSettings.settings.hashingAlgorithm) chain
+      { uid => dbAndSettings.settings.emailValidationInstance.start[M](uid, email) } execute(dbAndSettings)
   }
 
   //TODO: take the first validated email or the primary one
-  def resetPassword(userID: UserID) = {
-    import DSL.dsl._
-    settings.resetPassword.start[M](userID)
-  }
+  //def resetPassword(userID: UserID) = {
+  //  import DSL.dsl._
+  //  dbAndSettings.settings.resetPassword.start[M](userID)
+  //}
 
 }
