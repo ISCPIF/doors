@@ -24,6 +24,7 @@ import slick.driver.H2Driver.api._
 import db._
 import db.DB._
 import DSL._
+import Utils._
 
 class ApiImpl(loggedUserId: UserID, settings: Settings, database: db.Database) extends shared.Api {
 
@@ -61,16 +62,22 @@ class ApiImpl(loggedUserId: UserID, settings: Settings, database: db.Database) e
   //DataBase
 
   //USERS
-  def loggedUser: Option[User] =
+  def loggedUser: Option[UserData] =
     db.DB { scheme =>
       (for {
         u <- scheme.users if u.id === loggedUserId.id
       } yield (u)).result
-    }.execute(settings, database)
+    }.execute(settings, database) match {
+      case Right(s: Seq[User])=> s.headOption
+      case _=> None
+    }
 
 
-  def allUsers: Seq[User] =
-    db.DB { scheme => scheme.users.result }.execute(settings, database)
+  def allUsers: Seq[UserData] =
+    db.DB { scheme => scheme.users.result }.execute(settings, database) match {
+      case Right(r: Seq[User])=> r
+      case _=> Seq()
+    }
 
   private def adminCapacity = Capacity(query.user.isAdmin(loggedUserId)(settings, database))
 

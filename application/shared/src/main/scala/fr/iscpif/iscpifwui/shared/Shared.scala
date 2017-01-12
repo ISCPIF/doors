@@ -27,9 +27,9 @@ trait Api {
   //def modify(authentication: LoginPassword, newUser: LDAPUser): LDAPUserQuery
 
   //Database
-//  def loggedUser(): Option[db.User]
+  def loggedUser(): Option[UserData]
 //
-//  def allUsers(): Seq[Data.User]
+  def allUsers(): Seq[UserData]
 //
 //  def atLeastOneAdminRight(): Capacity
 //
@@ -37,7 +37,7 @@ trait Api {
 //
 //  def canModifyPartialUser(userID: UserID): Capacity
 //
-//  def isPasswordValid(pass: String): Boolean
+  def isPasswordValid(pass: String): Boolean
 //
 //  def updatePassword(userID: UserID, pass: String): Unit
 //

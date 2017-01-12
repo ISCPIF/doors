@@ -40,7 +40,7 @@ class UserConnection {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
-  val user: Var[Option[User]] = Var(None)
+  val user: Var[Option[UserData]] = Var(None)
 
   // SIGN IN
   val emailInput = bs.input("")(
@@ -83,18 +83,19 @@ class UserConnection {
         personalEdition.checkData.foreach { personalOK =>
           passEdition.isStatusOK.foreach { passOK =>
             if (personalOK && passOK) {
-              Post[UnloggedApi].addUser(
-                PartialUser(
-                  UserID(Utils.uuid),
-                  personalEdition.name
-                ),
-                personalEdition.email,
-                Password(
-                  Some(passEdition.newPassword)
-                )
-              ).call()
-
-              registerLinkElement.close
+              //FIXME, updating API_IMPL
+//              Post[UnloggedApi].addUser(
+//                PartialUser(
+//                  UserID(Utils.uuid),
+//                  personalEdition.name
+//                ),
+//                personalEdition.email,
+//                Password(
+//                  Some(passEdition.newPassword)
+//                )
+//              ).call()
+//
+//              registerLinkElement.close
             }
           }
         }

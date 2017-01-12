@@ -18,19 +18,21 @@ package fr.iscpif.doors.client
  */
 
 import fr.iscpif.doors.client.stylesheet._
-import fr.iscpif.doors.ext.Data.User
+import fr.iscpif.doors.ext.Data.{UserData}
 import org.scalajs.dom
 import org.scalajs.dom._
 import shared.Api
+
 import scala.concurrent.Future
 import rx._
+
 import scala.scalajs.js.annotation.JSExport
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
-import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
-import fr.iscpif.scaladget.api.{BootstrapTags ⇒ bs}
-import bs._
+import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import sheet._
+
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 
@@ -60,7 +62,7 @@ object Client {
     println("Application")
     Post[Api].loggedUser.call().foreach {
       _ match {
-        case Some(u: User) =>
+        case Some(u: UserData) =>
           bs.withBootstrapNative(
             tags.div(
               tags.form(

@@ -40,19 +40,21 @@ object AdminEditionDialog {
 class AdminEditionDialog {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
 
-  val users: Var[Seq[User]] = Var(Seq())
-  val user: Var[Option[User]] = Var(None)
+  val users: Var[Seq[UserData]] = Var(Seq())
+  val user: Var[Option[UserData]] = Var(None)
   val canModify: Var[Boolean] = Var(false)
-  val userEdition: Var[Option[User]] = Var(None)
+  val userEdition: Var[Option[UserData]] = Var(None)
 
   lazy val modalDialog = bs.ModalDialog()
 
   Post[Api].loggedUser().call().foreach { uopt =>
     user() = uopt
     uopt.foreach { u =>
-      Post[Api].canModifyPartialUser(u.id).call().foreach { ok =>
-        canModify() = ok.authorized
-      }
+
+                  //FIXME, updating API_IMPL
+//      Post[Api].canModifyPartialUser(u.id).call().foreach { ok =>
+//        canModify() = ok.authorized
+//      }
     }
   }
 
@@ -68,14 +70,15 @@ class AdminEditionDialog {
       // input was not validated as passwords: do nothing (can't save)
       if (pOK) {
         user.now match {
-          case Some(u: User) =>
+          case Some(u: UserData) =>
             val puser = PartialUser(u.id, personalEditionPanel.name)
-            Post[Api].updatePartialUser(
-              puser
-            ).call().foreach { x =>
-              userEdition() = None
-              modalDialog.close
-            }
+
+//            Post[Api].updatePartialUser(
+//              puser
+//            ).call().foreach { x =>
+//              userEdition() = None
+//              modalDialog.close
+//            }
           case _ =>
         }
       }
@@ -114,10 +117,10 @@ class AdminEditionDialog {
     )
   )
 
-  val lineHovered: Var[Option[User]] = Var(None)
+  val lineHovered: Var[Option[UserData]] = Var(None)
 
 
-  def divIfAuthorized(d: User => TypedTag[HTMLDivElement]) = tags.div(
+  def divIfAuthorized(d: UserData => TypedTag[HTMLDivElement]) = tags.div(
     Rx {
       if (canModify()) {
         user().map { u =>
@@ -129,7 +132,7 @@ class AdminEditionDialog {
 
   val panel = {
     Rx {
-      val emptyUser = User.emptyUser
+      val emptyUser = UserData.empty
       personalEditionPanel.nameInput.value = user().getOrElse(emptyUser).name
       // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
     }
@@ -147,9 +150,10 @@ class AdminEditionDialog {
             bs.button("Change password", btn_primary, () => {
               passEdition.isStatusOK.foreach { pOK =>
                 if (pOK)
-                  Post[Api].updatePassword(u.id, passEdition.newPassword).call().foreach { p =>
+                  //FIXME, updating API_IMPL
+              // //   Post[Api].updatePassword(u.id, passEdition.newPassword).call().foreach { p =>
                     println("Pass updated")
-                  }
+               //   }
               }
             }))
         }
@@ -158,7 +162,7 @@ class AdminEditionDialog {
     )
   }
 
-  case class ReactiveLine(user: User) {
+  case class ReactiveLine(user: UserData) {
 
     val render = tr(row)(
       onmouseover := { () ⇒ lineHovered() = Some(user) },
@@ -170,9 +174,11 @@ class AdminEditionDialog {
           glyph_trash +++ pointer +++ (lineHovered() == Some(user), opaque, transparent)
         },
           onclick := { () ⇒
-            Post[Api].removeUser(user).call().foreach { u =>
-              getUsers
-            }
+
+                  //FIXME, updating API_IMPL
+//            Post[Api].removeUser(user).call().foreach { u =>
+//              getUsers
+//            }
           }
         )
       )

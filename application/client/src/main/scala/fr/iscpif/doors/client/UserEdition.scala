@@ -5,7 +5,7 @@ import bs._
 import shared.{Api, UnloggedApi}
 
 import scalatags.JsDom.all._
-import fr.iscpif.doors.ext.Data.{PartialUser, Password, User}
+import fr.iscpif.doors.ext.Data.UserData
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.scaladget.tools.JsRxTags._
 import sheet._
@@ -15,7 +15,7 @@ import autowire._
 import rx._
 
 
-class UserEdition(user: Var[Option[User]] = Var(None)) {
+class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
 
   val nameInput = bs.input("")(placeholder := "Given name", width := "100%").render
@@ -28,7 +28,7 @@ class UserEdition(user: Var[Option[User]] = Var(None)) {
 
   user.trigger {
     user.now match {
-      case Some(u: User) =>
+      case Some(u: UserData) =>
         nameInput.value = u.name
       // emailInput.value = u.email
       case _ =>
@@ -44,7 +44,7 @@ class UserEdition(user: Var[Option[User]] = Var(None)) {
     val nameCheck = if (name.isEmpty) Some("The name cannot be empty") else None
     Post[UnloggedApi].isEmailUsed(email).call().map { b =>
       stringErrors() = (Seq(emailCheck, nameCheck) :+ (b match {
-        case true => Some("This email is already used")
+        case Right(true) => Some("This email is already used")
         case _ => None
       })).flatten
       isPanelValid.now

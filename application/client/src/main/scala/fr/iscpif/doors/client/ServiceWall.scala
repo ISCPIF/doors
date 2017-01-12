@@ -35,14 +35,15 @@ import shared.Api
  */
 
 
-class ServiceWall(user: User) {
+class ServiceWall(user: UserData) {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
-  val atLeastOneRight = Post[Api].atLeastOneAdminRight.call()
+  val atLeastOneRight = Seq()//FIXME, updating API_IMPL //Post[Api].atLeastOneAdminRight.call()
   val isAdmin = Var(false)
 
-  atLeastOneRight.foreach { cap =>
-    isAdmin() = cap.authorized
-  }
+  //FIXME, updating API_IMPL
+//  atLeastOneRight.foreach { cap =>
+//    isAdmin() = cap.authorized
+//  }
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),

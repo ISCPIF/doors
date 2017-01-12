@@ -175,4 +175,10 @@ object Data {
     val unlocked = StateID("unlocked")
   }
 
+  object UserData {
+    def empty = UserData(UserID(""), "", Password(""))
+  }
+
+  case class UserData(id: UserID, name: String, password: Password)
+
 }

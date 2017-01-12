@@ -5,12 +5,13 @@ package fr.iscpif.doors.server
 //import javax.naming.OperationNotSupportedException
 //
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.ext.Data.ApiRep
+import fr.iscpif.doors.ext.Data.{ApiRep, UserData}
 import fr.iscpif.doors.server
 //import fr.iscpif.doors.server.db.States
 import org.json4s.jackson.JsonMethods._
 import org.json4s._
 import db.DB._
+import db._
 import DSL._
 import slick.driver.H2Driver.api._
 //
@@ -47,6 +48,12 @@ object Utils {
 
   def fromJSON[T: Manifest](s: String) = parse(s).extract[T]
 
+
+  implicit def userToUserData(u: User): UserData = UserData(u.id, u.name, u.password)
+
+  implicit def optionOfUserToOptionOfUserData(u: Option[User]): Option[UserData] = u.map{userToUserData}
+
+  implicit def seqOfUserToSeqOfUserData(u: Seq[User]): Seq[UserData] = u.map{userToUserData}
   //
   //  implicit def throwableToEmailDeliveringError(t: Throwable): EmailDeliveringError =
   //    EmailDeliveringError(t.getMessage, t.getStackTrace.map {
