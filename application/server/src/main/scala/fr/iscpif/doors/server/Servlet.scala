@@ -36,7 +36,7 @@ object AutowireServer extends autowire.Server[String, upickle.default.Reader, up
 }
 
 
-class Servlet(val settings: Settings, val database: db.Database) extends ScalatraServlet with AuthenticationSupport {
+class Servlet(val settings: Settings, val database: db.Database) extends ScalatraServlet with AuthenticationSupport with CorsSupport {
 
   import DSL._
   import dsl._
@@ -87,18 +87,12 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   get("/connection") {
     if (isLoggedIn) redirect("/app")
     else {
-      response.setHeader("Access-Control-Allow-Origin", "*")
-      response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-      response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
       contentType = "text/html"
       connection
     }
   }
 
   post("/connection") {
-    response.setHeader("Access-Control-Allow-Origin", "*")
-    response.setHeader("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
-    response.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
     basicAuth.status.code match {
       case 200 => redirect("/app")
       case _ => redirect("/connection")
@@ -136,6 +130,13 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       case _ => None
     }
 
+
+  // HTTP OPTIONS method allows setting up the CORS exchange
+  // cf www.scalatra.org/guides/web-services/cors.html
+  // cf groups.google.com/forum/#!searchin/scalatra-user/405%7Csort:relevance/scalatra-user/aNV1yj401Z8/zsymZ3FA-YcJ
+  options("/api/*"){
+    response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
+  }
 
   post("/api/user") {
     val login = params get "login" getOrElse ("")
