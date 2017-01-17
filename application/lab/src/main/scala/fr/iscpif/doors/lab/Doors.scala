@@ -28,21 +28,9 @@ import scala.tools.nsc.interpreter.{ILoop, IMain, ReplGlobal}
 
 object Doors extends App {
 
+
   def example = """
-    def quests = {
-      def admins =  (for {
-        c <- chronicles if c.lock === locks.ADMIN
-        uc <- userChronicles if uc.chronicleID === c.chronicleID
-        u <- users.filter{_.id === uc.userID}
-      } yield u).result
-
-      Map(
-        locks.SUBSCRIPTION -> ManualValidation(admins)
-      )
-    }
-
     Settings (
-      quests = quests,
       publicURL = "http://localhost:8989",
       port = 8989,
       salt = "yoursalthere",
@@ -50,6 +38,7 @@ object Doors extends App {
     )"""
 
   val settings = Settings.compile(example)
+
   Launcher.run(settings)
 
 }
