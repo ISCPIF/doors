@@ -148,6 +148,19 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     }
   }
 
+  // API route to check if email exists
+  post(s"/api/userExists") {
+    val login = params get "login" getOrElse ("")
+
+    val myApi = new UnloggedApiImpl(settings, database)
+
+    myApi.isEmailUsed(login) match {
+      case Right(true) => Ok("""{"status":"login exists"}""")
+      case Right(false) => Ok("""{"status":"login available"}""")
+      case Left(_) => InternalServerError("isEmailUsed error")
+    }
+  }
+
   get(s"/emailvalidation") {
     val validate =
       for {
