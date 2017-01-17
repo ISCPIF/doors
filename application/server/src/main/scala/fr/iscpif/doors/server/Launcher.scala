@@ -6,6 +6,7 @@ import org.eclipse.jetty.webapp.WebAppContext
 import org.scalatra.servlet.ScalatraListener
 import org.eclipse.jetty.util.log._
 import DSL._
+import org.scalatra.LifeCycle
 import slick.driver.H2Driver.api._
 
 
@@ -29,6 +30,11 @@ import slick.driver.H2Driver.api._
 
 object Launcher {
 
+  val arguments = "arguments"
+
+  case class Arguments(settings: Settings, database: db.Database)
+
+
   // this is my entry object as specified in sbt project definition
   def run(settings: Settings) = {
     Log.setLog(null)
@@ -39,21 +45,20 @@ object Launcher {
     val server = new Server(settings.port)
 
     val context = new WebAppContext()
-    context setContextPath "/"
 
 
     val webapp = getClass.getClassLoader.getResource("webapp").toExternalForm
 
-    println(webapp)
-
+    context.setAttribute(arguments, Arguments(settings, database))
+    context setContextPath "/"
     context.setResourceBase(webapp)
-
-    context.setAttribute(Servlet.arguments, Servlet.Arguments(settings, database))
+    context.setInitParameter(ScalatraListener.LifeCycleKey, classOf[GUIBootstrap].getCanonicalName)
     context.addEventListener(new ScalatraListener)
-    context.setInitParameter(ScalatraListener.LifeCycleKey, classOf[Servlet.GUIBootstrap].getCanonicalName)
     server.setHandler(context)
 
-    db.DB { scheme => scheme.users.result }.execute(settings, database).right.foreach{ println }
+    db.DB { scheme => scheme.users.result }.execute(settings, database).right.foreach {
+      println
+    }
 
 
     //val api = new UnloggedApiImpl(settings, database)
@@ -62,5 +67,14 @@ object Launcher {
     server.join
 
 
+  }
+}
+
+class GUIBootstrap extends LifeCycle {
+
+  override def init(context: javax.servlet.ServletContext) {
+    val args = context.get(Launcher.arguments).get.asInstanceOf[Launcher.Arguments]
+    println("ARG" + args)
+    context mount(new Servlet(args.settings, args.database), "/*")
   }
 }

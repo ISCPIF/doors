@@ -16,7 +16,7 @@ def projectSettings = Seq(
 )
 
 val scalatraVersion = "2.4.+"
-val jettyVersion = "9.4.0.RC1"
+val jettyVersion = "9.4.0.v20161208"
 val json4sVersion = "3.3.0"
 val httpComponentsVersion = "4.5.1"
 val scalatagsVersion = "0.5.4"

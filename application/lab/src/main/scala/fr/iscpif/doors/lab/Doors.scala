@@ -28,7 +28,6 @@ import scala.tools.nsc.interpreter.{ILoop, IMain, ReplGlobal}
 
 object Doors extends App {
 
-
   def example = """
     Settings (
       publicURL = "http://localhost:8989",

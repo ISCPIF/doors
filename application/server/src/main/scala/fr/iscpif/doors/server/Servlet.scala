@@ -36,20 +36,6 @@ object AutowireServer extends autowire.Server[String, upickle.default.Reader, up
 }
 
 
-
-object Servlet {
-  val arguments = "arguments"
-  case class Arguments(settings: Settings, database: db.Database)
-
-  class GUIBootstrap extends LifeCycle {
-    override def init(context: javax.servlet.ServletContext) {
-      val args = context.get(arguments).get.asInstanceOf[Arguments]
-      context mount (new Servlet(args.settings, args.database), "/*")
-    }
-  }
-}
-
-
 class Servlet(val settings: Settings, val database: db.Database) extends ScalatraServlet with AuthenticationSupport {
 
   import DSL._
