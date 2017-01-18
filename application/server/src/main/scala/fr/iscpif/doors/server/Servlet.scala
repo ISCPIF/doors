@@ -164,8 +164,6 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   // API route to register
   post("/api/register") {
-    val incomingData = upickle.json.read(request.body).obj
-
     val loginEmail = params get "login" getOrElse ("")
     val name = params get "name" getOrElse ("")
     val pass = params get "password" getOrElse ("")
