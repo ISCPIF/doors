@@ -6,11 +6,30 @@ doors:
     - mail:mail
   ports:
     - 8989:8989
+
+# mail service based on tvial/docker-mailserver
 mail:
-  build: ./mail
+  image: tvial/docker-mailserver:latest
+  hostname: mail
+  container_name: mail
+  # real-world host's outer domainname or at least host's `hostname`
+  domainname: doors.iscpif.fr
   environment:
-    - HOST=doors.iscpif.fr
+    - ONE_DIR=1
+    - ENABLE_SPAMASSASSIN=0
+    - ENABLE_CLAMAV=0
+    - ENABLE_FAIL2BAN=0
+    - DMS_DEBUG=0
+  ports:
+    - "25:25"
+    - "143:143"
+    - "587:587"
+    - "993:993"
   volumes:
-    - "./data/mail/spool:/var/spool/postfix"
-
-
+    - maildata:/var/mail
+    - mailstate:/var/mail-state
+    - ./config/:/tmp/docker-mailserver/
+  # cf. also 2 configuration steps to execute *after* docker-compose up
+  #   https://hub.docker.com/r/tvial/docker-mailserver/
+  #   1) Create your mail accounts
+  #   2) Generate DKIM keys
