@@ -29,6 +29,7 @@ import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
 import scala.concurrent.ExecutionContext.Implicits.global
+import db.User
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
@@ -160,6 +161,63 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       case Left(_) => InternalServerError("isEmailUsed error")
     }
   }
+
+  // API route to register
+  post("/api/register") {
+    val incomingData = upickle.json.read(request.body).obj
+
+    val loginEmail = params get "login" getOrElse ("")
+    val name = params get "name" getOrElse ("")
+    val pass = params get "password" getOrElse ("")
+
+    val myApi = new UnloggedApiImpl(settings, database)
+
+    myApi.isEmailUsed(loginEmail) match {
+
+      // the user exists, we just log him in
+      case Right(true) => connect(settings, database)(loginEmail, pass) match {
+        case Right(u: User) => {
+          // TODO conventions sur les messages "status"
+          val userJson = u.toJson
+          Ok(s"""{
+                  "status":"login ok" ,
+                  "userInfo": $userJson
+             }""")
+        }
+        // should never happen at this point
+        case Left(_) => Unit
+      }
+
+      // Ok, the email is not used, proceed with registration
+      case Right(false) => {
+
+        // addUser (+ it also sends the email confirmation)
+        // ----------------------------------------------------------
+        myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
+        // ----------------------------------------------------------
+
+        Ok(s"""{"status":"registration email sent", "email":$loginEmail}""")
+
+        // now connect to get the new user object
+//        connect(settings, database)(loginEmail, pass) match {
+//          case Right(u: User) => {
+//            val userJson = u.toJson
+//            // NB json combine as strings but could also be done with json4s.JsonDSL
+//            Ok(s"""{
+//                    "status":"registration ok" ,
+//                    "userInfo": $userJson
+//              }""")
+//          }
+//          // should never happen at this point
+//          case Left(_) => Unit
+//        }
+      }
+
+      // problem with isEmailUsed
+      case Left(_) => halt(500, ("Unknown isEmailUsed error, can't register"))
+    }
+  }
+
 
   get(s"/emailvalidation") {
     val validate =
