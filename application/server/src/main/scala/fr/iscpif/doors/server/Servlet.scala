@@ -194,7 +194,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
         // ----------------------------------------------------------
 
-        Ok(s"""{"status":"registration email sent", "email":$loginEmail}""")
+        Ok(s"""{"status":"registration email sent", "email":"$loginEmail"}""")
 
         // now connect to get the new user object
 //        connect(settings, database)(loginEmail, pass) match {
