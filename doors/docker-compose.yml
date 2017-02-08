@@ -12,5 +12,16 @@ mail:
     - HOST=doors.iscpif.fr
   volumes:
     - "./data/mail/spool:/var/spool/postfix"
+https-portal:
+  image: steveltn/https-portal
+  ports:
+    - 80:80
+    - 443:443
+  links:
+    - doors
+  environment:
+    - "DOMAINS=localhost -> http://doors"
+    #- "CLIENT_MAX_BODY_SIZE=4G" 
+    #- "PRODUCTION=true"     
 
 
