@@ -198,12 +198,12 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       } yield settings.emailValidation(settings.publicURL).unlock[M](secret)
 
     validate match {
-      case None => halt(404, "Wrong arguments")
       case Some(e) =>
         e.execute(settings, database) match {
           case Left(e) => halt(404, (s"Error....").toJson)
           case Right(_) => Ok()
         }
+      case _ => halt(404, "Wrong arguments")
     }
   }
 
@@ -219,18 +219,18 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   post(s"/$basePath/*") {
     session.get(USER_ID) match {
-      case None =>
-        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl(settings, database))(
-          autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
-            upickle.default.read[Map[String, String]](request.body))
-        ), Duration.Inf)
-      //halt(404, "Not logged in")
       case Some(loggedUserId) =>
         Await.result(AutowireServer.route[shared.Api](
           new ApiImpl(loggedUserId.asInstanceOf[UserID], settings, database))(
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
             upickle.default.read[Map[String, String]](request.body))
         ), Duration.Inf)
+      case _ =>
+        Await.result(AutowireServer.route[shared.UnloggedApi](new UnloggedApiImpl(settings, database))(
+          autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
+            upickle.default.read[Map[String, String]](request.body))
+        ), Duration.Inf)
+      //halt(404, "Not logged in")
     }
 
   }

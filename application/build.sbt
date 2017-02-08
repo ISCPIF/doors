@@ -1,6 +1,8 @@
 import org.scalatra.sbt.ScalatraPlugin
 
 
+scalaOrganization in ThisBuild := "org.typelevel"
+
 def projectSettings = Seq(
   organization := "fr.iscpif",
   version := "0.1.0-SNAPSHOT",
@@ -97,7 +99,7 @@ lazy val server = Project(
       "org.json4s" %% "json4s-jackson" % json4sVersion,
       "org.apache.directory.api" % "api-all" % apacheDirectoryVersion,
       "com.sun.mail" % "javax.mail" % "1.5.6",
-      "com.typesafe.slick" %% "slick" % "3.1.1",
+      "com.typesafe.slick" %% "slick" % "3.2.0-M2",
       "com.h2database" % "h2" % "1.4.190",
       "com.github.pathikrit" %% "better-files" % betterFileVersion,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,

@@ -152,7 +152,7 @@ object DSL {
   implicit def eitherOptionToApiRep[T](either: Either[freedsl.dsl.Error, Option[T]]): ApiRep[T] = either match {
     case Right(t) => t match {
       case Some(t)=> Right(t)
-      case None=> Left(DSLError)
+      case _=> Left(DSLError)
     }
     case Left(l) => Left(DSLError)
   }
