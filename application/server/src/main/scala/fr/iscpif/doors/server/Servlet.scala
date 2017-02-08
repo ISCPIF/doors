@@ -33,6 +33,7 @@ import db.User
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
+
   def write[Result: upickle.default.Writer](r: Result) = upickle.default.write(r)
 }
 
@@ -55,6 +56,17 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"
 
+
+  val connectionRoute = "/connection"
+  val appRoute = "/app"
+  val logoutRoute = "/logout"
+  val emailValidationRoute = "/emailvalidation"
+  val resetPasswordRoute = "/resetPassword"
+  val apiAllRoute = "/api/*"
+  val apiUserExistsRoute = "/api/userExists"
+  val apiUserRoute = "/api/user"
+  val apiRegisterRoute = "/api/register"
+
   def html(javascritMethod: String) = tags.html(
     tags.head(
       tags.meta(tags.httpEquiv := "Content-Type", tags.content := "text/html; charset=UTF-8"),
@@ -62,8 +74,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       tags.link(tags.rel := "stylesheet", tags.`type` := "text/css", href := "css/styleISC.css"),
       tags.script(tags.`type` := "text/javascript", tags.src := "js/client-fastopt.js")
 
-        // bootstrap-native.js loader at the end thanks to loadBootstrap
-        // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
+      // bootstrap-native.js loader at the end thanks to loadBootstrap
+      // tags.script(tags.`type` := "text/javascript", tags.src := "js/bootstrap-native.min.js")
     ),
     tags.body(tags.onload := javascritMethod)
   )
@@ -77,16 +89,16 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         recordUser(u)
         Ok()
       case _ =>
-        redirect("/connection")
+        redirect(connectionRoute)
     }
   }
 
   get("/") {
-    redirect("/app")
+    redirect(appRoute)
   }
 
-  get("/connection") {
-    if (isLoggedIn) redirect("/app")
+  get(connectionRoute) {
+    if (isLoggedIn) redirect(appRoute)
     else {
       contentType = "text/html"
       connection
@@ -95,25 +107,25 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   post("/connection") {
     basicAuth.status.code match {
-      case 200 => redirect("/app")
-      case _ => redirect("/connection")
+      case 200 => redirect(appRoute)
+      case _ => redirect(connectionRoute)
     }
   }
 
-  get("/app") {
+  get(appRoute) {
     contentType = "text/html"
     if (isLoggedIn) application
-    else redirect("/connection")
+    else redirect(connectionRoute)
   }
 
 
-  post("/logout") {
+  post(logoutRoute) {
     userIDFromSession.foreach { u =>
       connectedUsers() = connectedUsers.now.filterNot {
         _ == u
       }
     }
-    redirect("/connection")
+    redirect(connectionRoute)
   }
 
   def isLoggedIn: Boolean = userIDFromSession.map {
@@ -135,11 +147,11 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   // HTTP OPTIONS method allows setting up the CORS exchange
   // cf www.scalatra.org/guides/web-services/cors.html
   // cf groups.google.com/forum/#!searchin/scalatra-user/405%7Csort:relevance/scalatra-user/aNV1yj401Z8/zsymZ3FA-YcJ
-  options("/api/*"){
+  options(apiAllRoute) {
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
-  post("/api/user") {
+  post(apiUserRoute) {
     val login = params get "login" getOrElse ("")
     val pass = params get "password" getOrElse ("")
 
@@ -150,7 +162,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   }
 
   // API route to check if email exists
-  post(s"/api/userExists") {
+  post(apiUserExistsRoute) {
     val login = params get "login" getOrElse ("")
 
     val myApi = new UnloggedApiImpl(settings, database)
@@ -163,7 +175,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   }
 
   // API route to register
-  post("/api/register") {
+  post(apiRegisterRoute) {
     val loginEmail = params get "login" getOrElse ("")
     val name = params get "name" getOrElse ("")
     val pass = params get "password" getOrElse ("")
@@ -177,7 +189,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         case Right(u: User) => {
           // TODO conventions sur les messages "status"
           val userJson = u.toJson
-          Ok(s"""{
+          Ok(
+            s"""{
                   "status":"login ok" ,
                   "userInfo": $userJson
              }""")
@@ -197,18 +210,18 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         Ok(s"""{"status":"registration email sent", "email":"$loginEmail"}""")
 
         // now connect to get the new user object
-//        connect(settings, database)(loginEmail, pass) match {
-//          case Right(u: User) => {
-//            val userJson = u.toJson
-//            // NB json combine as strings but could also be done with json4s.JsonDSL
-//            Ok(s"""{
-//                    "status":"registration ok" ,
-//                    "userInfo": $userJson
-//              }""")
-//          }
-//          // should never happen at this point
-//          case Left(_) => Unit
-//        }
+        //        connect(settings, database)(loginEmail, pass) match {
+        //          case Right(u: User) => {
+        //            val userJson = u.toJson
+        //            // NB json combine as strings but could also be done with json4s.JsonDSL
+        //            Ok(s"""{
+        //                    "status":"registration ok" ,
+        //                    "userInfo": $userJson
+        //              }""")
+        //          }
+        //          // should never happen at this point
+        //          case Left(_) => Unit
+        //        }
       }
 
       // problem with isEmailUsed
@@ -217,7 +230,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   }
 
 
-  get(s"/emailvalidation") {
+  get(emailValidationRoute) {
     val validate =
       for {
         lockID <- params get "lock"
@@ -234,13 +247,13 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     }
   }
 
-  get(s"/resetPassword") {
+  get(resetPasswordRoute) {
     // NOTE: pour reset le password on peut peut etre faire une lock avec un id nouveau à chaque fois
     // cet id est envoyé dans le mail de reset. Le unlock reset le password.
     val chronicleID = params get "chronicle" getOrElse ("")
     val secret = params get "secret" getOrElse ("")
 
-   // println("Confirmed ?" + Utils.isSecretConfirmed(dbAndSettings.db)(secret, chronicleID))
+    // println("Confirmed ?" + Utils.isSecretConfirmed(dbAndSettings.db)(secret, chronicleID))
     //TODO Redirect to a new html page with PassEdition
   }
 
@@ -251,7 +264,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
           autowire.Core.Request(Seq(basePath) ++ multiParams("splat").head.split("/"),
             upickle.default.read[Map[String, String]](request.body))
         ), Duration.Inf)
-        //halt(404, "Not logged in")
+      //halt(404, "Not logged in")
       case Some(loggedUserId) =>
         Await.result(AutowireServer.route[shared.Api](
           new ApiImpl(loggedUserId.asInstanceOf[UserID], settings, database))(
