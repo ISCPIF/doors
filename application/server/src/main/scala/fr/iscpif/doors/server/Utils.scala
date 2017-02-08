@@ -23,6 +23,7 @@ import slick.driver.H2Driver.api._
 //
 
 import fr.iscpif.doors.ext.route._
+
 /*
  * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
  *

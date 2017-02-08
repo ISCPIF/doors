@@ -17,12 +17,7 @@
   */
 package fr.iscpif.doors
 
-import javax.script.ScriptEngineManager
-
-import fr.iscpif.doors.ext.Data.{EmailAddress, PartialUser, UserID}
-import better.files._
-
-import scala.tools.nsc.interpreter.IMain
+import fr.iscpif.doors.ext.Data.{EmailAddress}
 
 package object server {
 
@@ -30,26 +25,16 @@ package object server {
 
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false, sender: Option[EmailSender] = None)
 
-  sealed trait DoorsAPIStatus {
-    def status: String
-  }
+  case class DoorsAPIStatus(status: String, userID: Option[String], email: Option[String], message: String)
 
-  case class LoginAlreadyExists(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
-    val status = "LoginAlreadyExists"
-  }
+  object DoorsAPIStatus {
+    def loginAlreadyExists(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("LoginAlreadyExists", userID, email, message)
 
-  case class LoginOK(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
-    val status = "LoginOK"
+    def loginOK(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("LoginOK", userID, email, message)
 
-  }
+    def registrationPending(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("RegistrationPending", userID, email, message)
 
-  case class RegistrationPending(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
-    val status = "RegistrationPending"
-
-  }
-
-  case class LoginAvailable(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
-    val status = "LoginAvailable"
+    def loginAvailable(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("LoginAvailable", userID, email, message)
   }
 
 }

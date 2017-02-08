@@ -28,6 +28,7 @@ import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
+import fr.iscpif.doors.server.DoorsAPIStatus._
 import scala.concurrent.ExecutionContext.Implicits.global
 import db.User
 
@@ -144,7 +145,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   private def apiConnect(login: String, pass: String) = {
     Utils.connect(settings, database)(login, pass) match {
-      case Right(u: db.User) => Ok((LoginOK(Some(u.id), Some(login)).toJson))
+      case Right(u: db.User) => Ok(loginOK(Some(u.id.toString), Some(login)).toJson)
       case _ => halt(404, (s"User $login not found").toJson)
     }
   }
@@ -161,8 +162,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     val myApi = new UnloggedApiImpl(settings, database)
 
     myApi.isEmailUsed(login) match {
-      case Right(true) => Ok(LoginAlreadyExists().toJson)
-      case Right(false) => Ok(LoginAvailable().toJson)
+      case Right(true) => Ok(loginAlreadyExists().toJson)
+      case Right(false) => Ok(loginAvailable().toJson)
       case Left(_) => InternalServerError("isEmailUsed error")
     }
   }
@@ -182,7 +183,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       case Right(false) => {
         // addUser (+ it also sends the email confirmation)
         myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
-        Ok(RegistrationPending(email = Some(loginEmail)).toJson)
+        Ok(registrationPending(email = Some(loginEmail)).toJson)
       }
       // problem with isEmailUsed
       case Left(_) => halt(500, ("Unknown isEmailUsed error, can't register"))
