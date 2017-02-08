@@ -30,10 +30,10 @@ package object server {
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false, sender: Option[EmailSender] = None)
 
   sealed trait DoorsAPIStatus
-  object LoginAlreadyExists extends DoorsAPIStatus
-  object LoginAvailable extends DoorsAPIStatus
-  object LoginOK extends DoorsAPIStatus
-  object RegistrationPending extends DoorsAPIStatus
+  case class LoginAlreadyExists() extends DoorsAPIStatus
+  case class LoginAvailable() extends DoorsAPIStatus
+  case class LoginOK() extends DoorsAPIStatus
+  case class RegistrationPending() extends DoorsAPIStatus
 
   case class ApiResponse(status: DoorsAPIStatus, userID: Option[UserID] = None, email: Option[String] = None, message: String = "")
 //  type Quests = Map[String, AccessQuest]
