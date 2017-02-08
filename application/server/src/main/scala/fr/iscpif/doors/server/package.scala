@@ -19,7 +19,7 @@ package fr.iscpif.doors
 
 import javax.script.ScriptEngineManager
 
-import fr.iscpif.doors.ext.Data.{EmailAddress, PartialUser}
+import fr.iscpif.doors.ext.Data.{EmailAddress, PartialUser, UserID}
 import better.files._
 
 import scala.tools.nsc.interpreter.IMain
@@ -29,6 +29,13 @@ package object server {
   case class EmailSender(name: String, address: EmailAddress)
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false, sender: Option[EmailSender] = None)
 
+  sealed trait DoorsAPIStatus
+  object LoginAlreadyExists extends DoorsAPIStatus
+  object LoginAvailable extends DoorsAPIStatus
+  object LoginOK extends DoorsAPIStatus
+  object RegistrationPending extends DoorsAPIStatus
+
+  case class ApiResponse(status: DoorsAPIStatus, userID: Option[UserID] = None, email: Option[String] = None, message: String = "")
 //  type Quests = Map[String, AccessQuest]
 
 }
