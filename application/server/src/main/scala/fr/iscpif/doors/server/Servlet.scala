@@ -141,25 +141,28 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     response.setHeader("Access-Control-Allow-Headers", request.getHeader("Access-Control-Request-Headers"))
   }
 
+
+  private def apiConnect(login: String, pass: String) = {
+    Utils.connect(settings, database)(login, pass) match {
+      case Right(u: db.User) => Ok(ApiResponse(LoginOK, Some(u.id), Some(login)).toJson)
+      case _ => halt(404, (s"User $login not found").toJson)
+    }
+  }
+
   post(apiUserRoute) {
     val login = params get "login" getOrElse ("")
     val pass = params get "password" getOrElse ("")
-
-    Utils.connect(settings, database)(login, pass) match {
-      case Right(u: db.User) => Ok(u.toJson)
-      case _ => halt(404, (s"User $login not found").toJson)
-    }
+    apiConnect(login, pass)
   }
 
   // API route to check if email exists
   post(apiUserExistsRoute) {
     val login = params get "login" getOrElse ("")
-
     val myApi = new UnloggedApiImpl(settings, database)
 
     myApi.isEmailUsed(login) match {
-      case Right(true) => Ok("""{"status":"login exists"}""")
-      case Right(false) => Ok("""{"status":"login available"}""")
+      case Right(true) => Ok(ApiResponse(LoginAlreadyExists).toJson)
+      case Right(false) => Ok(ApiResponse(LoginAvailable).toJson)
       case Left(_) => InternalServerError("isEmailUsed error")
     }
   }
@@ -173,47 +176,14 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     val myApi = new UnloggedApiImpl(settings, database)
 
     myApi.isEmailUsed(loginEmail) match {
-
       // the user exists, we just log him in
-      case Right(true) => connect(settings, database)(loginEmail, pass) match {
-        case Right(u: User) => {
-          // TODO conventions sur les messages "status"
-          val userJson = u.toJson
-          Ok(
-            s"""{
-                  "status":"login ok" ,
-                  "userInfo": $userJson
-             }""")
-        }
-        // should never happen at this point
-        case Left(_) => Unit
-      }
-
+      case Right(true) => apiConnect(loginEmail, pass)
       // Ok, the email is not used, proceed with registration
       case Right(false) => {
-
         // addUser (+ it also sends the email confirmation)
-        // ----------------------------------------------------------
         myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
-        // ----------------------------------------------------------
-
-        Ok(s"""{"status":"registration email sent", "email":"$loginEmail"}""")
-
-        // now connect to get the new user object
-        //        connect(settings, database)(loginEmail, pass) match {
-        //          case Right(u: User) => {
-        //            val userJson = u.toJson
-        //            // NB json combine as strings but could also be done with json4s.JsonDSL
-        //            Ok(s"""{
-        //                    "status":"registration ok" ,
-        //                    "userInfo": $userJson
-        //              }""")
-        //          }
-        //          // should never happen at this point
-        //          case Left(_) => Unit
-        //        }
+        Ok(ApiResponse(RegistrationPending, email = Some(loginEmail)).toJson)
       }
-
       // problem with isEmailUsed
       case Left(_) => halt(500, ("Unknown isEmailUsed error, can't register"))
     }
