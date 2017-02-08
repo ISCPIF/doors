@@ -36,11 +36,8 @@ object Doors extends App {
       smtp = SMTPSettings("smtp", 587, "xx@xx.xx", "xxx", true, true)
     )"""
 
-  println("lab 1")
   val settings = Settings.compile(example)
 
-  println("lab 2")
   Launcher.run(settings)
-  println("lab 3")
 
 }
