@@ -22,7 +22,7 @@ package fr.iscpif.doors.server
 import fr.iscpif.doors.ext.Data._
 import org.scalatra._
 import rx._
-import DSL._
+import fr.iscpif.doors.ext.route._
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._
@@ -56,16 +56,6 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"
 
-
-  val connectionRoute = "/connection"
-  val appRoute = "/app"
-  val logoutRoute = "/logout"
-  val emailValidationRoute = "/emailvalidation"
-  val resetPasswordRoute = "/resetPassword"
-  val apiAllRoute = "/api/*"
-  val apiUserExistsRoute = "/api/userExists"
-  val apiUserRoute = "/api/user"
-  val apiRegisterRoute = "/api/register"
 
   def html(javascritMethod: String) = tags.html(
     tags.head(
@@ -105,7 +95,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     }
   }
 
-  post("/connection") {
+  post(connectionRoute) {
     basicAuth.status.code match {
       case 200 => redirect(appRoute)
       case _ => redirect(connectionRoute)

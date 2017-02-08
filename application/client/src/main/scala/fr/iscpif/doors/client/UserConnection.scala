@@ -24,7 +24,7 @@ import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
-import shared.{Api, UnloggedApi}
+import fr.iscpif.doors.ext.route._
 import fr.iscpif.scaladget.tools.JsRxTags._
 
 import scalatags.JsDom.tags
@@ -114,7 +114,7 @@ class UserConnection {
           case _ => tags.div
         },
         tags.form(
-          action := "/connection",
+          action := connectionRoute,
           method := "post",
           tags.p(ms("grouptop"), emailInput),
           tags.p(ms("groupbottom"), passwordInput),
