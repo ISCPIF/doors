@@ -27,15 +27,29 @@ import scala.tools.nsc.interpreter.IMain
 package object server {
 
   case class EmailSender(name: String, address: EmailAddress)
+
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false, sender: Option[EmailSender] = None)
 
-  sealed trait DoorsAPIStatus
-  case class LoginAlreadyExists() extends DoorsAPIStatus
-  case class LoginAvailable() extends DoorsAPIStatus
-  case class LoginOK() extends DoorsAPIStatus
-  case class RegistrationPending() extends DoorsAPIStatus
+  sealed trait DoorsAPIStatus {
+    def status: String
+  }
 
-  case class ApiResponse(status: DoorsAPIStatus, userID: Option[UserID] = None, email: Option[String] = None, message: String = "")
-//  type Quests = Map[String, AccessQuest]
+  case class LoginAlreadyExists(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
+    val status = "LoginAlreadyExists"
+  }
+
+  case class LoginOK(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
+    val status = "LoginOK"
+
+  }
+
+  case class RegistrationPending(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
+    val status = "RegistrationPending"
+
+  }
+
+  case class LoginAvailable(userID: Option[UserID] = None, email: Option[String] = None, message: String = "") extends DoorsAPIStatus {
+    val status = "LoginAvailable"
+  }
 
 }
