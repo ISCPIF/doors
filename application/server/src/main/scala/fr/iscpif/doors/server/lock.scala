@@ -43,7 +43,7 @@ object lock {
             lockId: Data.EmailAddress => Data.LockID,
             confirmationDelay: Time): DB[String] = query.secret.add(lockId(emailAddress), Utils.now + confirmationDelay.toMillis)
 
-    def unlock[M[_] : Monad](lockId: Data.EmailAddress => Data.LockID)(secret: String)(implicit errorM: DSL.SignalError[M]) = {
+    def unlock[M[_] : Monad](lockId: Data.EmailAddress => Data.LockID)(secret: String)(implicit io: freedsl.io.IO[M]) = {
       def processEmail(email: Option[db.Email]) = {
         email.map(e => lockId(e.address)) match {
           case None => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound))
@@ -67,12 +67,7 @@ object lock {
         email <- query.secret.email(secret)
         res <- processEmail(email.headOption)
       } yield res
-    } effect { e =>
-      e match {
-        case Left(e) => errorM.error(e)
-        case Right(_) => ().pure[M]
-      }
-    }
+    } effect { e => io.exceptionOrResult(e) }
   }
 
   object Email {
@@ -113,7 +108,7 @@ object lock {
       content = s"Hi,<br>Please click on the following link to reset your password !<br> ${info.secretLink} <br><br>The DOORS team"
     )
 
-    sealed trait UnlockError
+    sealed trait UnlockError extends Throwable
 
     case object DeadLineNotFound extends UnlockError
 
@@ -146,7 +141,7 @@ object lock {
       } yield secret
     } effect { secret => Email.send(publicURL, emailAddress, generateEmail, secret) }
 
-    def unlock[M[_] : Monad](secret: String)(implicit errorM: DSL.SignalError[M]) = Secret.unlock[M](lockId)(secret)
+    def unlock[M[_] : Monad: freedsl.io.IO](secret: String) = Secret.unlock[M](lockId)(secret)
   }
 
 
@@ -166,7 +161,7 @@ object lock {
         Email.send(publicURL, e.emailAddress, generateEmail, secret)*/
       }
 
-    def unlock[M[_] : Monad](lockId: Data.EmailAddress => Data.LockID)(secret: String)(implicit errorM: DSL.SignalError[M]) = Secret.unlock[M](lockId)(secret)
+    def unlock[M[_] : Monad: freedsl.io.IO](lockId: Data.EmailAddress => Data.LockID)(secret: String) = Secret.unlock[M](lockId)(secret)
   }
 
   //
