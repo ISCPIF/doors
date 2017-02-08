@@ -102,7 +102,8 @@ lazy val server = Project(
       "com.github.pathikrit" %% "better-files" % betterFileVersion,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
       "fr.iscpif.freedsl" %% "dsl" % freedslVersion,
-      "fr.iscpif.freedsl" %% "io" % freedslVersion
+      "fr.iscpif.freedsl" %% "io" % freedslVersion,
+      "com.github.scopt" %% "scopt" % "3.5.0"
     )
   )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
