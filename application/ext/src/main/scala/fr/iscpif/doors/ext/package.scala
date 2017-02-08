@@ -1,4 +1,4 @@
-package fr.iscpif.doors
+package fr.iscpif.doors.ext
 
 /*
  * Copyright (C) 05/09/15 // mathieu.leclaire@openmole.org
@@ -17,8 +17,17 @@ package fr.iscpif.doors
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package object ext {
+package object route {
 
+  val connectionRoute = "/connection"
+  val appRoute = "/app"
+  val logoutRoute = "/logout"
+  val emailValidationRoute = "/emailValidation"
+  val resetPasswordRoute = "/resetPassword"
+  val apiAllRoute = "/api/*"
+  val apiUserExistsRoute = "/api/userExists"
+  val apiUserRoute = "/api/user"
+  val apiRegisterRoute = "/api/register"
 //
 //  type LdapAttribute = String
 //

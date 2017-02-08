@@ -22,7 +22,7 @@ import fr.iscpif.doors.ext.Data.{UserData}
 import org.scalajs.dom
 import org.scalajs.dom._
 import shared.Api
-
+import fr.iscpif.doors.ext.route._
 import scala.concurrent.Future
 import rx._
 
@@ -59,14 +59,13 @@ object Client {
 
   @JSExport
   def application(): Unit = {
-    println("Application")
     Post[Api].loggedUser.call().foreach {
       _ match {
         case Some(u: UserData) =>
           bs.withBootstrapNative(
             tags.div(
               tags.form(
-                action := "/logout",
+                action := logoutRoute,
                 method := "post",
                 shutdownButton
               ).render,
