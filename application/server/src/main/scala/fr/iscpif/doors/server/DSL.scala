@@ -105,14 +105,6 @@ object DSL {
     import dsl._
     import dsl.implicits._
 
-
-//    def tryToDSLError[T](t: util.Try[T]): Either[freedsl.dsl.DSLError, T] =
-//      t match {
-//        case util.Success(r) => Right[freedsl.dsl.DSLError, T](r)
-//        case util.Failure(e) => Left[freedsl.dsl.DSLError, T](SignalError.ErrorOccured(e))
-//      }
-
-
     implicit def dbIsExecutable[U] = new Executable[db.DB[U], U, M] {
       override def execute(t: DB[U], settings: Settings, database: Database): Either[freedsl.dsl.Error, U] =
         interpreter(settings).run(db.runTransaction[U, M](t, database))
