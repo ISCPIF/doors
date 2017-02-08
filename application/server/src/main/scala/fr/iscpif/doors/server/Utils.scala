@@ -175,7 +175,7 @@ object Utils {
   //
 
   def secretLink(publicURL: String, secret: String) = {
-    val secretURL = s"${publicURL}/$emailValidationRoute?secret=$secret"
+    val secretURL = s"${publicURL}$emailValidationRoute?secret=$secret"
     s"<a href=${secretURL}>${secretURL}</a>"
   }
 
