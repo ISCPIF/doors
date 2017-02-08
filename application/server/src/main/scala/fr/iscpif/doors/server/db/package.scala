@@ -118,11 +118,11 @@ package object db {
 
   type DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T]
 
-  def runTransaction[T](f: DB[T], db: Database): Try[T] =
-    Try {
-      Await.result(db.run(f(dbScheme).transactionally), Duration.Inf)
-    }
+  def runTransaction[T, M[_]](f: DB[T], db: Database)(implicit io: freedsl.io.IO[M]) =
+    io(doRunTransaction(f, db))
 
+  def doRunTransaction[T](f: DB[T], db: Database) =
+    Await.result(db.run(f(dbScheme).transactionally), Duration.Inf)
 
   lazy val dbVersion = 1
 
@@ -167,7 +167,7 @@ package object db {
   def updateDB(db: Database) = {
     def max(s: Seq[Int]): Option[Int] = if(s.isEmpty) None else Some(s.max)
 
-    runTransaction(
+    doRunTransaction(
       DB { scheme =>
         for {
           v <- scheme.versions.result
@@ -195,7 +195,7 @@ package object db {
       }
 
     if (!dbWorks)
-      runTransaction(DB(
+      doRunTransaction(DB(
         scheme =>
           (scheme.users.schema ++
             scheme.locks.schema ++

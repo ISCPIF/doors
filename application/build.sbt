@@ -75,6 +75,8 @@ lazy val client = Project(
   )
   ) dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
 
+def freedslVersion = "0.7"
+
 lazy val server = Project(
   "server",
   file("server")) settings (projectSettings: _*) settings (
@@ -99,8 +101,8 @@ lazy val server = Project(
       "com.h2database" % "h2" % "1.4.190",
       "com.github.pathikrit" %% "better-files" % betterFileVersion,
       "org.scala-lang" % "scala-compiler" % scalaVersion.value,
-      "fr.iscpif.freedsl" %% "dsl" % "0.2",
-      "com.squants"  %% "squants"  % "0.7.1-SNAPSHOT"
+      "fr.iscpif.freedsl" %% "dsl" % freedslVersion,
+      "fr.iscpif.freedsl" %% "io" % freedslVersion
     )
   )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 

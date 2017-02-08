@@ -17,12 +17,12 @@
   */
 package fr.iscpif.doors.server
 
-import freedsl.dsl.dsl
+import freedsl.dsl._
+import freedsl.io._
 import cats._
 import cats.data._
 import cats.implicits._
 import slick.driver.H2Driver.api._
-import freek._
 import db.dbIOActionIsMonad
 import fr.iscpif.doors.ext.Data.{ApiRep, DSLError}
 import fr.iscpif.doors.server.db.DB
@@ -105,34 +105,36 @@ object DSL {
     import dsl._
     import dsl.implicits._
 
-    def tryToDSLError[T](t: util.Try[T]): Either[freedsl.dsl.DSLError, T] =
-      t match {
-        case util.Success(r) => Right[freedsl.dsl.DSLError, T](r)
-        case util.Failure(e) => Left[freedsl.dsl.DSLError, T](SignalError.ErrorOccured(e))
-      }
+
+//    def tryToDSLError[T](t: util.Try[T]): Either[freedsl.dsl.DSLError, T] =
+//      t match {
+//        case util.Success(r) => Right[freedsl.dsl.DSLError, T](r)
+//        case util.Failure(e) => Left[freedsl.dsl.DSLError, T](SignalError.ErrorOccured(e))
+//      }
 
 
-    implicit def dbIsExecutable[U] = new Executable[db.DB[U], U] {
-      override def execute(t: DB[U], settings: Settings, database: Database): Either[freedsl.dsl.DSLError, U] =
-        tryToDSLError(db.runTransaction(t, database))
+    implicit def dbIsExecutable[U] = new Executable[db.DB[U], U, M] {
+      override def execute(t: DB[U], settings: Settings, database: Database): Either[freedsl.dsl.Error, U] =
+        interpreter(settings).run(db.runTransaction[U, M](t, database))
     }
 
-    implicit def dbAndSide[T, U] = new Executable[DBAndSide[T, U, M], U] {
+    implicit def dbAndSide[T, U] = new Executable[DBAndSide[T, U, M], U, M] {
       override def execute(t: DBAndSide[T, U, M], settings: Settings, database: Database) = {
-        for {
-          dbRes <- tryToDSLError(db.runTransaction(t.db, database))
-          effect: M[U] = t.sideEffect.run(dbRes)
-          res <- dsl.result(effect, interpreter(settings)): Either[freedsl.dsl.DSLError, U]
-        } yield res
+        def prg =
+          for {
+            dbRes <- db.runTransaction[T, M](t.db, database)
+            effect <- t.sideEffect.run(dbRes)
+          } yield effect
+        interpreter(settings).run(prg)
       }
     }
   }
 
-  trait Executable[T, U] {
-    def execute(t: T, settings: Settings, database: Database): Either[freedsl.dsl.DSLError, U]
+  trait Executable[T, U, M[_]] {
+    def execute(t: T, settings: Settings, database: Database): Either[freedsl.dsl.Error, U]
   }
 
-  implicit class ExecuteDecorator[T, U](t: T)(implicit executable: Executable[T, U]) {
+  implicit class ExecuteDecorator[T, U, M[_]](t: T)(implicit executable: Executable[T, U, M]) {
     def execute(settings: Settings, database: Database) = executable.execute(t, settings, database)
   }
 
@@ -150,12 +152,12 @@ object DSL {
     case _ => false
   }
 
-  implicit def eitherToApiRep[T](either: Either[freedsl.dsl.DSLError, T]): ApiRep[T] = either match {
+  implicit def eitherToApiRep[T](either: Either[freedsl.dsl.Error, T]): ApiRep[T] = either match {
     case Right(t) => Right(t)
     case Left(l) => Left(DSLError)
   }
 
-  implicit def eitherOptionToApiRep[T](either: Either[freedsl.dsl.DSLError, Option[T]]): ApiRep[T] = either match {
+  implicit def eitherOptionToApiRep[T](either: Either[freedsl.dsl.Error, Option[T]]): ApiRep[T] = either match {
     case Right(t) => t match {
       case Some(t)=> Right(t)
       case None=> Left(DSLError)
@@ -165,15 +167,12 @@ object DSL {
 
 
   object Email {
-    def interpreter(smtp: SMTPSettings) = new Interpreter[Id] {
-      def interpret[_] = {
-        case send(address, subject, content) =>
-          DoorsMailer.send(smtp, subject, content, address) match {
-            case util.Failure(e) => Left(SendMailError(e))
-            case util.Success(_) => Right(())
-          }
-
-      }
+    def interpreter(smtp: SMTPSettings) = new Interpreter {
+      def send(address: String, subject: String, content: String)(implicit context: Context) =
+        DoorsMailer.send(smtp, subject, content, address) match {
+          case util.Failure(e) => Left(SendMailError(e))
+          case util.Success(_) => Right(())
+        }
     }
 
     case class SendMailError(e: Throwable) extends Error
@@ -186,10 +185,8 @@ object DSL {
 
 
   object Date {
-    def interpreter = new Interpreter[Id] {
-      def interpret[_] = {
-        case now() => Right(System.currentTimeMillis())
-      }
+    def interpreter = new Interpreter {
+      def now(implicit context: Context) = result(System.currentTimeMillis())
     }
   }
 
@@ -197,27 +194,13 @@ object DSL {
     def now: M[Long]
   }
 
-  object SignalError {
-    def interpreter = new Interpreter[Id] {
-      def interpret[_] = {
-        case error(t) => Left(ErrorOccured(t))
-      }
-    }
-
-    case class ErrorOccured[T](t: T) extends Error
-
-  }
-
-  @dsl trait SignalError[M[_]] {
-    def error[T](t: T): M[Unit]
-  }
-
-  val dsl = freedsl.dsl.merge(Email, Date, SignalError)
+  val dsl = merge(Email, Date, IO)
 
   def interpreter(settings: Settings) =
-    Email.interpreter(settings.smtp) :&:
-      Date.interpreter :&:
-      SignalError.interpreter
+    merge(
+      Email.interpreter(settings.smtp),
+      Date.interpreter,
+      IO.interpreter)
 
 
 }
