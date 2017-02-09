@@ -21,7 +21,7 @@ import fr.iscpif.doors.ext.Data._
 import slick.driver.H2Driver.api._
 
 
-class Secrets(tag: Tag) extends Table[Secret](tag, "EMAIL_CONFIRMATIONS") {
+class Secrets(tag: Tag) extends Table[Secret](tag, "SECRETS") {
   def lockID = column[String]("LOCK_ID")
   def secret = column[String]("SECRET")
   def deadline = column[Long]("DEADLINE")

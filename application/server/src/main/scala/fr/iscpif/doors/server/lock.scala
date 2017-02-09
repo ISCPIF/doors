@@ -32,7 +32,7 @@ import DSL._
 
 object lock {
 
-  lazy val registration = LockID("registration")
+  def registration(user: User) = LockID(s"registration:${user.id.id}")
 
   object Secret {
 
@@ -51,7 +51,7 @@ object lock {
               deadline <- query.secret.deadline(secret, lid)
               r <- processDeadline(deadline, lid)
             } yield r
-          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound))
+          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound(email.map{_.address.value}.getOrElse(""))))
         }
       }
 
@@ -72,59 +72,59 @@ object lock {
 
   object Email {
     def send[M[_]](publicURL: String,
-                   emailAddress: Data.EmailAddress,
-                   generateEmail: EmailSettings.Info => EmailSettings.Email,
-                   secret: String)(implicit mailM: DSL.Email[M]) = {
-      val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, secret)))
-      mailM.send(emailAddress.value, emailContent.subject, emailContent.content)
-    }
-
-    def insert(uid: Data.UserID,
-               emailAddress: Data.EmailAddress,
-               lockId: Data.EmailAddress => Data.LockID) = {
-      val lockIdVal = lockId(emailAddress)
-      query.lock.exists(emailAddress, lockIdVal) map { r =>
-        if (r) DB.pure(())
-        else db.query.email.add(uid, emailAddress, lockIdVal)
-      }
-    }
+  emailAddress: Data.EmailAddress,
+  generateEmail: EmailSettings.Info => EmailSettings.Email,
+  secret: String)(implicit mailM: DSL.Email[M]) = {
+    val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, secret)))
+    mailM.send(emailAddress.value, emailContent.subject, emailContent.content)
   }
 
+  def insert(uid: Data.UserID,
+             emailAddress: Data.EmailAddress,
+             lockId: Data.EmailAddress => Data.LockID) = {
+    val lockIdVal = lockId(emailAddress)
+    for {
+      r <- query.lock.exists(emailAddress, lockIdVal)
+      _ <- if (r) DB.pure(()) else db.query.email.add(uid, emailAddress, lockIdVal)
+    } yield ()
+  }
+}
 
-  object EmailSettings {
 
-    case class Info(secret: String, secretLink: String)
+object EmailSettings {
 
-    case class Email(subject: String, content: String)
+  case class Info(secret: String, secretLink: String)
 
-    def defaultEmail(info: Info) =
-      EmailSettings.Email(
-        subject = "[DOORS] Email confirmation",
-        content = s"Hi,<br>Please click on the following link to confirm this email address !<br> ${info.secretLink} <br><br>The DOORS team"
-      )
+  case class Email(subject: String, content: String)
 
-    def resetPassword(info: Info) = EmailSettings.Email(
-      subject = "[DOORS] Reset password",
-      content = s"Hi,<br>Please click on the following link to reset your password !<br> ${info.secretLink} <br><br>The DOORS team"
+  def defaultEmail(info: Info) =
+    EmailSettings.Email(
+      subject = "[DOORS] Email confirmation",
+      content = s"Hi,<br>Please click on the following link to confirm this email address !<br> ${info.secretLink} <br><br>The DOORS team"
     )
 
-    sealed trait UnlockError extends Throwable
+  def resetPassword(info: Info) = EmailSettings.Email(
+    subject = "[DOORS] Reset password",
+    content = s"Hi,<br>Please click on the following link to reset your password !<br> ${info.secretLink} <br><br>The DOORS team"
+  )
 
-    case object DeadLineNotFound extends UnlockError
+  sealed trait UnlockError extends Throwable
 
-    case object SecretExpired extends UnlockError
+  case object DeadLineNotFound extends UnlockError
 
-    case object EmailNotFound extends UnlockError
+  case object SecretExpired extends UnlockError
 
-  }
+  case class EmailNotFound(emailAddress: String) extends Exception(s"Email $emailAddress not found") with UnlockError
 
-  //
-  // val startQuest = EmailValidation() -- ManualValidation("")
+}
 
-  //  val form512 = FormValidation(iden"Form512")
-  //
-  //  val gargantext =
-  //    startQuest --
+//
+// val startQuest = EmailValidation() -- ManualValidation("")
+
+//  val form512 = FormValidation(iden"Form512")
+//
+//  val gargantext =
+//    startQuest --
   //   (form512 && FormValidation("Gargantext5")) --
   //     (ManualValidation(validator = query(firstName = "Alexandre", famillyName = "Delanoe"), id = "GargantextMailValditaion"))
   //

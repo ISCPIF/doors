@@ -25,8 +25,8 @@ object query {
     // FIXME side effect current time
     def create(userId: Data.UserID, lockId: Data.LockID, statusId: Data.StateID = Data.LockState.locked) = DB { scheme =>
       for {
-        _ <- scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
-        _ <- scheme.userLocks += db.UserLock(userId, lockId)
+       _ <- scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
+       _ <- scheme.userLocks += db.UserLock(userId, lockId)
       } yield lockId
     }
 
@@ -59,10 +59,10 @@ object query {
     def add(userId: Data.UserID, email: Data.EmailAddress, lockId: Data.LockID) =
       for {
         es <- query.email.get(userId)
-        emailStatus = if (es.isEmpty) db.EmailStatus.Contact else db.EmailStatus.Other
+        emailStatus = if (true) db.EmailStatus.Contact else db.EmailStatus.Other
         lockId <- lock.create(userId, lockId)
-        _ <- DB {
-          _.emails += db.Email(lockId, email, emailStatus)
+        _ <- DB { scheme =>
+          scheme.emails += db.Email(lockId, email, if (true) db.EmailStatus.Contact else db.EmailStatus.Other)
         }
       } yield lockId
 
@@ -136,7 +136,7 @@ object query {
         _ <- DB {
           _.users += user
         }
-        lockId <- lock.create(user.id, fr.iscpif.doors.server.lock.registration, Data.LockState.locked)
+        lockId <- lock.create(user.id, fr.iscpif.doors.server.lock.registration(user), Data.LockState.locked)
         _ <- lock.progress(lockId, Data.LockState.unlocked)
       } yield user.id
     }

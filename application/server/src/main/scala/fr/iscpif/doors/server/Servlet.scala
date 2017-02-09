@@ -23,14 +23,17 @@ import fr.iscpif.doors.ext.Data._
 import org.scalatra._
 import rx._
 import fr.iscpif.doors.ext.route._
+
 import scala.concurrent.duration._
 import scala.concurrent.Await
 import scalatags.Text.all._
 import scalatags.Text.{all => tags}
 import Utils._
 import fr.iscpif.doors.server.DoorsAPIStatus._
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import db.User
+import freedsl.io.IO.IOError
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
   def read[Result: upickle.default.Reader](p: String) = upickle.default.read[Result](p)
@@ -170,23 +173,18 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   // API route to register
   post(apiRegisterRoute) {
-    val loginEmail = params get "login" getOrElse ("")
-    val name = params get "name" getOrElse ("")
-    val pass = params get "password" getOrElse ("")
+    val loginEmail = params get "login"
+    val name = params get "name"
+    val pass = params get "password"
 
-    val myApi = new UnloggedApiImpl(settings, database)
-
-    myApi.isEmailUsed(loginEmail) match {
-      // the user exists, we just log him in
-      case Right(true) => apiConnect(loginEmail, pass)
-      // Ok, the email is not used, proceed with registration
-      case Right(false) => {
-        // addUser (+ it also sends the email confirmation)
-        myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
-        Ok(registrationPending(email = Some(loginEmail)).toJson)
-      }
-      // problem with isEmailUsed
-      case Left(_) => halt(500, ("Unknown isEmailUsed error, can't register"))
+    (loginEmail, name, pass) match {
+      case (Some(email), Some(name), Some(pass)) =>
+        db.query.user.add(name, Password(pass), settings.hashingAlgorithm) chain { uid =>
+          settings.emailValidationInstance.start[M](uid, EmailAddress(email)) } execute(settings, database) match {
+          case Right(_) =>  Ok(registrationPending(email = loginEmail).toJson)
+          case Left(e) => halt(500, (e))
+        }
+      case _ => halt(500, ("Unknown isEmailUsed error, can't register"))
     }
   }
 
@@ -194,14 +192,19 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   get(emailValidationRoute) {
     val validate =
       for {
-        lockID <- params get "lock"
         secret <- params get "secret"
       } yield settings.emailValidation(settings.publicURL).unlock[M](secret)
 
     validate match {
-      case Some(e) =>
-        e.execute(settings, database) match {
-          case Left(e) => halt(404, (s"Error....").toJson)
+      case Some(validate) =>
+        validate.execute(settings, database) match {
+          case Left(e) =>
+            println("E " + e)
+            val message = e match {
+            case io: IOError=>  io.t.getMessage
+            case _=> "Undefined error"
+          }
+            halt(404, (message).toJson)
           case Right(_) => Ok()
         }
       case _ => halt(404, "Wrong arguments")
