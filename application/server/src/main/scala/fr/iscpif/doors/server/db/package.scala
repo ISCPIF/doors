@@ -47,22 +47,17 @@ package object db {
     lazy val versions = TableQuery[db.Versions]
     lazy val secrets = TableQuery[db.Secrets]
   }
+
   type Database = slick.driver.H2Driver.api.Database
 
   trait DBScheme {
     def users: TableQuery[Users]
-
     def locks: TableQuery[Locks]
-
     def userLocks: TableQuery[UserLocks]
-
     def emails: TableQuery[Emails]
-
     def versions: TableQuery[Versions]
-
     def secrets: TableQuery[Secrets]
   }
-
 
   object DB {
 
@@ -109,11 +104,6 @@ package object db {
         case Left(nextA) => tailRecM(nextA)(f)
       }
   }
-
-  //  implicit def dbIsMonad = new Monad[DB] {
-  //    override def pure[A](x: A): DB[A] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, A] { _ => dbIOActionIsMonad.pure(x) }
-  //
-  //  }
 
   type DB[T] = Kleisli[DBIOAction[?, NoStream, Effect.All], fr.iscpif.doors.server.db.DBScheme, T]
 
