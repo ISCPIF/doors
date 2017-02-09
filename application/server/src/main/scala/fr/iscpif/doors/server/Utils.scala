@@ -23,6 +23,7 @@ import slick.driver.H2Driver.api._
 //
 
 import fr.iscpif.doors.ext.route._
+
 /*
  * Copyright (C) 18/03/16 // mathieu.leclaire@openmole.org
  *
@@ -175,7 +176,7 @@ object Utils {
   //
 
   def secretLink(publicURL: String, secret: String) = {
-    val secretURL = s"${publicURL}/$emailValidationRoute?secret=$secret"
+    val secretURL = s"${publicURL}$emailValidationRoute?secret=$secret"
     s"<a href=${secretURL}>${secretURL}</a>"
   }
 

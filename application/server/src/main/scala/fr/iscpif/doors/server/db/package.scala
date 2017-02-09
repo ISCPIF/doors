@@ -27,7 +27,6 @@ import slick.dbio.DBIOAction
 import slick.driver.H2Driver
 import slick.driver.H2Driver.api._
 import slick.lifted.{Query, QueryBase, TableQuery}
-import slick.profile.{FixedSqlAction, SqlAction}
 
 import scala.concurrent.Await
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -155,16 +154,18 @@ package object db {
   def smtpPort = "smtpPort"
 
   def updateDB(db: Database) = {
-    def max(s: Seq[Int]): Option[Int] = if(s.isEmpty) None else Some(s.max)
+    def max(s: Seq[Int]): Option[Int] = if (s.isEmpty) None else Some(s.max)
 
     doRunTransaction(
       DB { scheme =>
         for {
-          v <- scheme.versions.result
+          v <- scheme.versions.map{_.id}.max.filter{_ < dbVersion}.result
+          //FIXME: Versions table to be updated
+         // _ <- scheme.versions += Version(f)
+          } yield ()
         //TODO: UPDATE DB
-          _ <- scheme.versions += Version(dbVersion) if max(v.map{_.id}).getOrElse(-1) < dbVersion
-        } yield ()
-      }, db
+        }
+      , db
     )
   }
 

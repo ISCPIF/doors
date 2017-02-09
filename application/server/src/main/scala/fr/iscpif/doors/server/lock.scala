@@ -46,21 +46,21 @@ object lock {
     def unlock[M[_] : Monad](lockId: Data.EmailAddress => Data.LockID)(secret: String)(implicit io: freedsl.io.IO[M]) = {
       def processEmail(email: Option[db.Email]) = {
         email.map(e => lockId(e.address)) match {
-          case None => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound))
           case Some(lid) =>
             for {
               deadline <- query.secret.deadline(secret, lid)
               r <- processDeadline(deadline, lid)
             } yield r
+          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound))
         }
       }
 
       def processDeadline(deadline: Option[Time], lockID: Data.LockID): DB[Either[EmailSettings.UnlockError, Unit]] =
         deadline match {
-          case None => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
           case Some(deadline) =>
             if (deadline.toMillis > System.currentTimeMillis()) DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
             else query.lock.progress(lockID, Data.LockState.locked).map(e => Right(e))
+          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
         }
 
       for {
