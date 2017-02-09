@@ -83,7 +83,7 @@ lazy val server = Project(
   "server",
   file("server")) settings (projectSettings: _*) settings (
   ScalatraPlugin.scalatraWithJRebel ++ Seq(
-    unmanagedResourceDirectories in Compile <+= target(_ / "webapp"),
+    unmanagedResourceDirectories in Compile += target.value / "webapp",
     libraryDependencies ++= Seq(
       "com.lihaoyi" %% "autowire" % autowireVersion,
       "com.lihaoyi" %% "upickle" % upickleVersion,
@@ -119,14 +119,19 @@ lazy val lab = Project(
 ) settings (projectSettings: _*) enablePlugins(JavaAppPackaging) settings(
   runMain := ((runMain in Runtime) dependsOn assemble).evaluated,
   run := ((run in Runtime) dependsOn assemble).evaluated,
-  assemble :=
-    ((fastOptJS in client in Compile, resourceDirectory in client in Compile, classDirectory in Compile, version) map { (js, ressource, classDirectory, version) =>
-      copy(js, ressource, classDirectory / "webapp").data
-    }).value,
-    (stage in Universal) := ((stage in Universal) dependsOn
-      ((fastOptJS in client in Compile, resourceDirectory in client in Compile, stagingDirectory in Universal) map { (js, webapp, stage) =>
-        copy(js, webapp, stage / "webapp").data
-      })).value
+  assemble := {
+     val js = (fastOptJS in client in Compile).value
+     val res = (resourceDirectory in client in Compile).value
+     val cd = (classDirectory in Compile).value
+     copy(js, res, cd / "webapp").data
+    },
+    (stage in Universal) := {
+      (stage in Universal).value
+      val js = (fastOptJS in client in Compile).value
+      val res = (resourceDirectory in client in Compile).value
+      val std = (stagingDirectory in Universal).value
+      copy(js, res, std / "webapp").data
+    }
   ) dependsOn (server, client)
 
 def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) =
