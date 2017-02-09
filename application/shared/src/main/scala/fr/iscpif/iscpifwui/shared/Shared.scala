@@ -55,5 +55,5 @@ trait Api {
 trait UnloggedApi {
   def isEmailUsed(email: String): ApiRep[Boolean]
 
-  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[Unit]
+  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[UserID]
 }

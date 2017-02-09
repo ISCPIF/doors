@@ -182,8 +182,14 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       // Ok, the email is not used, proceed with registration
       case Right(false) => {
         // addUser (+ it also sends the email confirmation)
-        myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
-        Ok(registrationPending(email = Some(loginEmail)).toJson)
+        val uid = myApi.addUser(name, EmailAddress(loginEmail), Password(pass))
+
+        uid match {
+          // problem with addUser
+          case Left(_) => halt(500, ("Unknown addUser error, can't register"))
+          case Right(uid) => Ok(registrationPending(userID = Some(uid.id), email = Some(loginEmail)).toJson)
+        }
+
       }
       // problem with isEmailUsed
       case Left(_) => halt(500, ("Unknown isEmailUsed error, can't register"))
