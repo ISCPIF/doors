@@ -23,21 +23,8 @@ import fr.iscpif.doors.server.db._
 
 object LabSettings extends App {
 
-  def quests = {
-    def admins =  (for {
-      c <- chronicles if c.lock === locks.ADMIN
-      uc <- userChronicles if uc.chronicleID === c.chronicleID
-      u <- users.filter{_.id === uc.userID}
-    } yield u).result
-
-    Map(
-      locks.SUBSCRIPTION -> ManualValidation(admins)
-    )
-  }
-
   val settings =
     Settings (
-      quests = quests,
       publicURL = "http://localhost:8989/",
       port = 8989,
       salt = "yoursalthere",
