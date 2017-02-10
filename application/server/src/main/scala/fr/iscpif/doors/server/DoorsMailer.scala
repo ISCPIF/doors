@@ -47,6 +47,7 @@ println("SEND EMAIL " + emailSubject)
         message.setSender(new InternetAddress(s.name, s.address.value))
       }
       message.setRecipients(Message.RecipientType.TO, to)
+      message.setFrom("doors@iscpif.fr")
       message.setSubject(emailSubject)
       message.setText(content, "utf-8", "html")
       Transport.send(message)
