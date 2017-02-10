@@ -4,8 +4,8 @@ doors:
     - "./data/doors/home/:/var/doors/.doors/"
   links:
     - mail:mail
-  ports:
-    - 8989:8989
+  # ports:
+  #   - 8989:8989
 mail:
   build: ./mail
   environment:
@@ -20,8 +20,7 @@ https-portal:
   links:
     - doors
   environment:
-    - "DOMAINS=localhost -> http://doors"
-    #- "CLIENT_MAX_BODY_SIZE=4G" 
-    #- "PRODUCTION=true"     
-
-
+    - "DOMAINS=localhost -> http://doors:8989"
+    #- "CLIENT_MAX_BODY_SIZE=4G"
+    #- "STAGE=production"
+    - "STAGE=local"
