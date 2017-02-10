@@ -28,7 +28,8 @@ object LabSettings extends App {
       publicURL = "http://localhost:8989/",
       port = 8989,
       salt = "yoursalthere",
-      smtp = SMTPSettings("mail", 465, "login", "password")
+      smtp = SMTPSettings("mail", 25, "login", "password")
+
     )
 
   Launcher.run(settings)
