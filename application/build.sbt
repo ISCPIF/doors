@@ -30,7 +30,7 @@ val monocleVersion = "1.2.1"
 val betterFileVersion = "2.15.0"
 
 
-lazy val doors = project in file(".") settings(projectSettings) aggregate(ext, rest, server, client)
+lazy val doors = project in file(".") settings (projectSettings) aggregate(ext, rest, server, client)
 
 lazy val hasher = ProjectRef(uri("https://github.com/Nycto/Hasher.git#v1.2.0"), "hasher")
 
@@ -52,7 +52,7 @@ lazy val ext = Project(
 
 lazy val rest = Project(
   "rest",
-  file("rest")) settings (projectSettings: _*) settings(
+  file("rest")) settings (projectSettings: _*) settings (
   libraryDependencies ++= Seq(
     "org.apache.httpcomponents" % "httpclient" % httpComponentsVersion,
     "org.apache.httpcomponents" % "httpmime" % httpComponentsVersion,
@@ -116,23 +116,23 @@ lazy val application = taskKey[File]("application")
 lazy val lab = Project(
   "lab",
   file("lab")
-) settings (projectSettings: _*) enablePlugins(JavaAppPackaging) settings(
+) settings (projectSettings: _*) enablePlugins (JavaAppPackaging) settings(
   runMain := ((runMain in Runtime) dependsOn assemble).evaluated,
   run := ((run in Runtime) dependsOn assemble).evaluated,
   assemble := {
-     val js = (fastOptJS in client in Compile).value
-     val res = (resourceDirectory in client in Compile).value
-     val cd = (classDirectory in Compile).value
-     copy(js, res, cd / "webapp").data
-    },
-    (stage in Universal) := {
-      (stage in Universal).value
-      val js = (fastOptJS in client in Compile).value
-      val res = (resourceDirectory in client in Compile).value
-      val std = (stagingDirectory in Universal).value
-      copy(js, res, std / "webapp").data
-    }
-  ) dependsOn (server, client)
+    val js = (fastOptJS in client in Compile).value
+    val res = (resourceDirectory in client in Compile).value
+    val cd = (classDirectory in Compile).value
+    copy(js, res, cd / "webapp").data
+  },
+  (stage in Universal) := {
+    (stage in Universal).value
+    val js = (fastOptJS in client in Compile).value
+    val res = (resourceDirectory in client in Compile).value
+    val std = (stagingDirectory in Universal).value
+    copy(js, res, std / "webapp").data
+  }
+) dependsOn(server, client)
 
 def copy(clientTarget: Attributed[File], resources: File, webappServerTarget: File) =
   clientTarget.map { ct =>

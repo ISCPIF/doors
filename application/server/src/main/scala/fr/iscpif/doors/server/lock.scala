@@ -51,7 +51,9 @@ object lock {
               deadline <- query.secret.deadline(secret, lid)
               r <- processDeadline(deadline, lid)
             } yield r
-          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound(email.map{_.address.value}.getOrElse(""))))
+          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.EmailNotFound(email.map {
+            _.address.value
+          }.getOrElse(""))))
         }
       }
 
@@ -72,67 +74,67 @@ object lock {
 
   object Email {
     def send[M[_]](publicURL: String,
-  emailAddress: Data.EmailAddress,
-  generateEmail: EmailSettings.Info => EmailSettings.Email,
-  secret: String)(implicit mailM: DSL.Email[M]) = {
-    val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, secret)))
-    mailM.send(emailAddress.value, emailContent.subject, emailContent.content)
+                   emailAddress: Data.EmailAddress,
+                   generateEmail: EmailSettings.Info => EmailSettings.Email,
+                   secret: String)(implicit mailM: DSL.Email[M]) = {
+      val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, secret)))
+      mailM.send(emailAddress.value, emailContent.subject, emailContent.content)
+    }
+
+    def insert(uid: Data.UserID,
+               emailAddress: Data.EmailAddress,
+               lockId: Data.EmailAddress => Data.LockID) = {
+      val lockIdVal = lockId(emailAddress)
+      for {
+        r <- query.lock.exists(emailAddress, lockIdVal)
+        _ <- if (r) DB.pure(()) else db.query.email.add(uid, emailAddress, lockIdVal)
+      } yield ()
+    }
   }
 
-  def insert(uid: Data.UserID,
-             emailAddress: Data.EmailAddress,
-             lockId: Data.EmailAddress => Data.LockID) = {
-    val lockIdVal = lockId(emailAddress)
-    for {
-      r <- query.lock.exists(emailAddress, lockIdVal)
-      _ <- if (r) DB.pure(()) else db.query.email.add(uid, emailAddress, lockIdVal)
-    } yield ()
-  }
-}
 
+  object EmailSettings {
 
-object EmailSettings {
+    case class Info(secret: String, secretLink: String)
 
-  case class Info(secret: String, secretLink: String)
+    case class Email(subject: String, content: String)
 
-  case class Email(subject: String, content: String)
+    def defaultEmail(info: Info) =
+      EmailSettings.Email(
+        subject = "[DOORS] Email confirmation",
+        content = s"Hi,<br>Please click on the following link to confirm this email address !<br> ${info.secretLink} <br><br>The DOORS team"
+      )
 
-  def defaultEmail(info: Info) =
-    EmailSettings.Email(
-      subject = "[DOORS] Email confirmation",
-      content = s"Hi,<br>Please click on the following link to confirm this email address !<br> ${info.secretLink} <br><br>The DOORS team"
+    def resetPassword(info: Info) = EmailSettings.Email(
+      subject = "[DOORS] Reset password",
+      content = s"Hi,<br>Please click on the following link to reset your password !<br> ${info.secretLink} <br><br>The DOORS team"
     )
 
-  def resetPassword(info: Info) = EmailSettings.Email(
-    subject = "[DOORS] Reset password",
-    content = s"Hi,<br>Please click on the following link to reset your password !<br> ${info.secretLink} <br><br>The DOORS team"
-  )
+    sealed trait UnlockError extends Throwable
 
-  sealed trait UnlockError extends Throwable
+    case object DeadLineNotFound extends UnlockError
 
-  case object DeadLineNotFound extends UnlockError
+    case object SecretExpired extends UnlockError
 
-  case object SecretExpired extends UnlockError
+    case class EmailNotFound(emailAddress: String) extends Exception(s"Email $emailAddress not found") with UnlockError
 
-  case class EmailNotFound(emailAddress: String) extends Exception(s"Email $emailAddress not found") with UnlockError
+  }
 
-}
+  //
+  // val startQuest = EmailValidation() -- ManualValidation("")
 
-//
-// val startQuest = EmailValidation() -- ManualValidation("")
-
-//  val form512 = FormValidation(iden"Form512")
-//
-//  val gargantext =
-//    startQuest --
+  //  val form512 = FormValidation(iden"Form512")
+  //
+  //  val gargantext =
+  //    startQuest --
   //   (form512 && FormValidation("Gargantext5")) --
   //     (ManualValidation(validator = query(firstName = "Alexandre", famillyName = "Delanoe"), id = "GargantextMailValditaion"))
   //
 
   case class EmailValidation(
-    lockId: Data.EmailAddress => Data.LockID = e => Data.LockID(s"validate:${e.value}"),
-    confirmationDelay: Time = Days(2),
-    generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.defaultEmail)(publicURL: String) {
+                              lockId: Data.EmailAddress => Data.LockID = e => Data.LockID(s"validate:${e.value}"),
+                              confirmationDelay: Time = Days(2),
+                              generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.defaultEmail)(publicURL: String) {
 
     def start[M[_] : Monad](uid: Data.UserID, emailAddress: Data.EmailAddress)(implicit mailM: DSL.Email[M]) = {
       for {
@@ -141,111 +143,110 @@ object EmailSettings {
       } yield secret
     } effect { secret => Email.send(publicURL, emailAddress, generateEmail, secret) }
 
-    def unlock[M[_] : Monad: freedsl.io.IO](secret: String) = Secret.unlock[M](lockId)(secret)
+    def unlock[M[_] : Monad : freedsl.io.IO](secret: String) = Secret.unlock[M](lockId)(secret)
   }
 
 
-  case class ResetPassword( confirmationDelay: Time = Days(2),
-                            generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.resetPassword)(publicURL: String) {
+  case class ResetPassword(lockId: Data.EmailAddress => Data.LockID = e => Data.LockID(s"resetPassword:${e.value}"),
+                           confirmationDelay: Time = Days(2),
+                           generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.resetPassword)(publicURL: String) {
 
-    def start[M[_] : Monad](userID: UserID)(implicit mailM: DSL.Email[M]) = {
+    def start[M[_] : Monad](emailAddress: EmailAddress)(implicit mailM: DSL.Email[M]) = {
       for {
-        email <- query.email.get(userID)
-        secret <- Secret.add(LockID(Utils.uuid), (confirmationDelay + Milliseconds(Utils.now)) )
+        secret <- Secret.add(LockID(Utils.uuid), (confirmationDelay + Milliseconds(Utils.now)))
       } yield secret
     } effect { secret =>
-      //TODO: Send email for a given valid adress
-      Email.send(publicURL, EmailAddress("CORRECT ADDRESS"), generateEmail, secret)
-      /*
-      email.map { e =>
-        Email.send(publicURL, e.emailAddress, generateEmail, secret)*/
-      }
+      Email.send(publicURL, EmailAddress(emailAddress.value), generateEmail, secret)
+    }
 
-    def unlock[M[_] : Monad: freedsl.io.IO](lockId: Data.EmailAddress => Data.LockID)(secret: String) = Secret.unlock[M](lockId)(secret)
+
+    def unlock[M[_] : Monad : freedsl.io.IO](secret: String) = Secret.unlock[M](lockId)(secret)
   }
 
-  //
-  //    def revalidate[M[_] : Monad](emailAddress: String)(implicit mailM: DSL.Email[M]) =
-  //      DSL.Action.db { scheme =>
-  //        query.lock.forEmail(scheme)(emailAddress).result.flatMap {
-  //          _.headOption match {
-  //            case None => db.error(EmailValidation.EmailNotFound)
-  //            case Some(e) =>
-  //              query.secret.add(scheme)(e.id, chronicleID, Utils.now + confirmationDelay.toMillis).map(Ior.right)
-  //          }
-  //        }
-  //      } map (_.map(sendMail[M](publicURL, emailAddress)))
-
-
-  //    def chronicId =
-  //      mailTableM.chronicForEmail(email).flatMap {
-  //        case Some(chronicId) => chronicId.pure[M]
-  //        case None =>
-  //          for {
-  //            id <- chronicM.generateId
-  //            _ <- mailTableM.add(uid, email, id)
-  //          } yield id
-  //      }
-  //
-  //    for {
-  //      id <- chronicId
-  //      now <- dateM.now
-  //      secret <- secretM.generateSecret
-  //      _ <- secretM.setSecret(email, id, now + (2 days).toMillis, secret)
-  //      _ <- Utils.sendEmailConfirmation(publicURL, email, id, secret)
-  //      _ <- statusM.set(db.States.LOCKED, id, lockId)
-  //    } yield ()
-  //  }
-
-  //  // FIXME manage error and separate return types for each action
-  //  def next[M[_]: Monad](action: Action)(implicit mailTableM: DSL.EmailTable[M],
-  //                                        mailM: DSL.Email[M],
-  //                                        chronicM: DSL.ChronicTable[M],
-  //                                        secretM: DSL.SecretTable[M],
-  //                                        dateM: DSL.Date[M],
-  //                                        statusM: DSL.Status[M]) = action match {
-  //    case Start(uid, email, publicURL) =>
-  //
-  //    case Unlock(email, secret, chronicID) =>
-  //      secretM.checkSecret(secret, chronicID) flatMap {
-  //        case true => statusM.set(db.States.OPEN, chronicID, lockId)
-  //        case false => ().pure[M]
-  //      }
-  //    case Revalidate(chronicId, publicURL) =>
-  //      mailTableM.emailForChronic(chronicId) flatMap {
-  //        case Some(email) =>
-  //          for {
-  //            now <- dateM.now
-  //            secret <- secretM.generateSecret
-  //            _ <- secretM.setSecret(email.email, chronicId, now + confirmationDelay.toMillis, secret)
-  //            _ <- Utils.sendEmailConfirmation(publicURL, email.email, chronicId, secret)
-  //            _ <- statusM.set(db.States.LOCKED, chronicId, lockId)
-  //          } yield ()
-  //        case None =>
-  //          //FIXME manage errors
-  //          ().pure[M]
-  //      }
-  //
-  //  }
-
-
-  //      chronicForMail (email) {
-  //        case Some(chronicId) => chronicId
-  //        case None =>
-  //          id = Generer chronic id
-  //          Ajoute mail dans base(email, id)
-  //          id
-  //      }
-  //      set sercret(mail, chronicId)
-  //      envoie mail avec secret(mail, chronicId)
-  //      setStatus(LOCKED)
-  //    case Unlock(email, secret, chronicID) =>
-  //      if(secretOK(email, secret, chronicID)) setStatus(OPEN) else Noop
-  //    case Revalidate(chronicId) =>
-  //      set sercret(mail, chronicId)
-  //      envoie mail avec secret(mail, chronicId)
-  //      setStatus(LOCKED)
 }
+
+//
+//    def revalidate[M[_] : Monad](emailAddress: String)(implicit mailM: DSL.Email[M]) =
+//      DSL.Action.db { scheme =>
+//        query.lock.forEmail(scheme)(emailAddress).result.flatMap {
+//          _.headOption match {
+//            case None => db.error(EmailValidation.EmailNotFound)
+//            case Some(e) =>
+//              query.secret.add(scheme)(e.id, chronicleID, Utils.now + confirmationDelay.toMillis).map(Ior.right)
+//          }
+//        }
+//      } map (_.map(sendMail[M](publicURL, emailAddress)))
+
+
+//    def chronicId =
+//      mailTableM.chronicForEmail(email).flatMap {
+//        case Some(chronicId) => chronicId.pure[M]
+//        case None =>
+//          for {
+//            id <- chronicM.generateId
+//            _ <- mailTableM.add(uid, email, id)
+//          } yield id
+//      }
+//
+//    for {
+//      id <- chronicId
+//      now <- dateM.now
+//      secret <- secretM.generateSecret
+//      _ <- secretM.setSecret(email, id, now + (2 days).toMillis, secret)
+//      _ <- Utils.sendEmailConfirmation(publicURL, email, id, secret)
+//      _ <- statusM.set(db.States.LOCKED, id, lockId)
+//    } yield ()
+//  }
+
+//  // FIXME manage error and separate return types for each action
+//  def next[M[_]: Monad](action: Action)(implicit mailTableM: DSL.EmailTable[M],
+//                                        mailM: DSL.Email[M],
+//                                        chronicM: DSL.ChronicTable[M],
+//                                        secretM: DSL.SecretTable[M],
+//                                        dateM: DSL.Date[M],
+//                                        statusM: DSL.Status[M]) = action match {
+//    case Start(uid, email, publicURL) =>
+//
+//    case Unlock(email, secret, chronicID) =>
+//      secretM.checkSecret(secret, chronicID) flatMap {
+//        case true => statusM.set(db.States.OPEN, chronicID, lockId)
+//        case false => ().pure[M]
+//      }
+//    case Revalidate(chronicId, publicURL) =>
+//      mailTableM.emailForChronic(chronicId) flatMap {
+//        case Some(email) =>
+//          for {
+//            now <- dateM.now
+//            secret <- secretM.generateSecret
+//            _ <- secretM.setSecret(email.email, chronicId, now + confirmationDelay.toMillis, secret)
+//            _ <- Utils.sendEmailConfirmation(publicURL, email.email, chronicId, secret)
+//            _ <- statusM.set(db.States.LOCKED, chronicId, lockId)
+//          } yield ()
+//        case None =>
+//          //FIXME manage errors
+//          ().pure[M]
+//      }
+//
+//  }
+
+
+//      chronicForMail (email) {
+//        case Some(chronicId) => chronicId
+//        case None =>
+//          id = Generer chronic id
+//          Ajoute mail dans base(email, id)
+//          id
+//      }
+//      set sercret(mail, chronicId)
+//      envoie mail avec secret(mail, chronicId)
+//      setStatus(LOCKED)
+//    case Unlock(email, secret, chronicID) =>
+//      if(secretOK(email, secret, chronicID)) setStatus(OPEN) else Noop
+//    case Revalidate(chronicId) =>
+//      set sercret(mail, chronicId)
+//      envoie mail avec secret(mail, chronicId)
+//      setStatus(LOCKED)
+
 
 object Test {
 

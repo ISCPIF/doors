@@ -34,6 +34,8 @@ package object server {
 
     def registrationPending(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("RegistrationPending", userID, email, message)
 
+    def resetPasswordPending(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("ResetPasswordPending", userID, email, message)
+
     def loginAvailable(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("LoginAvailable", userID, email, message)
   }
 

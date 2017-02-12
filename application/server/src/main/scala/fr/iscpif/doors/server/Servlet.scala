@@ -33,6 +33,7 @@ import fr.iscpif.doors.server.DoorsAPIStatus._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import db.User
+import fr.iscpif.doors.server.lock.EmailSettings.UnlockError
 import freedsl.io.IO.IOError
 
 object AutowireServer extends autowire.Server[String, upickle.default.Reader, upickle.default.Writer] {
@@ -48,6 +49,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   import dsl._
   import dsl.implicits._
 
+  val unloggedAPI = new UnloggedApiImpl(settings, database)
+
   def authenticated(email: String, password: String): Option[UserID] =
     Utils.connect(settings, database)(email, password) map { u => u.id }
 
@@ -55,7 +58,14 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   val connection = html("Client().connection();")
 
-  def application = html(s"Client().application();")
+  val application = html(s"Client().application();")
+
+  val resetPassword = html(s"Client().resetPassword();")
+
+  //FIXME with a real page
+  val errorPage = tags.html(
+    tags.body("Error")
+  )
 
   val connectedUsers: Var[Seq[UserID]] = Var(Seq())
   val USER_ID = "UserID"
@@ -162,9 +172,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   // API route to check if email exists
   post(apiUserExistsRoute) {
     val login = params get "login" getOrElse ("")
-    val myApi = new UnloggedApiImpl(settings, database)
 
-    myApi.isEmailUsed(login) match {
+    unloggedAPI.isEmailUsed(login) match {
       case Right(true) => Ok(loginAlreadyExists().toJson)
       case Right(false) => Ok(loginAvailable().toJson)
       case Left(_) => InternalServerError("isEmailUsed error")
@@ -180,12 +189,55 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     (loginEmail, name, pass) match {
       case (Some(email), Some(name), Some(pass)) =>
         db.query.user.add(name, Password(pass), settings.hashingAlgorithm) chain { uid =>
-          settings.emailValidationInstance.start[M](uid, EmailAddress(email)) } execute(settings, database) match {
-          case Right(_) =>  Ok(registrationPending(email = loginEmail).toJson)
-          case Left(e) => halt(500, (e))
+          settings.emailValidationInstance.start[M](uid, EmailAddress(email))
+        } execute(settings, database) match {
+          case Right(_) => Ok(registrationPending(email = loginEmail).toJson)
+          case Left(e) => halt(500, e)
         }
-      case _ => halt(500, ("Unknown isEmailUsed error, can't register"))
+      case _ => halt(500, (s"Invalid register parameters: $loginEmail, $name, $pass. Can't register"))
     }
+  }
+
+  post(apiResetPasswordRoute) {
+    val email = params get "email"
+
+    email match {
+      case Some(email) =>
+//        unloggedAPI.resetPassword(email) match {
+//          case Right(_) => Ok(resetPasswordPending(Some(email)).toJson)
+//          case Left(e) => halt(500, e)
+//        }
+      case _ => halt(500, s"Invalid reset password parameters : $email. Can't reset password")
+    }
+  }
+
+
+  private def processUnlock(validate: Option[DBAndSide[Either[UnlockError, Unit], Unit, M]]): ActionResult = validate match {
+    case Some(validate) =>
+      validate.execute(settings, database) match {
+        case Left(e) =>
+          val message = e match {
+            case io: IOError => io.t.getMessage
+            case _ => "Undefined error"
+          }
+          halt(404, (message).toJson)
+        case Right(_) => Ok()
+      }
+    case _ => halt(404, "Wrong arguments")
+  }
+
+
+  get(resetPasswordRoute) {
+    val validate =
+      for {
+        secret <- params get "secret"
+      } yield settings.resetPassword.unlock[M](secret)
+
+    processUnlock(validate).status.code match {
+      case 200=> resetPassword
+      case _=> errorPage
+    }
+
   }
 
 
@@ -195,31 +247,9 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         secret <- params get "secret"
       } yield settings.emailValidation(settings.publicURL).unlock[M](secret)
 
-    validate match {
-      case Some(validate) =>
-        validate.execute(settings, database) match {
-          case Left(e) =>
-            println("E " + e)
-            val message = e match {
-            case io: IOError=>  io.t.getMessage
-            case _=> "Undefined error"
-          }
-            halt(404, (message).toJson)
-          case Right(_) => Ok()
-        }
-      case _ => halt(404, "Wrong arguments")
-    }
+    processUnlock(validate)
   }
 
-  get(resetPasswordRoute) {
-    // NOTE: pour reset le password on peut peut etre faire une lock avec un id nouveau à chaque fois
-    // cet id est envoyé dans le mail de reset. Le unlock reset le password.
-    val chronicleID = params get "chronicle" getOrElse ("")
-    val secret = params get "secret" getOrElse ("")
-
-    // println("Confirmed ?" + Utils.isSecretConfirmed(dbAndSettings.db)(secret, chronicleID))
-    //TODO Redirect to a new html page with PassEdition
-  }
 
   post(s"/$basePath/*") {
     session.get(USER_ID) match {
