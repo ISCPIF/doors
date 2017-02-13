@@ -191,7 +191,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         db.query.user.add(name, Password(pass), settings.hashingAlgorithm) chain { uid =>
           settings.emailValidationInstance.start[M] (uid, EmailAddress(email)).map(_ => uid)
         } execute(settings, database) match {
-          case Right(uid) =>  Ok(registrationPending(email = loginEmail).toJson)
+          case Right(uid) =>  Ok(registrationPending(email = loginEmail, userID = Some(uid.id)).toJson)
           case Left(e) => halt(500, (e))
         }
       case _ => halt(500, (s"Invalid register parameters: $loginEmail, $name, $pass. Can't register"))
