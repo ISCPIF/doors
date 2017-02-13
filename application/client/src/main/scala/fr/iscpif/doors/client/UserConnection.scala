@@ -17,7 +17,7 @@ package fr.iscpif.doors.client
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.scalajs.dom
+
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
 import fr.iscpif.scaladget.api.Selector._
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
@@ -29,18 +29,20 @@ import fr.iscpif.scaladget.tools.JsRxTags._
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import rx._
 import bs._
 import fr.iscpif.doors.ext.Data._
 import org.scalajs.dom.raw.HTMLDivElement
+import shared.UnloggedApi
 
 class UserConnection {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
   val connectionFailed: Var[Boolean] = Var(false)
   val errorMessage: Var[String] = Var("")
   val user: Var[Option[UserData]] = Var(None)
+  val isPasswordReset: Var[Boolean] = Var(false)
 
   // SIGN IN
   val emailInput = bs.input("")(
@@ -69,13 +71,17 @@ class UserConnection {
     personalEdition.panel,
     passEdition.panel.render,
     Rx {
-     // passEdition.isStatusOK
+      // passEdition.isStatusOK
       val passE = passEdition.stringError().getOrElse("")
       val personalE = personalEdition.stringErrors()
-      bs.dangerAlerts("", (personalE :+ passE).filterNot{_.isEmpty},
-        passEdition.errorToShow.flatMap{ pOK => personalEdition.isPanelValid.map { perOK =>
-          !(perOK && !pOK)
-        }}
+      bs.dangerAlerts("", (personalE :+ passE).filterNot {
+        _.isEmpty
+      },
+        passEdition.errorToShow.flatMap { pOK =>
+          personalEdition.isPanelValid.map { perOK =>
+            !(perOK && !pOK)
+          }
+        }
       )()
     },
     buttonGroup()(
@@ -83,19 +89,10 @@ class UserConnection {
         personalEdition.checkData.foreach { personalOK =>
           passEdition.isStatusOK.foreach { passOK =>
             if (personalOK && passOK) {
-              //FIXME, updating API_IMPL
-//              Post[UnloggedApi].addUser(
-//                PartialUser(
-//                  UserID(Utils.uuid),
-//                  personalEdition.name
-//                ),
-//                personalEdition.email,
-//                Password(
-//                  Some(passEdition.newPassword)
-//                )
-//              ).call()
-//
-//              registerLinkElement.close
+
+              Post[UnloggedApi].addUser(personalEdition.name, EmailAddress(personalEdition.email),Password(passEdition.newPassword)).call().foreach{x=>
+                registerLinkElement.close
+              }
             }
           }
         }
@@ -104,6 +101,22 @@ class UserConnection {
     )
   ).dropdown("Register", btn_primary, Seq(sheet.marginTop(15), sheet.marginLeft(10)))
 
+  def resetPassword(email: String) = Post[UnloggedApi].resetPassword(email).call().foreach { x =>
+    println("Email sent")
+    isPasswordReset() = false
+  }
+
+  val emailForPasswordDiv = div(
+    Rx {
+      val emailLogin = bs.input("")(placeholder := "Type your email for confirmation").render
+      if (isPasswordReset()) bs.hForm(
+        emailLogin,
+        bs.button("Send", btn_primary, () => {
+          resetPassword(emailLogin.value)
+        }).render
+      ) else div()
+    }
+  )
 
   val render = Rx {
     tags.div(
@@ -116,6 +129,11 @@ class UserConnection {
         tags.form(
           action := connectionRoute,
           method := "post",
+          if (!isPasswordReset()) {
+            tags.a("Reset password", stylesheet.resetPassword, onclick := { ()=>
+              isPasswordReset() = true
+            })
+          } else emailForPasswordDiv,
           tags.p(ms("grouptop"), emailInput),
           tags.p(ms("groupbottom"), passwordInput),
           connectButton

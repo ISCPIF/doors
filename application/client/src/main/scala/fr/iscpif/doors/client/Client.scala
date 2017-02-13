@@ -77,6 +77,11 @@ object Client {
     }
   }
 
+  @JSExport()
+    def resetPassword: Unit = {
+    PassEdition.oldUser.panelWithError
+  }
+
 }
 
 object Post extends autowire.Client[String, upickle.default.Reader, upickle.default.Writer] {

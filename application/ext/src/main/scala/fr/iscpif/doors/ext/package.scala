@@ -23,11 +23,14 @@ package object route {
   val appRoute = "/app"
   val logoutRoute = "/logout"
   val emailValidationRoute = "/emailValidation"
+  val resetPasswordValidationRoute = "/resetPasswordValidation"
   val resetPasswordRoute = "/resetPassword"
+
   val apiAllRoute = "/api/*"
   val apiUserExistsRoute = "/api/userExists"
   val apiUserRoute = "/api/user"
   val apiRegisterRoute = "/api/register"
+  val apiResetPasswordRoute = "/api/resetPassword"
 //
 //  type LdapAttribute = String
 //

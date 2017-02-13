@@ -4,12 +4,15 @@ doors:
     - "./data/doors/home/:/var/doors/.doors/"
   links:
     - mail:mail
-  ports:
-    - 8989:8989
+  # ports:
+  #   - 8989:8989
 mail:
   build: ./mail
   environment:
     - HOST=doors.iscpif.fr
+  dns:
+    # we assume this is the local DNS
+    - 192.168.1.1
   volumes:
     - "./data/mail/spool:/var/spool/postfix"
 https-portal:
@@ -20,8 +23,8 @@ https-portal:
   links:
     - doors
   environment:
-    - "DOMAINS=localhost -> http://doors"
-    #- "CLIENT_MAX_BODY_SIZE=4G" 
-    #- "PRODUCTION=true"     
-
-
+    - "DOMAINS=localhost -> http://doors:8989"
+    #- "CLIENT_MAX_BODY_SIZE=4G"
+    #- "STAGE=production"
+    #- "STAGE=staging"
+    - "STAGE=local"

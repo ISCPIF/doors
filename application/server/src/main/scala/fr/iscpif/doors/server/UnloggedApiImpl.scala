@@ -19,16 +19,24 @@ package fr.iscpif.doors.server
 
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.server.db.Database
+import DSL._
+import dsl._
+import dsl.implicits._
 
 
 class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
 
-  import DSL._
-  import dsl._
-  import dsl.implicits._
-
   // TODO : consult the email DB
-  def isEmailUsed(email: String): ApiRep[Boolean] =  db.query.email.exists(email) execute(settings, database)
+  def isEmailUsed(email: String): ApiRep[Boolean] = db.query.email.exists(email) execute(settings, database)
+
+
+  //TODO: take the first validated email or the primary one
+  def resetPassword(email: String): ApiRep[Boolean] = {
+    settings.resetPassword.start[M](EmailAddress(email)) execute(settings, database) match {
+      case Right(_) => Right(true)
+      case Left(e) => Left(DSLError)
+    }
+  }
 
   //TODO: take the first validated email or the primary one
   //def resetPassword(userID: UserID) = {

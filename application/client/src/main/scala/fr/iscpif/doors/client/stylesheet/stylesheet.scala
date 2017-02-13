@@ -82,4 +82,10 @@ package object stylesheet {
     bottom := 15,
     right := 15
   )
+
+  lazy val resetPassword: ModifierSeq = Seq(
+    pointer,
+    color := "white",
+    sheet.paddingBottom(10)
+  )
 }

@@ -23,7 +23,8 @@ package object server {
 
   case class EmailSender(name: String, address: EmailAddress)
 
-  case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false, sender: Option[EmailSender] = None)
+  case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false,
+                          sender: EmailSender = EmailSender("Doors", EmailAddress("doors@fake.info")))
 
   case class DoorsAPIStatus(status: String, userID: Option[String], email: Option[String], message: String)
 
@@ -33,6 +34,8 @@ package object server {
     def loginOK(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("LoginOK", userID, email, message)
 
     def registrationPending(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("RegistrationPending", userID, email, message)
+
+    def resetPasswordPending(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("ResetPasswordPending", userID, email, message)
 
     def loginAvailable(userID: Option[String] = None, email: Option[String] = None, message: String = "") = DoorsAPIStatus("LoginAvailable", userID, email, message)
   }
