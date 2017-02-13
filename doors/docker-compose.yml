@@ -10,6 +10,9 @@ mail:
   build: ./mail
   environment:
     - HOST=doors.iscpif.fr
+  dns:
+    # we assume this is the local DNS
+    - 192.168.1.1
   volumes:
     - "./data/mail/spool:/var/spool/postfix"
 https-portal:
@@ -23,4 +26,5 @@ https-portal:
     - "DOMAINS=localhost -> http://doors:8989"
     #- "CLIENT_MAX_BODY_SIZE=4G"
     #- "STAGE=production"
+    #- "STAGE=staging"
     - "STAGE=local"
