@@ -20,6 +20,7 @@ package fr.iscpif.doors.server
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.doors.server.db.Database
 
+
 class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
 
   import DSL._
@@ -29,21 +30,15 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
   // TODO : consult the email DB
   def isEmailUsed(email: String): ApiRep[Boolean] =  db.query.email.exists(email) execute(settings, database)
 
-  def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[UserID] = {
-    val addRes = db.query.user.add(name, pass, settings.hashingAlgorithm) execute(settings, database)
-    addRes match {
-      case Right(uid) => {
-        settings.emailValidationInstance.start[M](uid, email)
-        return Right(uid)
-      }
-      case Left(ee) => return Left(DSLError)
-    }
-  }
-
   //TODO: take the first validated email or the primary one
   //def resetPassword(userID: UserID) = {
   //  import DSL.dsl._
   //  dbAndSettings.settings.resetPassword.start[M](userID)
   //}
+
+  override def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[UserID] =
+    db.query.user.add(name, pass, settings.hashingAlgorithm) chain { uid =>
+      settings.emailValidationInstance.start[M] (uid, email).map(_ => uid)
+    } execute(settings, database)
 
 }

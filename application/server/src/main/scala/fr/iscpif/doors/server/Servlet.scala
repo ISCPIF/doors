@@ -180,8 +180,9 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     (loginEmail, name, pass) match {
       case (Some(email), Some(name), Some(pass)) =>
         db.query.user.add(name, Password(pass), settings.hashingAlgorithm) chain { uid =>
-          settings.emailValidationInstance.start[M](uid, EmailAddress(email)) } execute(settings, database) match {
-          case Right(_) =>  Ok(registrationPending(email = loginEmail).toJson)
+          settings.emailValidationInstance.start[M] (uid, EmailAddress(email)).map(_ => uid)
+        } execute(settings, database) match {
+          case Right(uid) =>  Ok(registrationPending(email = loginEmail).toJson)
           case Left(e) => halt(500, (e))
         }
       case _ => halt(500, ("Unknown isEmailUsed error, can't register"))

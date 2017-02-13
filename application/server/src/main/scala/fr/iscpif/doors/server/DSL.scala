@@ -68,8 +68,6 @@ object DSL {
     def chain[M[_], S, U](dbAndSide: T => DBAndSide[S, U, M]) = compose(db, dbAndSide)
   }
 
-
-
   object SideEffect {
     def apply[M[_], T, U](f: T => M[U]) = Kleisli(f)
   }
@@ -99,6 +97,7 @@ object DSL {
 
   case class DBAndSide[T, U, M[_]](db: fr.iscpif.doors.server.db.DB[T], sideEffect: SideEffect[M, T, U]) {
     def chain[V](effect: SideEffect[M, U, V])(implicit monad: Monad[M]) = DBAndSide(db, sideEffect andThen effect)
+    def map[V](f: U => V)(implicit functor: Functor[M]) = DBAndSide(db, sideEffect.map(f))
   }
 
   object Executable {

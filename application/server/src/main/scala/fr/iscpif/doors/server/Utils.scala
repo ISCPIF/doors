@@ -22,6 +22,8 @@ import slick.driver.H2Driver.api._
 //import db._
 //
 
+import cats._
+import cats.implicits._
 import fr.iscpif.doors.ext.route._
 
 /*
