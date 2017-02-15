@@ -248,6 +248,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
       } yield settings.emailValidation(settings.publicURL).unlock[M](secret)
 
     processUnlock(validate)
+    redirect(connectionRoute)
   }
 
 

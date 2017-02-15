@@ -60,9 +60,10 @@ object lock {
       def processDeadline(deadline: Option[Time], lockID: Data.LockID): DB[Either[EmailSettings.UnlockError, Unit]] =
         deadline match {
           case Some(deadline) =>
-            if (deadline.toMillis > System.currentTimeMillis()) DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
-            else query.lock.progress(lockID, Data.LockState.locked).map(e => Right(e))
-          case _ => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
+            if (deadline.toMillis < System.currentTimeMillis()) DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
+            else query.lock.progress(lockID, Data.LockState.unlocked).map(e => Right(e))
+          case _ =>
+            DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
         }
 
       for {
