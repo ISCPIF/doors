@@ -72,7 +72,14 @@ object Utils {
   def connect(settings: Settings, database: Database)(email: String, password: String): ApiRep[db.User] = {
     db.DB { scheme =>
       (for {
-        l <- scheme.locks if (l.state === Data.LockState.unlocked.id)
+
+        // most recent locks:(id, time) ... because we want max(l.time) to filter only the last lock having this l.id
+        lastLocks <- scheme.locks.groupBy(_.id).map{ case (id, aLock) => (id , aLock.map(_.time).max) }
+
+        l <- scheme.locks if (l.state === Data.LockState.unlocked.id
+                               && l.id === lastLocks._1
+                               && l.time === lastLocks._2)
+
         e <- scheme.emails if (e.address === email)
         ul <- scheme.userLocks if (e.lockID === ul.lockID && l.id === e.lockID)
         u <- scheme.users if (u.id === ul.userID && u.password === HashingAlgorithm.default(settings.salt, password))
