@@ -82,7 +82,7 @@ object Utils {
 
         e <- scheme.emails if (e.address === email)
         ul <- scheme.userLocks if (e.lockID === ul.lockID && l.id === e.lockID)
-        u <- scheme.users if (u.id === ul.userID && u.password === HashingAlgorithm.default(settings.salt, password))
+        u <- scheme.users if (u.id === ul.userID && u.password === settings.hashingAlgorithm(password, settings.salt))
       } yield (u)
         ).result.headOption
 
