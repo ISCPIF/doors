@@ -68,11 +68,13 @@ object Utils {
   //  def toUser(pUser: PartialUser, pass: Password, salt: String): User =
   //    User(pUser.id, Password(Hashing(pass.password, salt)), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
   //
+
   def connect(settings: Settings, database: Database)(email: String, password: String): ApiRep[db.User] = {
     db.DB { scheme =>
       (for {
+        l <- scheme.locks if (l.state === Data.LockState.unlocked.id)
         e <- scheme.emails if (e.address === email)
-        ul <- scheme.userLocks if (e.lockID === ul.lockID)
+        ul <- scheme.userLocks if (e.lockID === ul.lockID && l.id === e.lockID)
         u <- scheme.users if (u.id === ul.userID && u.password === HashingAlgorithm.default(settings.salt, password))
       } yield (u)
         ).result.headOption
