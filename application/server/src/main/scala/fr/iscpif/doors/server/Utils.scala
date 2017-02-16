@@ -59,26 +59,18 @@ object Utils {
   implicit def optionOfUserToOptionOfUserData(u: Option[User]): Option[UserData] = u.map{userToUserData}
 
   implicit def seqOfUserToSeqOfUserData(u: Seq[User]): Seq[UserData] = u.map{userToUserData}
-  //
-  //  implicit def throwableToEmailDeliveringError(t: Throwable): EmailDeliveringError =
-  //    EmailDeliveringError(t.getMessage, t.getStackTrace.map {
-  //      _.toString
-  //    })
-  //
-  //  def toUser(pUser: PartialUser, pass: Password, salt: String): User =
-  //    User(pUser.id, Password(Hashing(pass.password, salt)), pUser.name, Hashing.currentMethod, Hashing.currentParametersJson)
-  //
+
 
   def connect(settings: Settings, database: Database)(email: String, password: String): ApiRep[db.User] = {
     db.DB { scheme =>
       (for {
 
-        // most recent locks:(id, time) ... because we want max(l.time) to filter only the last lock having this l.id
-        lastLocks <- scheme.locks.groupBy(_.id).map{ case (id, aLock) => (id , aLock.map(_.time).max) }
+        // most recent locks:(id, increment) ... because we want max(l.increment) to filter only the last lock having this l.id
+        lastLocks <- scheme.locks.groupBy(_.id).map{ case (id, aLock) => (id , aLock.map(_.increment).max) }
 
         l <- scheme.locks if (l.state === Data.LockState.unlocked.id
                                && l.id === lastLocks._1
-                               && l.time === lastLocks._2)
+                               && l.increment === lastLocks._2)
 
         e <- scheme.emails if (e.address === email)
         ul <- scheme.userLocks if (e.lockID === ul.lockID && l.id === e.lockID)
