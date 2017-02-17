@@ -58,6 +58,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   val connection = html("Client().connection();")
 
+  val emailValidatedMessage = html("Client().emailValidatedMessage();")
+
   val application = html(s"Client().application();")
 
   val resetPassword = html(s"Client().resetPassword();")
@@ -216,6 +218,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   }
 
 
+  // FIXME Currently processUnlock Ok() returns a status code but other cases break (they send the response immediately)
   private def processUnlock(validate: Option[DBAndSide[Either[UnlockError, Unit], Unit, M]]): ActionResult = validate match {
     case Some(validate) =>
       validate.execute(settings, database) match {
@@ -244,15 +247,16 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   }
 
-
   get(emailValidationRoute) {
     val validate =
       for {
         secret <- params get "secret"
       } yield settings.emailValidation(settings.publicURL).unlock[M](secret)
 
-    processUnlock(validate)
-    redirect(connectionRoute)
+    processUnlock(validate).status.code match {
+      case 200=> emailValidatedMessage
+      case _=> errorPage
+    }
   }
 
 

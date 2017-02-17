@@ -58,6 +58,11 @@ object Client {
   }
 
   @JSExport
+  def emailValidatedMessage(): Unit = {
+    new MessageDisplay("Your email was successfully validated !").render
+  }
+
+  @JSExport
   def application(): Unit = {
     Post[Api].loggedUser.call().foreach {
       _ match {
