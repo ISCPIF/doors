@@ -1,5 +1,5 @@
 body {
-	background: -webkit-linear-gradient(top, #35537a 0%,#1d2d44 100%);
+	background: rgba(0, 0, 0, 0) linear-gradient(#35537a 100%, #1d2d44 50%) repeat scroll 0 0;
 }
 
 
