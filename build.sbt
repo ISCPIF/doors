@@ -21,7 +21,7 @@ val scalatraVersion = "2.4.+"
 val jettyVersion = "9.4.0.v20161208"
 val json4sVersion = "3.3.0"
 val httpComponentsVersion = "4.5.1"
-val scalatagsVersion = "0.5.4"
+val scalatagsVersion = "0.6.2"
 val autowireVersion = "0.2.5"
 val upickleVersion = "0.4.1"
 val apacheDirectoryVersion = "1.0.0-M33"
@@ -71,8 +71,8 @@ lazy val client = Project(
     "com.lihaoyi" %%% "upickle" % upickleVersion,
     "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
     "com.lihaoyi" %%% "scalarx" % "0.3.1",
-    "fr.iscpif" %%% "scaladget" % "0.9.0-SNAPSHOT",
-    "org.scala-js" %%% "scalajs-dom" % "0.9.0",
+    "fr.iscpif" %%% "scaladget" % "0.9.1-SNAPSHOT",
+    "org.scala-js" %%% "scalajs-dom" % "0.9.1",
     "org.json4s" %% "json4s-jackson" % json4sVersion
   )
   ) dependsOn(shared, ext) enablePlugins (ScalaJSPlugin)
