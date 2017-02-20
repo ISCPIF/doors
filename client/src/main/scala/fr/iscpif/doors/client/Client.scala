@@ -37,7 +37,7 @@ import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 
 @JSExport("Client")
-object Client {
+object  Client {
 
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
 
@@ -94,9 +94,10 @@ object Post extends autowire.Client[String, upickle.default.Reader, upickle.defa
   override def doCall(req: Request): Future[String] = {
     val url = req.path.mkString("/")
     val host = window.document.location.host
+    val protocol = window.document.location.protocol
 
     ext.Ajax.post(
-      url = s"http://$host/$url",
+      url = s"$protocol://$host/$url",
       data = upickle.default.write(req.args)
     ).map {
       _.responseText
