@@ -107,11 +107,17 @@ lazy val server = Project(
       "fr.iscpif.freedsl" %% "io" % freedslVersion,
       "com.github.scopt" %% "scopt" % "3.5.0"
     )
-  )) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
+  ),
+  assemble := {
+    val js = (fastOptJS in client in Compile).value
+    val res = (resourceDirectory in client in Compile).value
+    val cd = (classDirectory in Compile).value
+    copy(js, res, cd / "webapp").data
+  }
+) dependsOn(shared, ext, hasher) enablePlugins (JettyPlugin)
 
 
 lazy val assemble = taskKey[File]("assemble")
-lazy val application = taskKey[File]("application")
 
 lazy val lab = Project(
   "lab",

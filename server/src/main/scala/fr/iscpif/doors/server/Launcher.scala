@@ -46,7 +46,6 @@ object Launcher {
 
     val context = new WebAppContext()
 
-
     val webapp = getClass.getClassLoader.getResource("webapp").toExternalForm
 
     context.setAttribute(arguments, Arguments(settings, database))
@@ -74,7 +73,6 @@ class GUIBootstrap extends LifeCycle {
 
   override def init(context: javax.servlet.ServletContext) {
     val args = context.get(Launcher.arguments).get.asInstanceOf[Launcher.Arguments]
-    println("ARG" + args)
     context mount(new Servlet(args.settings, args.database), "/*")
   }
 }
