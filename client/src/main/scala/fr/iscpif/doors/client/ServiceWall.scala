@@ -37,13 +37,14 @@ import shared.Api
 
 class ServiceWall(user: UserData) {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
-  val atLeastOneRight = Seq()//FIXME, updating API_IMPL //Post[Api].atLeastOneAdminRight.call()
+  val atLeastOneRight = Seq()
+  //FIXME, updating API_IMPL //Post[Api].atLeastOneAdminRight.call()
   val isAdmin = Var(false)
 
   //FIXME, updating API_IMPL
-//  atLeastOneRight.foreach { cap =>
-//    isAdmin() = cap.authorized
-//  }
+  //  atLeastOneRight.foreach { cap =>
+  //    isAdmin() = cap.authorized
+  //  }
 
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
@@ -68,11 +69,12 @@ class ServiceWall(user: UserData) {
       tags.div(ms("centerpanel"))(
         div(doorsheet.user)(
           s"${user.name}",
-          adminEditionPanel.modalDialog.trigger(
+          adminEditionPanel.modalDialog.show /*.trigger(
             tags.span(glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30) +++ pointer))
-        ),
-        BootstrapTags.thumbs(services).render,
-        tags.img(src := Resources.isc, logoISC)
+        )*/ ,
+          BootstrapTags.thumbs(services).render,
+          tags.img(src := Resources.isc, logoISC)
+        )
       )
     ).render
 
