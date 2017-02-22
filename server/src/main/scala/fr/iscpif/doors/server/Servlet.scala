@@ -190,13 +190,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
     (loginEmail, name, pass) match {
       case (Some(email), Some(name), Some(pass)) =>
-        db.query.user.add(
-          name,
-          Password(settings.hashingAlgorithm(pass, settings.salt)),
-          settings.hashingAlgorithm
-        ) chain { uid =>
-          settings.emailValidationInstance.start[M] (uid, EmailAddress(email)).map(_ => uid)
-        } execute(settings, database) match {
+        unloggedAPI.addUser(email, pass, name) match {
           case Right(uid) =>  Ok(registrationPending(email = loginEmail, userID = Some(uid.id)).toJson)
           case Left(e) => halt(500, (e))
         }

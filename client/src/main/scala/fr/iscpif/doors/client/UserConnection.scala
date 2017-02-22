@@ -90,7 +90,7 @@ class UserConnection {
           passEdition.isStatusOK.foreach { passOK =>
             if (personalOK && passOK) {
 
-              Post[UnloggedApi].addUser(personalEdition.name, EmailAddress(personalEdition.email),Password(passEdition.newPassword)).call().foreach{x=>
+              Post[UnloggedApi].addUser(personalEdition.name, personalEdition.email,passEdition.newPassword).call().foreach{x=>
                 registerLinkElement.close
               }
             }

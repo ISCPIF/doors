@@ -44,9 +44,13 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
   //  dbAndSettings.settings.resetPassword.start[M](userID)
   //}
 
-  override def addUser(name: String, email: EmailAddress, pass: Password): ApiRep[UserID] =
-    db.query.user.add(name, pass, settings.hashingAlgorithm) chain { uid =>
-      settings.emailValidationInstance.start[M] (uid, email).map(_ => uid)
-    } execute(settings, database)
+  override def addUser(name: String, email: String, pass: String): ApiRep[UserID] =
+    db.query.user.add(
+      name,
+      Password(settings.hashingAlgorithm(pass, settings.salt)),
+      settings.hashingAlgorithm
+    ) chain { uid =>
+        settings.emailValidationInstance.start[M] (uid, EmailAddress(email)).map(_ => uid)
+      } execute(settings, database)
 
 }
