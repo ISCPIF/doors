@@ -97,7 +97,7 @@ object Post extends autowire.Client[String, upickle.default.Reader, upickle.defa
     val protocol = window.document.location.protocol
 
     ext.Ajax.post(
-      url = s"$protocol://$host/$url",
+      url = s"$protocol//$host/$url",
       data = upickle.default.write(req.args)
     ).map {
       _.responseText
