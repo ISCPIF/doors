@@ -178,9 +178,13 @@ object Utils {
   //
   //
 
-  def secretLink(publicURL: String, secret: String) = {
-    val secretURL = s"${publicURL}$emailValidationRoute?secret=$secret"
+
+  def secretLink(publicURL: String, targetRoute:String, secret: String) = {
+    val secretURL = s"${publicURL}${targetRoute}?secret=$secret"
     s"<a href=${secretURL}>${secretURL}</a>"
+
+    // exemple: https://doors.iscpif.fr/resetPassword?secret=ee1871f3
+    //                publicURL         targetRoute           secret
   }
 
   def uuid = java.util.UUID.randomUUID.toString

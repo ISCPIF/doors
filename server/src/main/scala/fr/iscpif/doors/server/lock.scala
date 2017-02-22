@@ -18,6 +18,7 @@ package fr.iscpif.doors.server
  */
 
 import fr.iscpif.doors.ext.Data
+import fr.iscpif.doors.ext.route
 import fr.iscpif.doors.server.db._
 
 import scala.util._
@@ -75,10 +76,11 @@ object lock {
 
   object Email {
     def send[M[_]](publicURL: String,
+                   targetRoute: String,
                    emailAddress: Data.EmailAddress,
                    generateEmail: EmailSettings.Info => EmailSettings.Email,
                    secret: String)(implicit mailM: DSL.Email[M]) = {
-      val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, secret)))
+      val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, targetRoute, secret)))
       mailM.send(emailAddress.value, emailContent.subject, emailContent.content)
     }
 
@@ -142,7 +144,7 @@ object lock {
         _ <- Email.insert(uid, emailAddress, lockId)
         secret <- Secret.add(emailAddress, lockId, confirmationDelay)
       } yield secret
-    } effect { secret => Email.send(publicURL, emailAddress, generateEmail, secret) }
+    } effect { secret => Email.send(publicURL, route.emailValidationRoute, emailAddress, generateEmail, secret) }
 
     def unlock[M[_] : Monad : freedsl.io.IO](secret: String) = Secret.unlock[M](lockId)(secret)
   }
@@ -157,7 +159,7 @@ object lock {
         secret <- Secret.add(LockID(Utils.uuid), (confirmationDelay + Milliseconds(Utils.now)))
       } yield secret
     } effect { secret =>
-      Email.send(publicURL, EmailAddress(emailAddress.value), generateEmail, secret)
+      Email.send(publicURL, route.resetPasswordRoute, EmailAddress(emailAddress.value), generateEmail, secret)
     }
 
 
