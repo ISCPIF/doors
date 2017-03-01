@@ -93,6 +93,7 @@ class UserConnection {
               Post[UnloggedApi].addUser(personalEdition.name, personalEdition.email,passEdition.newPassword).call().foreach{x=>
                 registerLinkElement.close
               }
+              new MessageDisplay("We have sent you a validation email, please check your mailbox").render
             }
           }
         }
