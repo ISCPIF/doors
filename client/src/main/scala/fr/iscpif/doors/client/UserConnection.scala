@@ -104,6 +104,7 @@ class UserConnection {
 
   def resetPassword(email: String) = Post[UnloggedApi].resetPassword(email).call().foreach { x =>
     println("Email sent")
+    isPasswordReset() = false
   }
 
   val emailForPasswordInput = bs.input("")(placeholder := "Type your email for confirmation").render
