@@ -50,11 +50,7 @@ object  Client {
 
   @JSExport
   def connection(): Unit = {
-    userConnection.render.map { r =>
-      bs.withBootstrapNative {
-        r
-      }
-    }
+    bs.withBootstrapNative(userConnection.render)
   }
 
   @JSExport

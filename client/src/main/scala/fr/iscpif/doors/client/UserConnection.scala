@@ -104,43 +104,50 @@ class UserConnection {
 
   def resetPassword(email: String) = Post[UnloggedApi].resetPassword(email).call().foreach { x =>
     println("Email sent")
-    isPasswordReset() = false
   }
 
+  val emailForPasswordInput = bs.input("")(placeholder := "Type your email for confirmation").render
+
   val emailForPasswordDiv = div(
-    Rx {
-      val emailLogin = bs.input("")(placeholder := "Type your email for confirmation").render
-      if (isPasswordReset()) bs.hForm(
-        emailLogin,
-        bs.button("Send", btn_primary, () => {
-          resetPassword(emailLogin.value)
-        }).render
-      ) else div()
-    }
+    bs.hForm(
+      emailForPasswordInput,
+      bs.button("Send", btn_primary, () => {
+        resetPassword(emailForPasswordInput.value)
+        // when email sent, GUI can already return to neutral status
+        isPasswordReset() = false
+        emailForPasswordInput.value = ""
+      }).render
+    )
   )
 
-  val render = Rx {
+  val render = {
     tags.div(
-      registerLinkElement.render,
-      div(ms("centerPage"))(
-        connectionFailed() match {
-          case true => div(doorsheet.connectionFailed)(errorMessage())
-          case _ => tags.div
-        },
-        tags.form(
-          action := connectionRoute,
-          method := "post",
-          if (!isPasswordReset()) {
-            tags.a("Reset password", stylesheet.resetPassword, onclick := { ()=>
-              isPasswordReset() = true
-            })
-          } else emailForPasswordDiv,
-          tags.p(ms("grouptop"), emailInput),
-          tags.p(ms("groupbottom"), passwordInput),
-          connectButton
+      Rx {
+        tags.div(
+          registerLinkElement.render
+          ,
+          div(ms("centerPage"))(
+            connectionFailed() match {
+              case true => div(doorsheet.connectionFailed)(errorMessage())
+              case _ => tags.div
+            },
+            tags.form(
+              action := connectionRoute,
+              method := "post",
+              if (!isPasswordReset()) {
+                tags.a("Reset password", stylesheet.resetPassword, onclick := { () =>
+                  isPasswordReset() = true
+                })
+              } else emailForPasswordDiv,
+              tags.p(ms("grouptop"), emailInput),
+              tags.p(ms("groupbottom"), passwordInput),
+              connectButton
+            ).render
+          )
+          ,
+          tags.img(src := "img/logoISC.png", logoISC)
         ).render
-      ),
-      tags.img(src := "img/logoISC.png", logoISC)
+      }
     ).render
   }
 }
