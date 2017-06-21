@@ -18,6 +18,13 @@ object query {
 
   object lock {
 
+    def getFromSecretStr(secret: String): Unit = DB { scheme =>
+      for {
+        s <- scheme.secrets.filter(s => s.secret === secret)
+        l <- scheme.locks.filter(l => l.id === s.lockID)
+      } yield l.id
+    }
+
     def exists(email: Data.EmailAddress, lockId: Data.LockID) = DB { scheme =>
       (scheme.emails.filter(e => e.address === email.value && e.lockID === lockId.id).size > 0)
     }
@@ -31,6 +38,7 @@ object query {
     }
 
     def progress(lockId: Data.LockID, statusId: Data.StateID) = DB { scheme =>
+      println("query: progress for lockID:" + lockId + "==> updated state:" + statusId)
       scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
     }
 

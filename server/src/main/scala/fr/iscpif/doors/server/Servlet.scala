@@ -230,31 +230,25 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   // returning point for users who asked to reset their pass
   get(resetPasswordRoute) {
-
-    // user input
+    // user input form
     askNewPassword
-
-    }
-
+  }
 
   // same route: POST reception after user added his input
   post(resetPasswordRoute) {
 
-    // idéalement
-    // validate(new pass + UID + secret) => unlock => progress state =: State(unlocked)
-
-    // ancienne signature
+    // scénario
+    // validate => unlock(new pass + secret) => progress state => State(unlocked)
     val validate =
       for {
         secret <- params get "secret"
-      } yield settings.resetPassword.unlock[M](secret)
+        newPass <- params get "newpass"
+      } yield settings.resetPassword.unlock[M](secret, newPass)
 
     processUnlock(validate).status.code match {
       case 200=> Ok()
       case _=> errorPage
     }
-
-
   }
 
 
