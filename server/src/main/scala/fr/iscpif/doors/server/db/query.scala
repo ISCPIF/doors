@@ -3,7 +3,7 @@ package fr.iscpif.doors.server.db
 import java.util.UUID
 
 import fr.iscpif.doors.ext.Data
-import fr.iscpif.doors.ext.Data.{LockID, UserID}
+import fr.iscpif.doors.ext.Data.{ApiRep, LockID, UserID}
 import fr.iscpif.doors.server.{HashingAlgorithm, Settings, Utils, db}
 import squants.time.TimeConversions._
 import fr.iscpif.doors.server.DSL._
@@ -160,6 +160,27 @@ object query {
 
       adminUsers.contains(uid.id)
     }
+
+
+    // from email to owner
+    def fromEmail(email: String)(settings: Settings, database: db.Database): ApiRep[User] = {
+      db.DB { scheme =>
+        (for {
+          e <- scheme.emails if (e.address === email)
+
+          // most recent locks:(id, increment) ... because we want max(l.increment) to filter only the last lock having this l.id
+          lastLocks <- scheme.locks.groupBy(_.id).map{ case (id, aLock) => (id , aLock.map(_.increment).max) }
+          l <- scheme.locks if (l.state === Data.LockState.unlocked.id
+                                && l.id === lastLocks._1
+                                && l.increment === lastLocks._2
+                                && l.id === e.lockID)
+
+          ul <- scheme.userLocks if (ul.lockID === l.id)
+          u <- scheme.users if (u.id === ul.userID)
+        } yield u).result.headOption
+      }.execute(settings, database)
+    }
+
 
     //  def resetPasswordQueries(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
     //    val cID = chronicleID.getOrElse(LockID(uuid))

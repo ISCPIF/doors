@@ -22,6 +22,7 @@ import fr.iscpif.doors.server.db.Database
 import DSL._
 import dsl._
 import dsl.implicits._
+import fr.iscpif.doors.server.db.query.user
 
 
 class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
@@ -30,10 +31,15 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
 
 
   def resetPasswordSend(email: String): ApiRep[Boolean] = {
-      settings.resetPassword.start[M](EmailAddress(email)) execute(settings, database) match {
-        case Right(_) => Right(true)
-        case Left(e) => Left(DSLError)
-      }
+    user.fromEmail(email)(settings, database) match {
+      case Left(e) => Left(DSLError)
+      case Right(user) =>
+        // start the quest (create lock + secret) and send email
+        settings.resetPassword.start[M](user.id, EmailAddress(email)) execute(settings, database) match {
+          case Left(e) => Left(DSLError)
+          case Right(_) => Right(true)
+        }
+    }
   }
 
   //def resetPassword(): ApiRep[Boolean] = {}

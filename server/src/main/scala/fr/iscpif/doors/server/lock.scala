@@ -154,9 +154,13 @@ object lock {
                            confirmationDelay: Time = Days(2),
                            generateEmail: EmailSettings.Info => EmailSettings.Email = EmailSettings.resetPassword)(publicURL: String) {
 
-    def start[M[_] : Monad](emailAddress: EmailAddress)(implicit mailM: DSL.Email[M]) = {
+    def start[M[_] : Monad](uid: Data.UserID, emailAddress: EmailAddress)(implicit mailM: DSL.Email[M]) = {
       for {
-        secret <- Secret.add(LockID(Utils.uuid), (confirmationDelay + Milliseconds(Utils.now)))
+        // reference the new lock in LOCKS and USER_LOCKS (and we preserve received lockId as argument)
+        lock <- query.lock.create(uid, lockId(emailAddress))
+        secret <- Secret.add(emailAddress, lockId, confirmationDelay)
+        // NB: 
+
       } yield secret
     } effect { secret =>
       Email.send(publicURL, route.resetPasswordRoute, EmailAddress(emailAddress.value), generateEmail, secret)
