@@ -7,6 +7,7 @@ import fr.iscpif.scaladget.stylesheet.{all => sheet}
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
+import Client.panelInBody
 
 import org.scalajs.dom.html.Element
 
@@ -30,18 +31,11 @@ import org.scalajs.dom.html.Element
 
 class MessageDisplay(aMessage: String) {
 
-  // can add this to BootstrapTags
-  def panelWithBody(heading: String, content: Element) =
-    div(sheet.panel +++ panelDefault +++ Seq(boxShadow := "0 6px 12px rgba(0,0,0,.175)"))(
-      div(panelHeading +++ Seq(fontWeight := "bold"))(heading),
-      div(panelBody)(content)
-    )
-
   def render = {
     bs.withBootstrapNative(
       tags.div()(
         tags.div(wall +++ Seq(width := "400px", margin := "auto"))(
-          panelWithBody(
+          panelInBody(
             "Information",
             tags.div(
               tags.p(

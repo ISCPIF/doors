@@ -26,23 +26,18 @@ import dsl.implicits._
 
 class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
 
-  // TODO : consult the email DB
   def isEmailUsed(email: String): ApiRep[Boolean] = db.query.email.exists(email) execute(settings, database)
 
 
-  //TODO: take the first validated email or the primary one
-  def resetPassword(email: String): ApiRep[Boolean] = {
-    settings.resetPassword.start[M](EmailAddress(email)) execute(settings, database) match {
-      case Right(_) => Right(true)
-      case Left(e) => Left(DSLError)
-    }
+  def resetPasswordSend(email: String): ApiRep[Boolean] = {
+      settings.resetPassword.start[M](EmailAddress(email)) execute(settings, database) match {
+        case Right(_) => Right(true)
+        case Left(e) => Left(DSLError)
+      }
   }
 
-  //TODO: take the first validated email or the primary one
-  //def resetPassword(userID: UserID) = {
-  //  import DSL.dsl._
-  //  dbAndSettings.settings.resetPassword.start[M](userID)
-  //}
+  //def resetPassword(): ApiRep[Boolean] = {}
+  // => moved to Servlet
 
   override def addUser(name: String, email: String, pass: String): ApiRep[UserID] =
     db.query.user.add(

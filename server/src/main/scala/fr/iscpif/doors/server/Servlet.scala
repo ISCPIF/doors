@@ -62,7 +62,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   val application = html(s"Client().application();")
 
-  val resetPassword = html(s"Client().resetPassword();")
+  val askNewPassword = html(s"Client().askNewPassword();")
 
   //FIXME with a real page
   val errorPage = tags.html(
@@ -228,18 +228,35 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   }
 
 
+  // returning point for users who asked to reset their pass
   get(resetPasswordRoute) {
+
+    // user input
+    askNewPassword
+
+    }
+
+
+  // same route: POST reception after user added his input
+  post(resetPasswordRoute) {
+
+    // idéalement
+    // validate(new pass + UID + secret) => unlock => progress state =: State(unlocked)
+
+    // ancienne signature
     val validate =
       for {
         secret <- params get "secret"
       } yield settings.resetPassword.unlock[M](secret)
 
     processUnlock(validate).status.code match {
-      case 200=> resetPassword
+      case 200=> Ok()
       case _=> errorPage
     }
 
+
   }
+
 
   get(emailValidationRoute) {
     val validate =

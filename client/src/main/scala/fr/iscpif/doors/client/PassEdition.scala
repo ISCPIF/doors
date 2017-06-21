@@ -20,7 +20,7 @@ import scala.concurrent.Future
 
 object PassEdition {
   // default should be 8
-  val PASS_MIN_CHAR = 3
+  val PASS_MIN_CHAR = 8
 
   def newUser = new PassEdition(new NewUserPasswordForm)
 

@@ -102,7 +102,7 @@ class UserConnection {
     )
   ).dropdown("Register", btn_primary, Seq(sheet.marginTop(15), sheet.marginLeft(10)))
 
-  def resetPassword(email: String) = Post[UnloggedApi].resetPassword(email).call().foreach { x =>
+  def resetPasswordStartBox(email: String) = Post[UnloggedApi].resetPasswordSend(email).call().foreach { x =>
     println("Email sent")
   }
 
@@ -112,7 +112,7 @@ class UserConnection {
     bs.hForm(
       emailForPasswordInput,
       bs.button("Send", btn_primary, () => {
-        resetPassword(emailForPasswordInput.value)
+        resetPasswordStartBox(emailForPasswordInput.value)
         // when email sent, GUI can already return to neutral status
         isPasswordReset() = false
         emailForPasswordInput.value = ""
@@ -135,7 +135,7 @@ class UserConnection {
               action := connectionRoute,
               method := "post",
               if (!isPasswordReset()) {
-                tags.a("Reset password", stylesheet.resetPassword, onclick := { () =>
+                tags.a("Reset password", stylesheet.resetPasswordStartBox, onclick := { () =>
                   isPasswordReset() = true
                 })
               } else emailForPasswordDiv,
