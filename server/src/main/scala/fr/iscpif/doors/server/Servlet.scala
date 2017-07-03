@@ -32,7 +32,8 @@ import Utils._
 import fr.iscpif.doors.server.DoorsAPIStatus._
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import db.User
+import db.{User, query}
+import fr.iscpif.doors.server.db.query.user
 import fr.iscpif.doors.server.lock.EmailSettings.UnlockError
 import freedsl.io.IO.IOError
 
@@ -237,18 +238,37 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   // same route: POST reception after user added his input
   post(resetPasswordRoute) {
 
-    // scénario
-    // validate => unlock(new pass + secret) => progress state => State(unlocked)
-    val validate =
-      for {
-        secret <- params get "secret"
-        newPass <- params get "newpass"
-      } yield settings.resetPassword.unlock[M](secret, newPass)
+    val secret = params get "secret"
+    val npass = params get "newpass"
 
-    processUnlock(validate).status.code match {
-      case 200=> Ok()
-      case _=> errorPage
+    (secret, npass) match {
+      case (Some(sec), Some(nps)) => {
+        db.query.user.fromSecret(sec)(settings, database) match {
+          case Left(e) => Left(e)
+          case Right(user: User) => {
+            // scénario
+            // validate => unlock(user, secret) => progress state => State(unlocked) => changePass(newPass)
+            val validate = settings.resetPassword.unlock[M](user, sec)
+            processUnlock(Option(validate)).status.code match {
+              case 200 => {
+                val newPass = Password(settings.hashingAlgorithm(nps, settings.salt))
+                query.user.changePass(
+                  user,
+                  newPass.value,
+                  settings.hashingAlgorithm.name,
+                  settings.hashingAlgorithm.toJson
+                )(settings, database)
+                Ok()
+              }
+              case _ => errorPage
+            }
+          }
+          case _ => println("ERROR: user is something else")
+        }
+      }
+      case _ => errorPage
     }
+
   }
 
 

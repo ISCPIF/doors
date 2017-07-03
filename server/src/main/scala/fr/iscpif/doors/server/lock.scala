@@ -25,11 +25,12 @@ import scala.util._
 import cats._
 import cats.data._
 import cats.implicits._
-import fr.iscpif.doors.ext.Data.{DSLError, EmailAddress, LockID, UserID}
+import fr.iscpif.doors.ext.Data._
 import db.dbIOActionIsMonad
 import squants.time._
 import squants.time.TimeConversions._
 import DSL._
+import eu.timepit.refined.boolean.True
 
 object lock {
 
@@ -75,49 +76,38 @@ object lock {
 
 
 
+    // when we have a secret with a lock different than the email validation lock
+    def unlockb[M[_] : Monad](lockId: Data.EmailAddress => Data.LockID)(user: User, secret: String)(implicit io: freedsl.io.IO[M]) = {
 
+      //        1 test secret (find -> test deadline)
+      def processSecretEtc(secret: String, user: User) = {
+        for {
+          lids  <- query.lock.getFromSecretStr(secret)
+          ddln <- query.secret.deadline(secret, LockID(lids))
+          r    <- processDeadlineAndUnlock(ddln, lids, user)
+        } yield r
+      }
 
-
-
-      // for password locks where we only have the secret
-      def unlock[M[_] : Monad](secret: String)(implicit io: freedsl.io.IO[M]) = {
-
-        println("UNLOCK WITH SECRET" + secret)
-
-        def processSecret(secret: String) = {
-            println("UNLOCK processSecret for secret:" + secret)
-            for {
-              lockId <- query.lock.getFromSecretStr(secret)
-              deadline <- query.secret.deadline(secret, lockId)
-              r <- processDeadline(deadline = deadline, lockID = lockId)
-            } yield r
+      //  chain 2 update lock state query.lock.progress(lockID, Data.LockState.unlocked).map(e => Right(e))
+      def processDeadlineAndUnlock(deadline: Option[Time], lockID: String, user: User): DB[Either[EmailSettings.UnlockError, Unit]] =
+        deadline match {
+          case Some(deadline) =>
+            if (deadline.toMillis < System.currentTimeMillis()) {
+              DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
+            }
+            else {
+              query.lock.progress(LockID(lockID), Data.LockState.unlocked).map(e => Right(e))
+            }
+          case _ =>
+            DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
         }
 
-        def processDeadline(deadline: Option[Time], lockID: Data.LockID): DB[Either[EmailSettings.UnlockError, Unit]] =
-          deadline match {
-            case Some(deadline) =>
-              println("UNLOCK processDeadline for lockID:" + lockID)
-              if (deadline.toMillis < System.currentTimeMillis()) DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
-              else query.lock.progress(lockID, Data.LockState.unlocked).map(e => Right(e))
-            case _ =>
-              DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
-          }
-
-        // now let's do it
-        for {
-          res <- processSecret(secret)
-        } yield res
-      } effect { e => io.exceptionOrResult(e) }
-
-
-
-
-
-
-
-
-
-
+      for {
+        res <- processSecretEtc(secret, user)
+      } yield res
+    } effect { e => {
+      io.exceptionOrResult(e)
+    } }
   }
 
   object Email {
@@ -205,7 +195,6 @@ object lock {
         // reference the new lock in LOCKS and USER_LOCKS (and we preserve received lockId as argument)
         lock <- query.lock.create(uid, lockId(emailAddress))
         secret <- Secret.add(emailAddress, lockId, confirmationDelay)
-        // NB: 
 
       } yield secret
     } effect { secret =>
@@ -215,15 +204,19 @@ object lock {
 
     // def unlock[M[_] : Monad : freedsl.io.IO](secret: String) = Secret.unlock[M](lockId)(secret)
 
-    def unlock[M[_] : Monad : freedsl.io.IO](secret: String, newPass: String) = {
+    def unlock[M[_] : Monad : freedsl.io.IO](usr: User, secret: String) = {
 
-      println ("lock.ResetPassword.unlock method, sec:" + secret)
+      println ("PASS: lock.ResetPassword.unlock method, sec:" + secret)
 
-      // ? essayer d'une autre signature pour faire l'action DB
-      Secret.unlock[M](secret)
-    } effect {
-      // £TODO ici enregistrer le pass (si le lockid existe, le secret était bon)
+      // db executes 3 queries
+      // ------------------
+      //        1 test secret
+      //  chain 2 ifok update lock state
+      //  chain 3      update pass
+      Secret.unlockb[M](lockId)(usr, secret)
     }
+
+
 
   }
 

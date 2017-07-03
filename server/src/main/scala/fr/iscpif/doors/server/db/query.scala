@@ -18,13 +18,6 @@ object query {
 
   object lock {
 
-    def getFromSecretStr(secret: String): Unit = DB { scheme =>
-      for {
-        s <- scheme.secrets.filter(s => s.secret === secret)
-        l <- scheme.locks.filter(l => l.id === s.lockID)
-      } yield l.id
-    }
-
     def exists(email: Data.EmailAddress, lockId: Data.LockID) = DB { scheme =>
       (scheme.emails.filter(e => e.address === email.value && e.lockID === lockId.id).size > 0)
     }
@@ -37,8 +30,15 @@ object query {
       } yield lockId
     }
 
+    def getFromSecretStr(secret: String) = DB { scheme =>
+      (for {
+        s <- scheme.secrets.filter(s => s.secret === secret)
+        l <- scheme.locks.filter(l => l.id === s.lockID)
+      } yield l.id).result.head
+    }
+
     def progress(lockId: Data.LockID, statusId: Data.StateID) = DB { scheme =>
-      println("query: progress for lockID:" + lockId + "==> updated state:" + statusId)
+      println("LOCK progress for lockID:" + lockId.id + " => " + statusId)
       scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
     }
 
@@ -85,12 +85,34 @@ object query {
         }
       }
 
+//    // returns most recent email of user connected to the lock connected to the secret
+//    def getFromSecretStr(secret: String)(settings: Settings, database: db.Database): DB[String] =  {
+//      db.DB { scheme =>
+//      (for {
+//
+    //
+    //
+    //    s <- scheme.secrets.filter(s => s.secret === secret)
+//        secl <- scheme.locks.filter(l => l.id === s.lockID) // the lock for the secret
+//        ul <- scheme.userLocks.filter(ul => ul.lockID === secl.id)
+//
+
+
+//        // most recent locks for the email to filter only the last "validate" lock
+//        lastLocks <- scheme.locks.groupBy(_.id).map { case (id, aLock) => (id, aLock.map(_.increment).max) }
+//        emll <- scheme.locks if (emll.state === Data.LockState.unlocked.id
+//        && emll.id === lastLocks._1
+//        && emll.increment === lastLocks._2)
+//
+//        e <- scheme.emails.filter(e => emll.id === e.lockID)
+//      } yield e.address).result.headOption
+//    }.execute(settings, database)
+//  }
 
   }
 
   object secret {
 
-    // FIXME side effect
     def add(lockID: LockID, secret: String, deadline: Long): DB[String] = DB { scheme =>
       for {
         _ <- scheme.secrets += db.Secret(lockID, secret, deadline)
@@ -150,13 +172,11 @@ object query {
       } yield user.id
     }
 
-    def get(userID: UserID) = {
-      for {
-        user <- DB {
-          _.users.filter(_.id === userID.id)
-        }
-      } yield user
-    }
+    def get(userID: UserID)(settings: Settings, database: db.Database) = DB { scheme =>
+      (for {
+        u <- scheme.users if u.id === userID.id
+      } yield u).result
+    }.execute(settings, database)
 
     def isAdmin(uid: UserID)(settings: Settings, database: db.Database): Boolean = {
       def adminUsers: Seq[String] = DB { scheme =>
@@ -167,6 +187,19 @@ object query {
       }.execute(settings, database)
 
       adminUsers.contains(uid.id)
+    }
+
+
+    // returns user connected to the lock connected to the secret
+    def fromSecret(scrt: String)(settings: Settings, database: db.Database): Either[freedsl.dsl.Error,User] = {
+        db.DB { scheme =>
+          (for {
+            s <- scheme.secrets.filter(s => s.secret === scrt)
+            secl <- scheme.locks.filter(l => l.id === s.lockID) // the lock for the secret
+            ul <- scheme.userLocks.filter(ul => ul.lockID === secl.id)
+            u <- scheme.users.filter(u => u.id === ul.userID)
+          } yield u).result.head
+      }.execute(settings, database)
     }
 
 
@@ -188,6 +221,16 @@ object query {
         } yield u).result.headOption
       }.execute(settings, database)
     }
+
+    def changePass(usr: User, newValue: String, newHName: String, newHJson: String)(settings: Settings, database: db.Database) = {
+      db.DB { scheme =>
+        scheme.users.filter(_.id === usr.id.id).map(
+          u => (u.password, u.hashAlgorithm, u.hashParameters)
+        ).update(newValue, newHName, newHJson)
+      }.execute(settings, database)
+    }
+
+
 
 
     //  def resetPasswordQueries(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
