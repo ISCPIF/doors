@@ -43,7 +43,7 @@ println("SEND EMAIL " + emailSubject)
 
     Try {
       val message = new MimeMessage(session)
-      message.setFrom(new InternetAddress(smtp.sender.address.value, smtp.sender.name))
+      message.setFrom(new InternetAddress(smtp.sender, "Doors"))
       message.setRecipients(Message.RecipientType.TO, to)
       message.setSubject(emailSubject)
       message.setText(content, "utf-8", "html")

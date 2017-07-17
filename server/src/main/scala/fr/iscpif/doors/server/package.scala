@@ -24,7 +24,7 @@ package object server {
   case class EmailSender(name: String, address: EmailAddress)
 
   case class SMTPSettings(host: String, port: Int, login: String, pass: String, enableTTLS: Boolean = false, auth: Boolean = false,
-                          sender: EmailSender = EmailSender("Doors", EmailAddress("doors@fake.info")))
+                          sender: String)
 
   case class DoorsAPIStatus(status: String, userID: Option[String], email: Option[String], message: String)
 
