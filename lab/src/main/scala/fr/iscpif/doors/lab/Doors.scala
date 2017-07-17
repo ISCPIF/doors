@@ -33,7 +33,7 @@ object Doors extends App {
       publicURL = "http://localhost:8989",
       port = 8989,
       salt = "yoursalthere",
-      smtp = SMTPSettings("smtp", 587, "xx@xx.xx", "xxx", true, true, "noreply@iscpif.fr")
+      smtp = SMTPSettings("smtp", 587, "xx@xx.xx", "xxx", true, true, Some("noreply@iscpif.fr"))
     )"""
 
   val settings = Settings.compile(example)
