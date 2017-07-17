@@ -206,8 +206,6 @@ object lock {
 
     def unlock[M[_] : Monad : freedsl.io.IO](usr: User, secret: String) = {
 
-      println ("PASS: lock.ResetPassword.unlock method, sec:" + secret)
-
       // db executes 3 queries
       // ------------------
       //        1 test secret

@@ -38,7 +38,6 @@ object query {
     }
 
     def progress(lockId: Data.LockID, statusId: Data.StateID) = DB { scheme =>
-      println("LOCK progress for lockID:" + lockId.id + " => " + statusId)
       scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
     }
 
@@ -84,31 +83,6 @@ object query {
           _.size > 0
         }
       }
-
-//    // returns most recent email of user connected to the lock connected to the secret
-//    def getFromSecretStr(secret: String)(settings: Settings, database: db.Database): DB[String] =  {
-//      db.DB { scheme =>
-//      (for {
-//
-    //
-    //
-    //    s <- scheme.secrets.filter(s => s.secret === secret)
-//        secl <- scheme.locks.filter(l => l.id === s.lockID) // the lock for the secret
-//        ul <- scheme.userLocks.filter(ul => ul.lockID === secl.id)
-//
-
-
-//        // most recent locks for the email to filter only the last "validate" lock
-//        lastLocks <- scheme.locks.groupBy(_.id).map { case (id, aLock) => (id, aLock.map(_.increment).max) }
-//        emll <- scheme.locks if (emll.state === Data.LockState.unlocked.id
-//        && emll.id === lastLocks._1
-//        && emll.increment === lastLocks._2)
-//
-//        e <- scheme.emails.filter(e => emll.id === e.lockID)
-//      } yield e.address).result.headOption
-//    }.execute(settings, database)
-//  }
-
   }
 
   object secret {
@@ -230,26 +204,6 @@ object query {
       }.execute(settings, database)
     }
 
-
-
-
-    //  def resetPasswordQueries(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
-    //    val cID = chronicleID.getOrElse(LockID(uuid))
-    //    //One day to reset the pass
-    //    DBIO.seq(
-    //      secrets += Secret(cID, secret.getOrElse(uuid), 86400000),
-    //      chronicleAddQueries(cID, userID, locks.RESET_PASSWORD, States.LOCKED)
-    //    )
-    //  }
-    //
-    //  def resetPassword(database: db.Database)(userID: UserID, chronicleID: Option[LockID] = None, secret: Option[String] = None) = {
-    //    runQuery(database)(resetPasswordQueries(userID, chronicleID, secret))
-    //  }
-    //      DBIO.seq(
-    //      scheme.users += user,
-    //
-    //      chronicleAddQueries(chronicleID, user.id, locks.REGISTRATION, States.LOCKED)
-    //    )
   }
 
 

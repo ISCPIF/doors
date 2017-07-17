@@ -263,7 +263,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
               case _ => errorPage
             }
           }
-          case _ => println("ERROR: user is something else")
+          case _ => errorPage
         }
       }
       case _ => errorPage

@@ -102,9 +102,7 @@ class UserConnection {
     )
   ).dropdown("Register", btn_primary, Seq(sheet.marginTop(15), sheet.marginLeft(10)))
 
-  def resetPasswordStartBox(email: String) = Post[UnloggedApi].resetPasswordSend(email).call().foreach { x =>
-    println("Email sent")
-  }
+  def resetPasswordStartBox(email: String) = Post[UnloggedApi].resetPasswordSend(email).call()
 
   val emailForPasswordInput = bs.input("")(placeholder := "Type your email for confirmation").render
 
