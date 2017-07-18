@@ -107,13 +107,20 @@ object  Client {
                     val currentGetArgs = dom.window.location.search.substring(1)
                     val senddata = currentGetArgs+"&newpass="+encodeURIComponent(pE.newPassword)
                     // send the form with the secret added inside
-                    dom.ext.Ajax.post(
+                    val response = dom.ext.Ajax.post(
                       dom.window.location.origin + dom.window.location.pathname,
                       data = senddata,
                       headers = Map("Content-Type" -> "application/x-www-form-urlencoded; charset=UTF-8")
                     )
-                    // POSS: wait for response + conditions ?
-                    new MessageDisplay("Your password will be updated in a few seconds").render
+                    response.map(_ => {
+                      new MessageDisplay("Your password will be updated in a few seconds").render
+                    }).onFailure {
+                      case dom.ext.AjaxException(resp) => resp.status match {
+                          case 400 => new MessageDisplay("The password couldn't be updated (please check if the URL is exactly like the one in the email you received).").render
+                          case _ => new MessageDisplay("The password couldn't be updated.").render
+                        }
+                      case _ => new MessageDisplay("The password couldn't be updated.").render
+                    }
                   }
                 }
               })

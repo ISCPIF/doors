@@ -244,7 +244,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     (secret, npass) match {
       case (Some(sec), Some(nps)) => {
         db.query.user.fromSecret(sec)(settings, database) match {
-          case Left(e) => Left(e)
+          case Left(e) => NotFound() // 404
           case Right(user: User) => {
             // scénario
             // validate => unlock(user, secret) => progress state => State(unlocked) => changePass(newPass)
@@ -258,17 +258,16 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
                   settings.hashingAlgorithm.name,
                   settings.hashingAlgorithm.toJson
                 )(settings, database)
-                Ok()
+                Ok() // 200
               }
-              case _ => errorPage
+              case _ => NotFound() // 404
             }
           }
-          case _ => errorPage
+          case _ => NotFound()  // 404
         }
       }
-      case _ => errorPage
+      case _ => BadRequest()  // 400
     }
-
   }
 
 
