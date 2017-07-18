@@ -37,6 +37,7 @@ import sheet._
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
+import scalajs.js.URIUtils.encodeURIComponent
 
 @JSExport("Client")
 object  Client {
@@ -104,7 +105,7 @@ object  Client {
                 pE.isStatusOK.foreach { passOK =>
                   if (passOK) {
                     val currentGetArgs = dom.window.location.search.substring(1)
-                    val senddata = currentGetArgs+"&newpass="+pE.newPassword
+                    val senddata = currentGetArgs+"&newpass="+encodeURIComponent(pE.newPassword)
                     // send the form with the secret added inside
                     dom.ext.Ajax.post(
                       dom.window.location.origin + dom.window.location.pathname,
