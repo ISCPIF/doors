@@ -21,7 +21,7 @@ import fr.iscpif.doors.client.stylesheet._
 import fr.iscpif.doors.ext.Data.UserData
 import org.scalajs.dom
 import org.scalajs.dom._
-import shared.Api
+import shared.{Api, UnloggedApi}
 import fr.iscpif.doors.ext.route._
 
 import scala.concurrent.Future
@@ -37,7 +37,6 @@ import sheet._
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
-import scalajs.js.URIUtils.encodeURIComponent
 
 @JSExport("Client")
 object  Client {
@@ -104,22 +103,26 @@ object  Client {
               bs.button("OK", btn_primary, () => {
                 pE.isStatusOK.foreach { passOK =>
                   if (passOK) {
+
+                    // parsing the url arg ourselves :/
                     val currentGetArgs = dom.window.location.search.substring(1)
-                    val senddata = currentGetArgs+"&newpass="+encodeURIComponent(pE.newPassword)
-                    // send the form with the secret added inside
-                    val response = dom.ext.Ajax.post(
-                      dom.window.location.origin + dom.window.location.pathname,
-                      data = senddata,
-                      headers = Map("Content-Type" -> "application/x-www-form-urlencoded; charset=UTF-8")
-                    )
-                    response.map(_ => {
-                      new MessageDisplay("Your password will be updated in a few seconds").render
-                    }).onFailure {
-                      case dom.ext.AjaxException(resp) => resp.status match {
-                          case 400 => new MessageDisplay("The password couldn't be updated (please check if the URL is exactly like the one in the email you received).").render
+                    val secretUrlArg = currentGetArgs.split("&").filter(_.startsWith("secret=")).headOption
+
+                    secretUrlArg match {
+                      case Some(secKeyValStr) =>
+                        val secVal = secKeyValStr.split("=").last
+                        // send via Autowire with the secret added inside
+                        Post[UnloggedApi].resetPassword(secVal, pE.newPassword).call().foreach{
+                        _ match {
+                          // DB success
+                          case Right(true) => new MessageDisplay("Your password will be updated in a few seconds").render
+
+                          // DB error (wrong secret, etc.)
                           case _ => new MessageDisplay("The password couldn't be updated.").render
                         }
-                      case _ => new MessageDisplay("The password couldn't be updated.").render
+                      }
+                      // no secret arg in the URL
+                      case _ => new MessageDisplay("The password couldn't be updated (please check if the URL is exactly like the one in the email you received).").render
                     }
                   }
                 }

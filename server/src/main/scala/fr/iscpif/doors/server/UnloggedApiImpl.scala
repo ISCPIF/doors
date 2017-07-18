@@ -18,11 +18,13 @@ package fr.iscpif.doors.server
  */
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.doors.server.db.Database
+import fr.iscpif.doors.server.db.{Database, User, query}
+import fr.iscpif.doors.server.Utils._
 import DSL._
 import dsl._
 import dsl.implicits._
 import fr.iscpif.doors.server.db.query.user
+import freedsl.io.IO.IOError
 
 
 class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
@@ -42,8 +44,36 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
     }
   }
 
-  //def resetPassword(): ApiRep[Boolean] = {}
-  // => moved to Servlet
+  def resetPassword(sec: String, newPassVal: String): ApiRep[Boolean] = {
+    db.query.user.fromSecret(sec)(settings, database) match {
+      case Left(e) => Left(DSLError)
+      case Right(user: User) => {
+        // scénario
+        // validate => unlock(user, secret) => progress state => State(unlocked) => changePass(newPass)
+        settings.resetPassword.unlock[M](user, sec).execute(settings, database) match {
+          case Left(e) =>
+            val message = e match {
+              case io: IOError => io.t.getMessage
+              case _ => "Undefined error"
+            }
+            Left(DSLError)
+          case Right(_) => {
+            val newPass = Password(settings.hashingAlgorithm(newPassVal, settings.salt))
+            query.user.changePass(
+              user,
+              newPass.value,
+              settings.hashingAlgorithm.name,
+              settings.hashingAlgorithm.toJson
+            )(settings, database)
+            Right(true)
+          }
+        }
+      }
+      case _ => Left(DSLError)
+    }
+  }
+
+
 
   override def addUser(name: String, email: String, pass: String): ApiRep[UserID] =
     db.query.user.add(

@@ -234,41 +234,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     // user input form
     askNewPassword
   }
-
-  // same route: POST reception after user added his input
-  post(resetPasswordRoute) {
-
-    val secret = params get "secret"
-    val npass = params get "newpass"
-
-    (secret, npass) match {
-      case (Some(sec), Some(nps)) => {
-        db.query.user.fromSecret(sec)(settings, database) match {
-          case Left(e) => NotFound() // 404
-          case Right(user: User) => {
-            // scénario
-            // validate => unlock(user, secret) => progress state => State(unlocked) => changePass(newPass)
-            val validate = settings.resetPassword.unlock[M](user, sec)
-            processUnlock(Option(validate)).status.code match {
-              case 200 => {
-                val newPass = Password(settings.hashingAlgorithm(nps, settings.salt))
-                query.user.changePass(
-                  user,
-                  newPass.value,
-                  settings.hashingAlgorithm.name,
-                  settings.hashingAlgorithm.toJson
-                )(settings, database)
-                Ok() // 200
-              }
-              case _ => NotFound() // 404
-            }
-          }
-          case _ => NotFound()  // 404
-        }
-      }
-      case _ => BadRequest()  // 400
-    }
-  }
+  // same route: POST reception is managed in UnloggedApi
 
 
   get(emailValidationRoute) {

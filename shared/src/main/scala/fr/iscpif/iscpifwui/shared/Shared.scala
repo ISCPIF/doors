@@ -53,7 +53,9 @@ trait Api {
 
 
 trait UnloggedApi {
- def resetPasswordSend(email: String): ApiRep[Boolean]
+  def resetPasswordSend(email: String): ApiRep[Boolean]
+
+  def resetPassword(sec: String, newPassVal: String): ApiRep[Boolean]
 
   def isEmailUsed(email: String): ApiRep[Boolean]
 
