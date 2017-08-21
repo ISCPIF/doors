@@ -19,14 +19,30 @@ import scala.concurrent.Future
 
 
 object PassEdition {
-  // default should be 8
-  val PASS_MIN_CHAR = 8
-
   def newUser = new PassEdition(new NewUserPasswordForm)
 
   def oldUser = new PassEdition(new OldUserPasswordForm)
 
-  def validatePassString(passString: String): Boolean = (passString.length > PASS_MIN_CHAR)
+  def validatePassString(passString: String): Boolean = {
+    // pass constraints:
+    //    - PASS_MIN_CHAR to PASS_MAX_CHAR chars
+    //    - some word (non-accented) letters
+    //      + at least MIN_OTHER_CHARS digit or punctuation mark (\W)
+    val PASS_MIN_CHAR = 8
+    val PASS_MAX_CHAR = 20
+    val MIN_OTHER_CHARS = 1
+    val OTHER_CHARS = "[0-9]|\\W".r
+
+    val lengthOk = s"""^.{$PASS_MIN_CHAR,$PASS_MAX_CHAR}$$""".r
+
+    // 1 - we test the length
+    passString match {
+      case lengthOk(_*) =>
+        // 2 - we test the string contains some "not too simple" chars
+        OTHER_CHARS.findAllIn(passString).toList.length >= MIN_OTHER_CHARS
+      case _ => false
+    }
+  }
 
   trait PasswordForm {
 
@@ -75,7 +91,7 @@ object PassEdition {
         case ("", _) => PassError("You did not fill the first password")
         case (_, "") => PassError("You did not fill the second password")
         case (p1, p2) if p1 != p2 => PassError("The passwords don't match !")
-        case (p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple")
+        case (p1, _) if !validatePassString(p1) => PassError("Passwords match but this new password is too simple (please use 8 to 20 characters, with at least one digit or punctuation mark)")
         case _ => PassMatchOk()
       }
     }
