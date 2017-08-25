@@ -76,7 +76,7 @@ object query {
     def exists(emailAddress: String) =
       DB { sheme =>
         def request = for {
-          e <- sheme.emails.filter(_.address === emailAddress)
+          e <- sheme.emails.filter(_.address.toLowerCase === emailAddress.toLowerCase)
         } yield e
 
         request.result.map {

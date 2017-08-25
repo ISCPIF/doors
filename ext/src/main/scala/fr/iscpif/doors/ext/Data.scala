@@ -69,8 +69,9 @@ object Data {
 
   case class PairOfPasses(oldpass: Password, newpass: Password, status: PassStatus)
 
-
-  case class EmailAddress(value: String) extends AnyVal
+  case class EmailAddress(value: String) extends AnyVal {
+    def apply(value: String) = new EmailAddress(value.toLowerCase)
+  }
 
 
   //  object User {
