@@ -116,7 +116,7 @@ object lock {
                    emailAddress: Data.EmailAddress,
                    generateEmail: EmailSettings.Info => EmailSettings.Email,
                    secret: String)(implicit mailM: DSL.Email[M]) = {
-      val emailContent = generateEmail(EmailSettings.Info(secret, Utils.secretLink(publicURL, targetRoute, secret)))
+      val emailContent = generateEmail(EmailSettings.Info(emailAddress.value, secret, Utils.secretLink(publicURL, targetRoute, secret)))
       mailM.send(emailAddress.value, emailContent.subject, emailContent.content)
     }
 
@@ -134,7 +134,7 @@ object lock {
 
   object EmailSettings {
 
-    case class Info(secret: String, secretLink: String)
+    case class Info(emailAddress: String, secret: String, secretLink: String)
 
     case class Email(subject: String, content: String)
 
@@ -146,7 +146,11 @@ object lock {
 
     def resetPassword(info: Info) = EmailSettings.Email(
       subject = "[DOORS] Reset password",
-      content = s"Hi,<br>Please click on the following link to reset your password !<br> ${info.secretLink} <br><br>The DOORS team"
+      content =
+        s"""Hi,<br>You required to reset your password for Doors, the application that enables the connection to the web services of ISC-PIF.
+           |<br><br>Please click on the following link to reset your password for the email: ${info.emailAddress}
+           |<br>  ${info.secretLink}
+           |<br><br>The ISC-PIF team""".stripMargin
     )
 
     sealed trait UnlockError extends Throwable
