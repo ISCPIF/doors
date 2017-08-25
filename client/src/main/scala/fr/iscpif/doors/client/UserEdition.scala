@@ -18,8 +18,7 @@ import rx._
 class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
 
-  val firstNameInput = bs.input("")(placeholder := "First name", width := "100%").render
-  val lastNameInput = bs.input("")(placeholder := "Given name", width := "100%").render
+  val nameInput = bs.input("")(placeholder := "Given name", width := "100%").render
   val emailInput = bs.input("")(placeholder := "Email", width := "100%").render
   lazy val stringErrors: Var[Seq[String]] = Var(Seq())
 
@@ -30,21 +29,19 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   user.trigger {
     user.now match {
       case Some(u: UserData) =>
-        lastNameInput.value = u.lastName
-        firstNameInput.value = u.firstName
+        nameInput.value = u.name
       // emailInput.value = u.email
       case _ =>
     }
   }
 
-  def lastName = lastNameInput.value
-  def firstName = firstNameInput.value
+  def name = nameInput.value
 
   def email = emailInput.value
 
   def checkData = {
     val emailCheck = if (email.isEmpty) Some("The email cannot be empty") else None
-    val nameCheck = if (lastName.isEmpty) Some("Your last name cannot be empty") else None
+    val nameCheck = if (name.isEmpty) Some("The name cannot be empty") else None
     Post[UnloggedApi].isEmailUsed(email).call().map { b =>
       stringErrors() = (Seq(emailCheck, nameCheck) :+ (b match {
         case Right(true) => Some("This email is already used")
@@ -60,8 +57,7 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
 
   lazy val panel =
     bs.vForm(width := "100%")(
-      firstNameInput.withLabel("First name"),
-      lastNameInput.withLabel("Last name"),
+      nameInput.withLabel("Given name"),
       emailInput.withLabel("Email")
     )
 

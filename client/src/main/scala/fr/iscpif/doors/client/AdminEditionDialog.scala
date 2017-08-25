@@ -71,7 +71,7 @@ class AdminEditionDialog {
       if (pOK) {
         user.now match {
           case Some(u: UserData) =>
-            val puser = PartialUser(u.id, personalEditionPanel.firstName, personalEditionPanel.lastName)
+            val puser = PartialUser(u.id, personalEditionPanel.name)
 
 //            Post[Api].updatePartialUser(
 //              puser
@@ -133,8 +133,7 @@ class AdminEditionDialog {
   val panel = {
     Rx {
       val emptyUser = UserData.empty
-      personalEditionPanel.lastNameInput.value = user().getOrElse(emptyUser).lastName
-      personalEditionPanel.firstNameInput.value = user().getOrElse(emptyUser).firstName
+      personalEditionPanel.nameInput.value = user().getOrElse(emptyUser).name
       // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
     }
 
@@ -168,7 +167,7 @@ class AdminEditionDialog {
     val render = tr(row)(
       onmouseover := { () ⇒ lineHovered() = Some(user) },
       onmouseout := { () ⇒ lineHovered() = None },
-      td(colMD(4), a(user.lastName, user.firstName, pointer, onclick := { () => userEdition() = Some(user) })),
+      td(colMD(4), a(user.name, pointer, onclick := { () => userEdition() = Some(user) })),
       td(colMD(7), "States ..."),
       td(colMD(1),
         tags.span(Rx {

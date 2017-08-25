@@ -45,9 +45,9 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
   //def resetPassword(): ApiRep[Boolean] = {}
   // => moved to Servlet
 
-  override def addUser(firstName: String, lastName: String, email: String, pass: String): ApiRep[UserID] =
+  override def addUser(name: String, email: String, pass: String): ApiRep[UserID] =
     db.query.user.add(
-      firstName, lastName,
+      name,
       Password(settings.hashingAlgorithm(pass, settings.salt)),
       settings.hashingAlgorithm
     ) chain { uid =>

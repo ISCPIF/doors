@@ -68,7 +68,7 @@ class ServiceWall(user: UserData) {
       adminEditionPanel.modalDialog.dialog,
       tags.div(ms("centerpanel"))(
         div(doorsheet.user)(
-          s"${user.firstName} ${user.lastName}",
+          s"${user.name}",
           adminEditionPanel.modalDialog.show /*.trigger(
             tags.span(glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30) +++ pointer))
         )*/ ,
