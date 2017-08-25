@@ -3,6 +3,7 @@ package fr.iscpif.doors.client
 import org.scalajs.dom
 import fr.iscpif.doors.ext.Data._
 import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import fr.iscpif.scaladget.mapping
 import fr.iscpif.scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
@@ -49,6 +50,7 @@ class ServiceWall(user: UserData) {
   val services = Seq(
     ServiceLink("OwnCloud", Resources.owncloud, "http://owncloud.iscpif.fr", "File sharing"),
     ServiceLink("Gogs", Resources.gogs, "http://gogs.iscpif.fr", "Code sharing"),
+    ServiceLink("CommunityExplorer", Resources.comex, "http://communityexplorer.org", "Community Keywords Discovery"),
     ServiceLink("Jenkins", Resources.jenkins, "http://jenkins.iscpif.fr", "Continous integration"),
     ServiceLink("Seminar", Resources.seminar, "http://webcast.iscpif.fr/stream.webm", "Seminar streaming"),
     ServiceLink("EGI Certificate", Resources.egi, "https://igc.services.cnrs.fr/usercert/?CA=GRID2-FR&lang=fr", "Procedure on how to get a digital Grid certificate"),
@@ -69,14 +71,14 @@ class ServiceWall(user: UserData) {
       tags.div(ms("centerpanel"))(
         div(doorsheet.user)(
           s"${user.firstName} ${user.lastName}",
-          adminEditionPanel.modalDialog.show /*.trigger(
-            tags.span(glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30) +++ pointer))
-        )*/ ,
+
+          // NB show method for adminEditionPanel will need update to scaladget 0.9.3
+          // adminEditionPanel.modalDialog.show ,
+
           BootstrapTags.thumbs(services).render,
           tags.img(src := Resources.isc, logoISC)
         )
       )
     ).render
-
 
 }

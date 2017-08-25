@@ -22,6 +22,7 @@ object Resources {
   val isc = "img/logoISC.png"
   val owncloud = "img/owncloud.svg"
   val gogs = "img/gogs.jpeg"
+  val comex = "img/comex.png"
   val jenkins = "img/jenkins.png"
   val seminar = "img/seminar.png"
   val egi = "img/egi.svg"
