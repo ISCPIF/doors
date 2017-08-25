@@ -115,7 +115,7 @@ package object db {
 
   lazy val dbVersion = 1
 
-  case class User(id: UserID, name: String, password: Password, hashAlgorithm: HashingAlgorithm)
+  case class User(id: UserID, firstName: String, lastName: String, password: Password, hashAlgorithm: HashingAlgorithm)
 
   case class Lock(id: LockID, state: StateID, time: Time, increment: Option[Long])
 

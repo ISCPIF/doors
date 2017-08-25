@@ -54,7 +54,7 @@ object Utils {
   def fromJSON[T: Manifest](s: String) = parse(s).extract[T]
 
 
-  implicit def userToUserData(u: User): UserData = UserData(u.id, u.name, u.password)
+  implicit def userToUserData(u: User): UserData = UserData(u.id, u.firstName, u.lastName, u.password)
 
   implicit def optionOfUserToOptionOfUserData(u: Option[User]): Option[UserData] = u.map{userToUserData}
 

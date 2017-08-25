@@ -134,9 +134,9 @@ object query {
 
   object user {
 
-    def add(name: String, password: Data.Password, hashAlgorithm: HashingAlgorithm) = {
+    def add(firstName: String, lastName: String, password: Data.Password, hashAlgorithm: HashingAlgorithm) = {
       // NB here it is assumed that password is already hashed
-      val user = User(UserID(Utils.uuid), name, password, hashAlgorithm)
+      val user = User(UserID(Utils.uuid), firstName: String, lastName: String, password, hashAlgorithm)
       for {
         _ <- DB {
           _.users += user

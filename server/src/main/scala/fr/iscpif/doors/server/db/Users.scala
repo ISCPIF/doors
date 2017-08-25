@@ -27,28 +27,32 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
 
   def password = column[String]("PASSWORD")
 
-  def name = column[String]("NAME")
+  def firstName = column[String]("FIRST_NAME")
+
+  def lastName = column[String]("LAST_NAME")
 
   def hashAlgorithm = column[String]("HASH_ALGORITHM")
 
   def hashParameters = column[String]("HASH_PARAMETERS")
 
   def * = {
-    val shValues = (id, password, name, hashAlgorithm, hashParameters).shaped
+    val shValues = (id, password, firstName, lastName, hashAlgorithm, hashParameters).shaped
     shValues.<>({
       tuple =>
         User.apply(
           id = UserID(tuple._1),
           password = Password(tuple._2),
-          name = tuple._3,
-          hashAlgorithm = HashingAlgorithm(tuple._4, tuple._5)
+          firstName = tuple._3,
+          lastName = tuple._4,
+          hashAlgorithm = HashingAlgorithm(tuple._5, tuple._6)
         )
     }, {
       (u: User) =>
         Some((
           u.id.id,
           u.password.value,
-          u.name,
+          u.firstName,
+          u.lastName,
           u.hashAlgorithm.name,
           u.hashAlgorithm.toJson
           )

@@ -186,12 +186,13 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   // API route to register
   post(apiRegisterRoute) {
     val loginEmail = params get "login"
-    val name = params get "name"
+    val firstName = params get "firstName"
+    val lastName = params get "lastName"
     val pass = params get "password"
 
-    (loginEmail, name, pass) match {
-      case (Some(email), Some(name), Some(pass)) =>
-        unloggedAPI.addUser(name, email, pass) match {
+    (loginEmail, firstName, lastName, pass) match {
+      case (Some(email), Some(firstName), Some(lastName), Some(pass)) =>
+        unloggedAPI.addUser(firstName, lastName, email, pass) match {
           case Right(uid) =>  Ok(registrationPending(email = loginEmail, userID = Some(uid.id)).toJson)
           case Left(e) => halt(500, (e))
         }
