@@ -27,7 +27,7 @@ import fr.iscpif.doors.server.db.query.user
 
 class UnloggedApiImpl(settings: Settings, database: Database) extends shared.UnloggedApi {
 
-  def isEmailUsed(email: String): ApiRep[Boolean] = db.query.email.exists(email) execute(settings, database)
+  def isEmailUsed(email: String): ApiRep[Boolean] = db.query.email.exists(email.toLowerCase) execute(settings, database)
 
 
   def resetPasswordSend(email: String): ApiRep[Boolean] = {
@@ -35,7 +35,7 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
       case Left(e) => Left(DSLError)
       case Right(user) =>
         // start the quest (create lock + secret) and send email
-        settings.resetPassword.start[M](user.id, EmailAddress(email)) execute(settings, database) match {
+        settings.resetPassword.start[M](user.id, EmailAddress(email.toLowerCase)) execute(settings, database) match {
           case Left(e) => Left(DSLError)
           case Right(_) => Right(true)
         }
@@ -51,7 +51,7 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
       Password(settings.hashingAlgorithm(pass, settings.salt)),
       settings.hashingAlgorithm
     ) chain { uid =>
-        settings.emailValidationInstance.start[M] (uid, EmailAddress(email)).map(_ => uid)
+        settings.emailValidationInstance.start[M] (uid, EmailAddress(email.toLowerCase)).map(_ => uid)
       } execute(settings, database)
 
 }
