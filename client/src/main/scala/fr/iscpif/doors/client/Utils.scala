@@ -20,3 +20,14 @@ package fr.iscpif.doors.client
 object Utils {
   def uuid = java.util.UUID.randomUUID.toString
 }
+
+
+
+// dar: db action request
+// for server answers to user requests involving db actions
+sealed trait darStatus {
+  def message: String
+}
+case class darUndefined(message: String = "") extends darStatus
+case class darError(message: String) extends darStatus
+case class darOk (message: String) extends darStatus

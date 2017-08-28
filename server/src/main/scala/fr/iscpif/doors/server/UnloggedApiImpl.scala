@@ -32,7 +32,14 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
 
   def resetPasswordSend(email: String): ApiRep[Boolean] = {
     user.fromEmail(email)(settings, database) match {
-      case Left(e) => Left(DSLError)
+      case Left(e) => {
+        Left(DSLError)
+
+        // POSS: alternative strategy (less scala-ish but more RESTFUL)
+        // import org.scalatra.Control
+        // class UnloggedApiImpl with Control
+        // halt(404, s"The email '$email' was not found. Can't reset password.")
+      }
       case Right(user) =>
         // start the quest (create lock + secret) and send email
         settings.resetPassword.start[M](user.id, EmailAddress(email.toLowerCase)) execute(settings, database) match {

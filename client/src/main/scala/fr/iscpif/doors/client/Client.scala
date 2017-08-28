@@ -82,8 +82,8 @@ object  Client {
   }
 
   // Body:  factorizable with MessageDisplay
-  def panelInBody(heading: String, content: Element) =
-    div(sheet.panel +++ panelDefault +++ Seq(boxShadow := "0 6px 12px rgba(0,0,0,.175)"))(
+  def panelInBody(heading: String, content: Element, modifiers: ModifierSeq = Seq()) =
+    div(sheet.panel +++ panelDefault +++ Seq(boxShadow := "0 6px 12px rgba(0,0,0,.175)") +++ modifiers)(
       div(panelHeading +++ Seq(fontWeight := "bold"))(heading),
       div(panelBody)(content)
     )
