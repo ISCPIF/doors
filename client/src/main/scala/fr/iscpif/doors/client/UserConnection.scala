@@ -119,6 +119,9 @@ class UserConnection {
         // when email sent, GUI can already return to neutral status
         isPasswordReset() = false
         emailForPasswordInput.value = ""
+      }).render,
+      bs.button("Cancel", btn_default, () => {
+          isPasswordReset() = false
       }).render
     )
   )
@@ -145,7 +148,14 @@ class UserConnection {
                   tags.a("Reset password", stylesheet.resetPasswordStartBox, onclick := { () =>
                     isPasswordReset() = true
                   })
-                } else emailForPasswordDiv
+                } else {
+                  Client.panelInBody(
+                    "Please enter your account's email and we will send you a unique link to reset your password",
+                    tags.div(
+                      emailForPasswordDiv
+                    ).render
+                  ).render
+                }
               )
             ).render
           )
