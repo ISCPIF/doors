@@ -137,14 +137,16 @@ class UserConnection {
             tags.form(
               action := connectionRoute,
               method := "post",
-              if (!isPasswordReset()) {
-                tags.a("Reset password", stylesheet.resetPasswordStartBox, onclick := { () =>
-                  isPasswordReset() = true
-                })
-              } else emailForPasswordDiv,
               tags.p(ms("grouptop"), emailInput),
               tags.p(ms("groupbottom"), passwordInput),
-              connectButton
+              connectButton,
+              tags.div(Seq(sheet.marginTop(10) +++ sheet.floatRight))(
+                if (!isPasswordReset()) {
+                  tags.a("Reset password", stylesheet.resetPasswordStartBox, onclick := { () =>
+                    isPasswordReset() = true
+                  })
+                } else emailForPasswordDiv
+              )
             ).render
           )
           ,
