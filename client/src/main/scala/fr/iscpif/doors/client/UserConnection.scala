@@ -90,10 +90,10 @@ class UserConnection {
         personalEdition.checkData.foreach { personalOK =>
           passEdition.isStatusOK.foreach { passOK =>
             if (personalOK && passOK) {
-
               Post[UnloggedApi].addUser(
                   personalEdition.firstName,
                   personalEdition.lastName,
+                  personalEdition.affiliation,
                   personalEdition.email,
                   passEdition.newPassword
               ).call().foreach{

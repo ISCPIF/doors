@@ -20,7 +20,18 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
 
   val firstNameInput = bs.input("")(placeholder := "First name", width := "100%").render
   val lastNameInput = bs.input("")(placeholder := "Given name", width := "100%").render
+  val affiliationInput = bs.input("")(placeholder := "Affiliation", width := "100%", list := "affiliations").render
   val emailInput = bs.input("")(placeholder := "Email", width := "100%").render
+
+
+  // TODO check if we want an AJAX API here ?
+  val autocompletionList = datalist(Seq(id := "affiliations"))(
+    option(Seq(value := "CNRS"))(),
+    option(Seq(value := "ISCPIF"))(),
+    option(Seq(value := "Université Paris 6"))(),
+  ).render
+
+
   lazy val stringErrors: Var[Seq[String]] = Var(Seq())
 
   val isPanelValid = Rx {
@@ -32,14 +43,14 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
       case Some(u: UserData) =>
         lastNameInput.value = u.lastName
         firstNameInput.value = u.firstName
-      // emailInput.value = u.email
+        affiliationInput.value = u.affiliation
       case _ =>
     }
   }
 
   def lastName = lastNameInput.value
   def firstName = firstNameInput.value
-
+  def affiliation = affiliationInput.value
   def email = emailInput.value
 
   def checkData = {
@@ -61,8 +72,10 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   lazy val panel =
     bs.vForm(width := "100%")(
       firstNameInput.withLabel("First name"),
-      lastNameInput.withLabel("Last name"),
-      emailInput.withLabel("Email")
+      lastNameInput.withLabel("* Last name"),
+      emailInput.withLabel("* Email"),
+      affiliationInput.withLabel("Affiliation"),
+      autocompletionList
     )
 
   lazy val panelWithError = div(

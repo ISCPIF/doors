@@ -31,12 +31,14 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
 
   def lastName = column[String]("LAST_NAME")
 
+  def affiliation = column[String]("AFFILIATION")
+
   def hashAlgorithm = column[String]("HASH_ALGORITHM")
 
   def hashParameters = column[String]("HASH_PARAMETERS")
 
   def * = {
-    val shValues = (id, password, firstName, lastName, hashAlgorithm, hashParameters).shaped
+    val shValues = (id, password, firstName, lastName, affiliation, hashAlgorithm, hashParameters).shaped
     shValues.<>({
       tuple =>
         User.apply(
@@ -44,7 +46,8 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
           password = Password(tuple._2),
           firstName = tuple._3,
           lastName = tuple._4,
-          hashAlgorithm = HashingAlgorithm(tuple._5, tuple._6)
+          affiliation = tuple._5,
+          hashAlgorithm = HashingAlgorithm(tuple._6, tuple._7)
         )
     }, {
       (u: User) =>
@@ -53,6 +56,7 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
           u.password.value,
           u.firstName,
           u.lastName,
+          u.affiliation,
           u.hashAlgorithm.name,
           u.hashAlgorithm.toJson
           )

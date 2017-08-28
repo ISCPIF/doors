@@ -174,9 +174,9 @@ object Data {
   }
 
   object UserData {
-    def empty = UserData(UserID(""), "", "", Password(""))
+    def empty = UserData(UserID(""), "", "", "", Password(""))
   }
 
-  case class UserData(id: UserID, firstName: String, lastName: String, password: Password)
+  case class UserData(id: UserID, firstName: String, lastName: String, affiliation: String, password: Password)
 
 }
