@@ -28,7 +28,7 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   val autocompletionList = datalist(Seq(id := "affiliations"))(
     option(Seq(value := "CNRS"))(),
     option(Seq(value := "ISCPIF"))(),
-    option(Seq(value := "Université Paris 6"))(),
+    option(Seq(value := "Université Paris 6"))()
   ).render
 
 
