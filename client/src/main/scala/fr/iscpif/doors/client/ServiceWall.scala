@@ -2,12 +2,12 @@ package fr.iscpif.doors.client
 
 import org.scalajs.dom
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import scaladget.api.{BootstrapTags => bs}
+import scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
-import fr.iscpif.scaladget.tools.JsRxTags._
+import scaladget.tools.JsRxTags._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import org.scalajs.dom.raw.HTMLDivElement

@@ -27,11 +27,11 @@ import fr.iscpif.doors.ext.route._
 import scala.concurrent.Future
 import rx._
 
-import scala.scalajs.js.annotation.JSExport
+import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import scaladget.stylesheet.{all => sheet}
+import scaladget.api.{BootstrapTags => bs}
 import org.scalajs.dom.html.Element
 import sheet._
 
@@ -39,7 +39,6 @@ import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import scalajs.js.URIUtils.encodeURIComponent
 
-@JSExport("Client")
 object  Client {
 
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
@@ -51,17 +50,17 @@ object  Client {
 
   dom.window.sessionStorage
 
-  @JSExport
+  @JSExportTopLevel("connection")
   def connection(): Unit = {
     bs.withBootstrapNative(userConnection.render)
   }
 
-  @JSExport
+  @JSExportTopLevel("emailValidatedMessage")
   def emailValidatedMessage(): Unit = {
     new MessageDisplay("Your email was successfully validated !").render
   }
 
-  @JSExport
+  @JSExportTopLevel("application")
   def application(): Unit = {
     Post[Api].loggedUser.call().foreach {
       _ match {
@@ -88,7 +87,7 @@ object  Client {
       div(panelBody)(content)
     )
 
-  @JSExport
+  @JSExportTopLevel("askNewPassword")
   def askNewPassword(): Unit = {
 
     // Content: the input ("newUser" form because we don't want the previous pass)

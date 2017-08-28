@@ -1,13 +1,13 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import scaladget.api.{BootstrapTags => bs}
+import scaladget.stylesheet.{all => sheet}
 import autowire._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import shared.Api
-import fr.iscpif.scaladget.tools.JsRxTags._
+import scaladget.tools.JsRxTags._
 
 import scalatags.JsDom.{TypedTag, all => tags}
 import tags._
