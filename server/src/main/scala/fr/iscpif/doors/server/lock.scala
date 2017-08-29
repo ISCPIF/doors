@@ -82,24 +82,30 @@ object lock {
       //        1 test secret (find -> test deadline)
       def processSecretEtc(secret: String, user: User) = {
         for {
-          lids  <- query.lock.getFromSecretStr(secret)
-          ddln <- query.secret.deadline(secret, LockID(lids))
-          r    <- processDeadlineAndUnlock(ddln, lids, user)
+          lid <- query.lock.getFromSecretStr(secret)
+          lockState <- query.lock.mostRecentLockState(LockID(lid))
+          ddln <- query.secret.deadline(secret, LockID(lid))
+          r    <- processDeadlineAndUnlock(ddln, lid, lockState, user)
         } yield r
       }
 
       //  chain 2 update lock state query.lock.progress(lockID, Data.LockState.unlocked).map(e => Right(e))
-      def processDeadlineAndUnlock(deadline: Option[Time], lockID: String, user: User): DB[Either[EmailSettings.UnlockError, Unit]] =
-        deadline match {
-          case Some(deadline) =>
-            if (deadline.toMillis < System.currentTimeMillis()) {
-              DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
+      def processDeadlineAndUnlock(deadline: Option[Time], lockID: String, lockState: String, user: User): DB[Either[EmailSettings.UnlockError, Unit]] =
+
+        lockState match {
+          case LockState.unlocked.id => DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretAlreadyUsed))
+          case LockState.locked.id =>
+            deadline match {
+              case Some(deadline) =>
+                if (deadline.toMillis < System.currentTimeMillis()) {
+                  DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.SecretExpired))
+                }
+                else {
+                  query.lock.progress(LockID(lockID), Data.LockState.unlocked).map(e => Right(e))
+                }
+              case _ =>
+                DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
             }
-            else {
-              query.lock.progress(LockID(lockID), Data.LockState.unlocked).map(e => Right(e))
-            }
-          case _ =>
-            DB.pure[Either[EmailSettings.UnlockError, Unit]](Left(EmailSettings.DeadLineNotFound))
         }
 
       for {
@@ -158,6 +164,8 @@ object lock {
     case object DeadLineNotFound extends UnlockError
 
     case object SecretExpired extends UnlockError
+
+    case object SecretAlreadyUsed extends UnlockError
 
     case class EmailNotFound(emailAddress: String) extends Exception(s"Email $emailAddress not found") with UnlockError
 
