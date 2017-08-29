@@ -233,8 +233,25 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   // returning point for users who asked to reset their pass
   get(resetPasswordRoute) {
-    // user input form
+
     askNewPassword
+
+    // TODO make this work tomorrow
+    //    val secret = params get "secret"
+    //
+    //    // 1-test if secret still valid
+    //    secret match {
+    //      case Some(sec) => db.query.lock.getFromSecretStrWithDB(sec)(settings,database) match {
+    //        case Left(e) => NotFound()
+    //        case Right(lockIdStr) => lockIdStr match {
+    //          case LockState.unlocked.id => NotFound()
+    //          case LockState.locked.id =>
+    //            // 2-user input form
+    //            askNewPassword
+    //        }
+    //      }
+    //      case _ => BadRequest()
+    //    }
   }
 
   // same route: POST reception after user added his input
@@ -245,40 +262,27 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
     (secret, npass) match {
       case (Some(sec), Some(nps)) => {
-        db.query.lock.getFromSecretStrWithDB(sec)(settings, database) match {
-          case Left(e) => NotFound()
-          case Right(lid) => lid match {
-            // the lock was already used so the secret is useless now
-            case LockState.unlocked.id => NotFound()
-
-              // lock is still locked: we proceed
-            case LockState.locked.id =>
-              db.query.user.fromSecret(sec)(settings, database) match {
-                case Left(e) => NotFound() // 404
-                case Right(user: User) => {
-                  // scénario
-                  // validate => unlock(user, secret) => progress state => State(unlocked) => changePass(newPass)
-                  val validate = settings.resetPassword.unlock[M](user, sec)
-                  processUnlock(Option(validate)).status.code match {
-                    case 200 => {
-                      val newPass = Password(settings.hashingAlgorithm(nps, settings.salt))
-                      query.user.changePass(
-                        user,
-                        newPass.value,
-                        settings.hashingAlgorithm.name,
-                        settings.hashingAlgorithm.toJson
-                      )(settings, database)
-                      Ok() // 200
-                    }
-                    case _ => NotFound() // 404
-                  }
-                }
-                case _ => NotFound()  // 404
+        db.query.user.fromSecret(sec)(settings, database) match {
+          case Left(e) => NotFound() // 404
+          case Right(user: User) => {
+            // scénario
+            // validate => unlock(user, secret) => progress state => State(unlocked) => changePass(newPass)
+            val validate = settings.resetPassword.unlock[M](user, sec)
+            processUnlock(Option(validate)).status.code match {
+              case 200 => {
+                val newPass = Password(settings.hashingAlgorithm(nps, settings.salt))
+                query.user.changePass(
+                  user,
+                  newPass.value,
+                  settings.hashingAlgorithm.name,
+                  settings.hashingAlgorithm.toJson
+                )(settings, database)
+                Ok() // 200
               }
-
+              case _ => NotFound() // 404
+            }
           }
-
-
+          case _ => NotFound()  // 404
         }
       }
       case _ => BadRequest()  // 400

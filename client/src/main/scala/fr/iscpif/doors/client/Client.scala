@@ -117,7 +117,7 @@ object  Client {
                     }).onFailure {
                       case dom.ext.AjaxException(resp) => resp.status match {
                           case 400 => new MessageDisplay("The password couldn't be updated (please check if the URL is exactly like the one in the email you received).").render
-                          case _ => new MessageDisplay("The password couldn't be updated.").render
+                          case _ => new MessageDisplay("The password couldn't be updated (perhaps you already used this reset link?)").render
                         }
                       case _ => new MessageDisplay("The password couldn't be updated.").render
                     }

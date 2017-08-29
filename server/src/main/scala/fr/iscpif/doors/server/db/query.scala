@@ -53,16 +53,6 @@ object query {
       }
     }
 
-    def mostRecentLock(lockId: Data.LockID) = DB { scheme =>
-      (for {
-        // lock rows GROUPed BY lid then in each group keep only last increment
-        mostRecentLockRow <-  scheme.locks.groupBy(_.id).map { case (id, l) => (id, l.map(_.increment).max) }
-
-        // join the preceding on entire table to get LockState of said row
-        lock <- scheme.locks if (lock.id === mostRecentLockRow._1 && lock.increment === mostRecentLockRow._2)
-      } yield lock).result.head
-    }
-
     def getFromSecretStr(secret: String) = DB {
       scheme =>
       (for {
@@ -80,25 +70,6 @@ object query {
           } yield l.id).result.head
       }.execute(settings, database)
     }
-
-
-
-
-//    // returns user connected to the lock connected to the secret
-//    def fromSecret(scrt: String)(settings: Settings, database: db.Database): Either[freedsl.dsl.Error,User] = {
-//      db.DB { scheme =>
-//        (for {
-//          s <- scheme.secrets.filter(s => s.secret === scrt)
-//          secl <- scheme.locks.filter(l => l.id === s.lockID) // the lock for the secret
-//          ul <- scheme.userLocks.filter(ul => ul.lockID === secl.id)
-//          u <- scheme.users.filter(u => u.id === ul.userID)
-//        } yield u).result.head
-//      }.execute(settings, database)
-//    }
-
-
-
-
 
     def progress(lockId: Data.LockID, statusId: Data.StateID) = DB { scheme =>
       scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
