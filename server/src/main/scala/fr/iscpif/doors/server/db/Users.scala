@@ -64,5 +64,4 @@ class Users(tag: Tag) extends Table[User](tag, "USERS") {
     }
     )
   }
-
 }

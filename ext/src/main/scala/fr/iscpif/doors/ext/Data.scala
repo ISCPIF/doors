@@ -51,7 +51,7 @@ object Data {
 
   case class LockID(id: String)
 
-  case class PartialUser(id: UserID, firstName: String, lastName: String)
+  case class PartialUser(id: UserID, firstName: String, lastName: String, affiliation: String)
 
   case class Password(value: String)
 

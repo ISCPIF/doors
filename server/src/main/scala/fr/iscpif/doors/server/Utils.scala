@@ -50,9 +50,7 @@ object Utils {
     def toJson = pretty(Extraction.decompose(x))
   }
 
-
   def fromJSON[T: Manifest](s: String) = parse(s).extract[T]
-
 
   implicit def userToUserData(u: User): UserData = UserData(u.id, u.firstName, u.lastName, u.affiliation, u.password)
 

@@ -1,13 +1,13 @@
 package fr.iscpif.doors.client
 
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
+import scaladget.api.{BootstrapTags => bs}
 import bs._
 import shared.{Api, UnloggedApi}
 
 import scalatags.JsDom.all._
 import fr.iscpif.doors.ext.Data.UserData
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
-import fr.iscpif.scaladget.tools.JsRxTags._
+import scaladget.stylesheet.{all => sheet}
+import scaladget.tools.JsRxTags._
 import sheet._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
@@ -54,8 +54,8 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   def email = emailInput.value
 
   def checkData = {
-    val emailCheck = if (email.isEmpty) Some("The email cannot be empty") else None
-    val nameCheck = if (lastName.isEmpty) Some("Your last name cannot be empty") else None
+    val emailCheck = if (email.isEmpty) Some("The email field cannot be empty") else None
+    val nameCheck = if (lastName.isEmpty) Some("The last name field cannot be empty") else None
     Post[UnloggedApi].isEmailUsed(email).call().map { b =>
       stringErrors() = (Seq(emailCheck, nameCheck) :+ (b match {
         case Right(true) => Some("This email is already used")

@@ -57,13 +57,13 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
 
   val basePath = "shared"
 
-  val connection = html("Client().connection();")
+  val connection = html("connection();")
 
-  val emailValidatedMessage = html("Client().emailValidatedMessage();")
+  val emailValidatedMessage = html("emailValidatedMessage();")
 
-  val application = html(s"Client().application();")
+  val application = html("application();")
 
-  val askNewPassword = html(s"Client().askNewPassword();")
+  val askNewPassword = html("askNewPassword();")
 
   //FIXME with a real page
   val errorPage = tags.html(

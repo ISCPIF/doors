@@ -2,7 +2,7 @@ package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
 import scalatags.JsDom.tags
-import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import scaladget.stylesheet.{all ⇒ sheet}
 import fr.iscpif.doors.client.stylesheet._
 import scalatags.JsDom.all._
 import sheet._

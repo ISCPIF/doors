@@ -1,13 +1,13 @@
 package fr.iscpif.doors.client
 
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import scaladget.api.{BootstrapTags => bs}
+import scaladget.stylesheet.{all => sheet}
 import autowire._
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import shared.Api
-import fr.iscpif.scaladget.tools.JsRxTags._
+import scaladget.tools.JsRxTags._
 
 import scalatags.JsDom.{TypedTag, all => tags}
 import tags._
@@ -71,7 +71,7 @@ class AdminEditionDialog {
       if (pOK) {
         user.now match {
           case Some(u: UserData) =>
-            val puser = PartialUser(u.id, personalEditionPanel.firstName, personalEditionPanel.lastName)
+            val puser = PartialUser(u.id, personalEditionPanel.firstName, personalEditionPanel.lastName, personalEditionPanel.affiliation)
 
 //            Post[Api].updatePartialUser(
 //              puser
@@ -133,8 +133,9 @@ class AdminEditionDialog {
   val panel = {
     Rx {
       val emptyUser = UserData.empty
-      personalEditionPanel.lastNameInput.value = user().getOrElse(emptyUser).lastName
       personalEditionPanel.firstNameInput.value = user().getOrElse(emptyUser).firstName
+      personalEditionPanel.lastNameInput.value = user().getOrElse(emptyUser).lastName
+      personalEditionPanel.affiliationInput.value = user().getOrElse(emptyUser).affiliation
       // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
     }
 
@@ -168,8 +169,8 @@ class AdminEditionDialog {
     val render = tr(row)(
       onmouseover := { () ⇒ lineHovered() = Some(user) },
       onmouseout := { () ⇒ lineHovered() = None },
-      td(colMD(4), a(user.lastName, user.firstName, pointer, onclick := { () => userEdition() = Some(user) })),
-      td(colMD(7), "States ..."),
+      td(colMD(6), a(user.lastName, user.firstName, user.affiliation, pointer, onclick := { () => userEdition() = Some(user) })),
+      td(colMD(5), "States ..."),
       td(colMD(1),
         tags.span(Rx {
           glyph_trash +++ pointer +++ (lineHovered() == Some(user), opaque, transparent)

@@ -1,6 +1,6 @@
 package fr.iscpif.doors.client
 
-import fr.iscpif.scaladget.stylesheet.{all ⇒ sheet}
+import scaladget.stylesheet.{all ⇒ sheet}
 import scalatags.JsDom.all._
 import sheet._
 

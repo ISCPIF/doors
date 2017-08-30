@@ -2,13 +2,12 @@ package fr.iscpif.doors.client
 
 import org.scalajs.dom
 import fr.iscpif.doors.ext.Data._
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.mapping
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import scaladget.api.{BootstrapTags => bs}
+import scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
-import fr.iscpif.scaladget.tools.JsRxTags._
+import scaladget.tools.JsRxTags._
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
 import org.scalajs.dom.raw.HTMLDivElement
@@ -71,10 +70,9 @@ class ServiceWall(user: UserData) {
       tags.div(ms("centerpanel"))(
         div(doorsheet.user)(
           s"${user.firstName} ${user.lastName}",
-
-          // NB show method for adminEditionPanel will need update to scaladget 0.9.3
-          // adminEditionPanel.modalDialog.show ,
-
+          adminEditionPanel.modalDialog.show /*.trigger(
+            tags.span(glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30) +++ pointer))
+        )*/ ,
           BootstrapTags.thumbs(services).render,
           tags.img(src := Resources.isc, logoISC)
         )

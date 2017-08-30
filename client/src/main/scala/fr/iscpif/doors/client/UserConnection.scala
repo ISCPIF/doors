@@ -18,14 +18,14 @@ package fr.iscpif.doors.client
  */
 
 
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.api.Selector._
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import scaladget.api.{BootstrapTags => bs}
+import scaladget.api.Selector._
+import scaladget.stylesheet.{all => sheet}
 import fr.iscpif.doors.client.{stylesheet => doorsheet}
 import doorsheet._
 import sheet._
 import fr.iscpif.doors.ext.route._
-import fr.iscpif.scaladget.tools.JsRxTags._
+import scaladget.tools.JsRxTags._
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._

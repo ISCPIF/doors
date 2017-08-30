@@ -1,9 +1,9 @@
 package fr.iscpif.doors.client
 
-import fr.iscpif.scaladget.api.{BootstrapTags => bs}
-import fr.iscpif.scaladget.stylesheet.all._
+import scaladget.api.{BootstrapTags => bs}
+import scaladget.stylesheet.all._
 import fr.iscpif.doors.client.stylesheet._
-import fr.iscpif.scaladget.stylesheet.{all => sheet}
+import scaladget.stylesheet.{all => sheet}
 
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
