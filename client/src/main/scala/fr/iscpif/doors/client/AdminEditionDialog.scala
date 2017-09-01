@@ -140,7 +140,7 @@ class AdminEditionDialog {
     }
     
 
-    val tabs = bs.tabs(stacked_pills)
+    val tabs = bs.tabs
       .add("Personal info",
         divIfAuthorized { u =>
           personalEditionPanel.panel
@@ -162,7 +162,7 @@ class AdminEditionDialog {
       )
       .add("Administration", userTable)
 
-    tabs.render
+    tabs.render(stacked_pills)
   }
 
   case class ReactiveLine(user: UserData) {
