@@ -140,7 +140,7 @@ class AdminEditionDialog {
     }
     
 
-    val tabs = bs.tabs
+    val tabs = bs.tabs(stacked_pills)
       .add("Personal info",
         divIfAuthorized { u =>
           personalEditionPanel.panel
@@ -162,7 +162,7 @@ class AdminEditionDialog {
       )
       .add("Administration", userTable)
 
-    tabs.render(stacked_pills)
+    tabs.render
   }
 
   case class ReactiveLine(user: UserData) {
@@ -170,7 +170,7 @@ class AdminEditionDialog {
     val render = tr(row)(
       onmouseover := { () ⇒ lineHovered() = Some(user) },
       onmouseout := { () ⇒ lineHovered() = None },
-      td(colMD(6), a(user.lastName, user.firstName, user.affiliation, pointer, onclick := { () => userEdition() = Some(user) })),
+      td(colMD(6), a(s"${user.lastName} ${user.firstName}, (${user.affiliation})", pointer, onclick := { () => userEdition() = Some(user) })),
       td(colMD(5), "States ..."),
       td(colMD(1),
         tags.span(Rx {
