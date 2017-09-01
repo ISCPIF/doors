@@ -39,7 +39,7 @@ import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import scalajs.js.URIUtils.encodeURIComponent
 
-object  Client {
+object Client {
 
   implicit val ctx: Ctx.Owner = Ctx.Owner.safe()
 
@@ -104,7 +104,7 @@ object  Client {
                 pE.isStatusOK.foreach { passOK =>
                   if (passOK) {
                     val currentGetArgs = dom.window.location.search.substring(1)
-                    val senddata = currentGetArgs+"&newpass="+encodeURIComponent(pE.newPassword)
+                    val senddata = currentGetArgs + "&newpass=" + encodeURIComponent(pE.newPassword)
                     // send the form with the secret added inside
                     val response = dom.ext.Ajax.post(
                       dom.window.location.origin + dom.window.location.pathname,
@@ -115,9 +115,9 @@ object  Client {
                       new MessageDisplay("Your password will be updated in a few seconds").render
                     }).onFailure {
                       case dom.ext.AjaxException(resp) => resp.status match {
-                          case 400 => new MessageDisplay("The password couldn't be updated (please check if the URL is exactly like the one in the email you received).").render
-                          case _ => new MessageDisplay("The password couldn't be updated (perhaps you already used this reset link?)").render
-                        }
+                        case 400 => new MessageDisplay("The password couldn't be updated (please check if the URL is exactly like the one in the email you received).").render
+                        case _ => new MessageDisplay("The password couldn't be updated (perhaps you already used this reset link?)").render
+                      }
                       case _ => new MessageDisplay("The password couldn't be updated.").render
                     }
                   }
