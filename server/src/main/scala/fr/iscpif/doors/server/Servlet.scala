@@ -64,6 +64,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   val application = html("application();")
 
   val askNewPassword = html("askNewPassword();")
+  val secretAlreadyUsedMessage = html("secretAlreadyUsedMessage();")
 
   //FIXME with a real page
   val errorPage = tags.html(
@@ -234,24 +235,30 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   // returning point for users who asked to reset their pass
   get(resetPasswordRoute) {
 
-    askNewPassword
+      val secret = params get "secret"
 
-    // TODO make this work tomorrow
-    //    val secret = params get "secret"
-    //
-    //    // 1-test if secret still valid
-    //    secret match {
-    //      case Some(sec) => db.query.lock.getFromSecretStrWithDB(sec)(settings,database) match {
-    //        case Left(e) => NotFound()
-    //        case Right(lockIdStr) => lockIdStr match {
-    //          case LockState.unlocked.id => NotFound()
-    //          case LockState.locked.id =>
-    //            // 2-user input form
-    //            askNewPassword
-    //        }
-    //      }
-    //      case _ => BadRequest()
-    //    }
+      // 1-test if secret still valid
+      secret match {
+        case Some(sec) =>
+          db.query.lock.getFromSecretStr(sec).execute(settings,database) match {
+          case Right(lockIdStr) =>
+            db.query.lock.mostRecentLockState(LockID(lockIdStr)).execute(settings, database) match {
+              case Right(lockStatus) => lockStatus match {
+                case LockState.unlocked.id =>
+                  secretAlreadyUsedMessage
+                case LockState.locked.id =>
+                  // 2-user input form
+                  askNewPassword
+                case _ =>
+                  // println("LockState is neither locked nor unlocked ?!")
+                  NotFound()
+              }
+              case Left(_) => NotFound()
+          }
+          case Left(_) => NotFound()
+        }
+        case _ => BadRequest()
+      }
   }
 
   // same route: POST reception after user added his input

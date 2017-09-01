@@ -30,11 +30,12 @@ import rx._
 import scala.scalajs.js.annotation.JSExportTopLevel
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
+
 import scaladget.stylesheet.{all => sheet}
 import scaladget.api.{BootstrapTags => bs}
 import org.scalajs.dom.html.Element
-import sheet._
 
+import sheet._
 import scalatags.JsDom.tags
 import scalatags.JsDom.all._
 import scalajs.js.URIUtils.encodeURIComponent
@@ -86,6 +87,17 @@ object Client {
       div(panelHeading +++ Seq(fontWeight := "bold"))(heading),
       div(panelBody)(content)
     )
+
+  @JSExportTopLevel("secretAlreadyUsedMessage")
+  def secretAlreadyUsedMessage() = {
+    bs.withBootstrapNative(
+      tags.div()(
+        tags.div(wall +++ Seq(width := "400px", margin := "auto"))(
+          panelInBody("Error", tags.div("This validation link has already been used.").render)
+        ).render
+      ).render
+    )
+  }
 
   @JSExportTopLevel("askNewPassword")
   def askNewPassword(): Unit = {

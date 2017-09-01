@@ -61,16 +61,6 @@ object query {
       } yield l.id).result.head
     }
 
-    def getFromSecretStrWithDB(secret: String)(settings: Settings, database: db.Database): Either[freedsl.dsl.Error,String] = {
-      db.DB {
-        scheme =>
-          (for {
-            s <- scheme.secrets.filter(s => s.secret === secret)
-            l <- scheme.locks.filter(l => l.id === s.lockID)
-          } yield l.id).result.head
-      }.execute(settings, database)
-    }
-
     def progress(lockId: Data.LockID, statusId: Data.StateID) = DB { scheme =>
       scheme.locks += db.Lock(lockId, statusId, System.currentTimeMillis() milliseconds, None)
     }
