@@ -133,6 +133,7 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         _ == u
       }
     }
+    session.invalidate()
     redirect(connectionRoute)
   }
 
