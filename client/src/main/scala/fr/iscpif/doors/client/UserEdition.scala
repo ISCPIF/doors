@@ -5,14 +5,16 @@ import bs._
 import shared.{Api, UnloggedApi}
 
 import scalatags.JsDom.all._
-import fr.iscpif.doors.ext.Data.UserData
+import fr.iscpif.doors.ext.Data.{ApiRep, UserData}
+
 import scaladget.stylesheet.{all => sheet}
 import scaladget.tools.JsRxTags._
 import sheet._
-
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.runNow
 import autowire._
+import org.scalajs.dom.html
 import rx._
+import scalatags.JsDom
 
 
 class UserEdition(user: Var[Option[UserData]] = Var(None)) {
@@ -24,13 +26,30 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   val emailInput = bs.input("")(placeholder := "Email", width := "100%").render
 
 
-  // TODO check if we want an AJAX API here ?
-  val autocompletionList = datalist(Seq(id := "affiliations"))(
-    option(Seq(value := "CNRS"))(),
-    option(Seq(value := "ISCPIF"))(),
-    option(Seq(value := "Université Paris 6"))()
-  ).render
+  val affListDefaults = Seq(
+    "CNRS",
+    "ISCPIF",
+    "Université Paris 6"
+  )
 
+  def strToHtmlOption(s: String): JsDom.TypedTag[html.Option] = option(Seq(value := s))()
+
+  val affAutocompleteList: Var[JsDom.TypedTag[html.DataList]] = Var(
+    datalist(Seq(id := "affiliations"))(affListDefaults.map(strToHtmlOption):_*)
+  )
+
+  def updateAffiliationAutocompleteList(defaultList: Seq[String] = affListDefaults): Unit = {
+    // fetching DB affiliations, concat with defaultList, and render to DataList
+    Post[UnloggedApi].affiliationsList().call().foreach {
+      resp: ApiRep[Seq[String]] => resp match {
+        case Right(dbAffiliationsList: Seq[String]) =>
+          affAutocompleteList() = datalist(Seq(id := "affiliations"))(
+            (defaultList ++ dbAffiliationsList).map(strToHtmlOption):_*
+          )
+        case Left(_) =>
+      }
+    }
+  }
 
   lazy val stringErrors: Var[Seq[String]] = Var(Seq())
 
@@ -75,13 +94,12 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
       lastNameInput.withLabel("* Last name"),
       emailInput.withLabel("* Email"),
       affiliationInput.withLabel("Affiliation"),
-      autocompletionList
+      affAutocompleteList.now.render              // <= TODO fix Rx: async comes back after ".now"
     )
 
   lazy val panelWithError = div(
     panel,
     errorPanel
   )
-
 }
 

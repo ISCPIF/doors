@@ -61,4 +61,11 @@ class UnloggedApiImpl(settings: Settings, database: Database) extends shared.Unl
         settings.emailValidationInstance.start[M] (uid, EmailAddress(email.toLowerCase)).map(_ => uid)
       } execute(settings, database)
 
+
+  def affiliationsList(): ApiRep[Seq[String]] = {
+    user.affiliationsList()(settings, database) match {
+      case Left(_) => Left(DSLError)
+      case Right(li) => Right(li)
+    }
+  }
 }

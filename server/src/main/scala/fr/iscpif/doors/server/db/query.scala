@@ -228,6 +228,11 @@ object query {
       }.execute(settings, database)
     }
 
+    def affiliationsList()(settings: Settings, database: db.Database) = DB { scheme =>
+      (for {
+        aff <- scheme.users.groupBy(_.affiliation).map { case (aff, u) => (aff) }
+      } yield aff).result
+    }.execute(settings, database)
   }
 
 
