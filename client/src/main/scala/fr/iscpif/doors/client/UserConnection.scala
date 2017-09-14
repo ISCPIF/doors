@@ -68,8 +68,6 @@ class UserConnection {
   val personalEdition = new UserEdition
   val passEdition = PassEdition.newUser
 
-  // TODO when to call this and how to combine with Rx ?
-  personalEdition.updateAffiliationAutocompleteList()
 
   val registerLinkElement: Dropdown[HTMLDivElement] = div(width := 250)(
     personalEdition.panel,

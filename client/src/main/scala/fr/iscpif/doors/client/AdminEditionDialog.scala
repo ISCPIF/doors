@@ -143,7 +143,7 @@ class AdminEditionDialog {
     val tabs = bs.tabs
       .add("Personal info",
         divIfAuthorized { u =>
-          personalEditionPanel.panel
+          Rx { personalEditionPanel.panel() }.now
         })
       .add("Change Password",
         divIfAuthorized { u =>

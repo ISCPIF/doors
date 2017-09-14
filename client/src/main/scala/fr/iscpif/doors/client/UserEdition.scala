@@ -34,8 +34,10 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
 
   def strToHtmlOption(s: String): JsDom.TypedTag[html.Option] = option(Seq(value := s))()
 
-  val affAutocompleteList: Var[JsDom.TypedTag[html.DataList]] = Var(
-    datalist(Seq(id := "affiliations"))(affListDefaults.map(strToHtmlOption):_*)
+  val affUpdated: Var[Boolean] = Var(false)
+
+  val affAutocompleteList: Var[html.Element] = Var(
+    datalist(Seq(id := "affiliations"))(affListDefaults.map(strToHtmlOption):_*).render
   )
 
   def updateAffiliationAutocompleteList(defaultList: Seq[String] = affListDefaults): Unit = {
@@ -45,7 +47,8 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
         case Right(dbAffiliationsList: Seq[String]) =>
           affAutocompleteList() = datalist(Seq(id := "affiliations"))(
             (defaultList ++ dbAffiliationsList).map(strToHtmlOption):_*
-          )
+          ).render
+          affUpdated() = true
         case Left(_) =>
       }
     }
@@ -89,17 +92,33 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   }
 
   lazy val panel =
-    bs.vForm(width := "100%")(
-      firstNameInput.withLabel("First name"),
-      lastNameInput.withLabel("* Last name"),
-      emailInput.withLabel("* Email"),
-      affiliationInput.withLabel("Affiliation"),
-      affAutocompleteList.now.render              // <= TODO fix Rx: async comes back after ".now"
-    )
+    Rx {
+      affUpdated() match {
+        case true =>
+          bs.vForm(width := "100%")(
+            firstNameInput.withLabel("First name"),
+            lastNameInput.withLabel("* Last name"),
+            emailInput.withLabel("* Email"),
+            affiliationInput.withLabel("Affiliation"),
+            affAutocompleteList()
+          )
+        case false =>
+          bs.vForm(width := "100%")(
+            firstNameInput.withLabel("First name"),
+            lastNameInput.withLabel("* Last name"),
+            emailInput.withLabel("* Email"),
+            affiliationInput.withLabel("Affiliation"),
+            affAutocompleteList()
+          )
+      }
+    }
 
   lazy val panelWithError = div(
     panel,
     errorPanel
   )
+
+  // async API call to update the affiliations content
+  updateAffiliationAutocompleteList()
 }
 
