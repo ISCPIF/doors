@@ -26,7 +26,6 @@ object DoorsMailer {
 
 
   def send(smtp: SMTPSettings, emailSubject: String, content: String, to: String): Try[Unit] = {
-println("SEND EMAIL " + emailSubject)
 
     val props = new Properties
     props.put("mail.smtp.auth", smtp.auth.toString)

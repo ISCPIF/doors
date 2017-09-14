@@ -51,10 +51,10 @@ class AdminEditionDialog {
     user() = uopt
     uopt.foreach { u =>
 
-                  //FIXME, updating API_IMPL
-//      Post[Api].canModifyPartialUser(u.id).call().foreach { ok =>
-//        canModify() = ok.authorized
-//      }
+      //FIXME, updating API_IMPL
+      //      Post[Api].canModifyPartialUser(u.id).call().foreach { ok =>
+      //        canModify() = ok.authorized
+      //      }
     }
   }
 
@@ -73,12 +73,12 @@ class AdminEditionDialog {
           case Some(u: UserData) =>
             val puser = PartialUser(u.id, personalEditionPanel.firstName, personalEditionPanel.lastName, personalEditionPanel.affiliation)
 
-//            Post[Api].updatePartialUser(
-//              puser
-//            ).call().foreach { x =>
-//              userEdition() = None
-//              modalDialog.close
-//            }
+          //            Post[Api].updatePartialUser(
+          //              puser
+          //            ).call().foreach { x =>
+          //              userEdition() = None
+          //              modalDialog.close
+          //            }
           case _ =>
         }
       }
@@ -138,30 +138,31 @@ class AdminEditionDialog {
       personalEditionPanel.affiliationInput.value = user().getOrElse(emptyUser).affiliation
       // personalEditionPanel.emailInput.value = user().getOrElse(emptyUser).email
     }
+    
 
-
-    bs.accordion(
-      accordionItem("Personal info",
+    val tabs = bs.tabs
+      .add("Personal info",
         divIfAuthorized { u =>
           personalEditionPanel.panel
-        }),
-      accordionItem("Change Password",
+        })
+      .add("Change Password",
         divIfAuthorized { u =>
           tags.div(
             passEdition.panelWithError,
             bs.button("Change password", btn_primary, () => {
               passEdition.isStatusOK.foreach { pOK =>
                 if (pOK)
-                  //FIXME, updating API_IMPL
-              // //   Post[Api].updatePassword(u.id, passEdition.newPassword).call().foreach { p =>
-                    println("Pass updated")
-               //   }
+                //FIXME, updating API_IMPL
+                // //   Post[Api].updatePassword(u.id, passEdition.newPassword).call().foreach { p =>
+                  println("Pass updated")
+                //   }
               }
             }))
         }
-      ),
-      accordionItem("Administration", userTable)
-    )
+      )
+      .add("Administration", userTable)
+
+    tabs.render(stacked_pills)
   }
 
   case class ReactiveLine(user: UserData) {
@@ -169,7 +170,7 @@ class AdminEditionDialog {
     val render = tr(row)(
       onmouseover := { () ⇒ lineHovered() = Some(user) },
       onmouseout := { () ⇒ lineHovered() = None },
-      td(colMD(6), a(user.lastName, user.firstName, user.affiliation, pointer, onclick := { () => userEdition() = Some(user) })),
+      td(colMD(6), a(s"${user.lastName} ${user.firstName}, (${user.affiliation})", pointer, onclick := { () => userEdition() = Some(user) })),
       td(colMD(5), "States ..."),
       td(colMD(1),
         tags.span(Rx {
@@ -177,10 +178,10 @@ class AdminEditionDialog {
         },
           onclick := { () ⇒
 
-                  //FIXME, updating API_IMPL
-//            Post[Api].removeUser(user).call().foreach { u =>
-//              getUsers
-//            }
+            //FIXME, updating API_IMPL
+            //            Post[Api].removeUser(user).call().foreach { u =>
+            //              getUsers
+            //            }
           }
         )
       )

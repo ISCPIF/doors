@@ -71,7 +71,7 @@ lazy val client = Project(
     "com.lihaoyi" %%% "upickle" % upickleVersion,
     "com.lihaoyi" %%% "scalatags" % scalatagsVersion,
     "com.lihaoyi" %%% "scalarx" % "0.3.1",
-    "fr.iscpif" %%% "scaladget" % "0.9.4",
+    "fr.iscpif" %%% "scaladget" % "0.9.5-SNAPSHOT",
     "org.scala-js" %%% "scalajs-dom" % "0.9.1",
     "org.json4s" %% "json4s-jackson" % json4sVersion
   )
