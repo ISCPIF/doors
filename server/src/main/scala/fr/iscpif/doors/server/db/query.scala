@@ -158,9 +158,9 @@ object query {
 
   object user {
 
-    def add(firstName: String, lastName: String, affiliation: String, password: Data.Password, hashAlgorithm: HashingAlgorithm) = {
+    def add(firstName: String, lastName: String, password: Data.Password, hashAlgorithm: HashingAlgorithm) = {
       // NB here it is assumed that password is already hashed
-      val user = User(UserID(Utils.uuid), firstName: String, lastName: String, affiliation: String, password, hashAlgorithm)
+      val user = User(UserID(Utils.uuid), firstName: String, lastName: String, password, hashAlgorithm)
       for {
         _ <- DB {
           _.users += user
@@ -227,12 +227,6 @@ object query {
         ).update(newValue, newHName, newHJson)
       }.execute(settings, database)
     }
-
-    def affiliationsList()(settings: Settings, database: db.Database) = DB { scheme =>
-      (for {
-        aff <- scheme.users.groupBy(_.affiliation).map { case (aff, u) => (aff) }
-      } yield aff).result
-    }.execute(settings, database)
   }
 
 

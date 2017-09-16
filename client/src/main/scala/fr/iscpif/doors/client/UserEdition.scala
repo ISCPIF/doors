@@ -22,38 +22,7 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
 
   val firstNameInput = bs.input("")(placeholder := "First name", width := "100%").render
   val lastNameInput = bs.input("")(placeholder := "Given name", width := "100%").render
-  val affiliationInput = bs.input("")(placeholder := "Affiliation", width := "100%", list := "affiliations").render
   val emailInput = bs.input("")(placeholder := "Email", width := "100%").render
-
-
-  val affListDefaults = Seq(
-    "CNRS",
-    "ISCPIF",
-    "Université Paris 6"
-  )
-
-  def strToHtmlOption(s: String): JsDom.TypedTag[html.Option] = option(Seq(value := s))()
-
-  val affUpdated: Var[Boolean] = Var(false)
-
-  val affAutocompleteList: Var[html.Element] = Var(
-    datalist(Seq(id := "affiliations"))(affListDefaults.map(strToHtmlOption):_*).render
-  )
-
-  def updateAffiliationAutocompleteList(defaultList: Seq[String] = affListDefaults): Unit = {
-    // fetching DB affiliations, concat with defaultList, and render to DataList
-    Post[UnloggedApi].affiliationsList().call().foreach {
-      resp: ApiRep[Seq[String]] => resp match {
-        case Right(dbAffiliationsList: Seq[String]) =>
-          affAutocompleteList() = datalist(Seq(id := "affiliations"))(
-            (defaultList ++ dbAffiliationsList).map(strToHtmlOption):_*
-          ).render
-          affUpdated() = true
-        case Left(_) =>
-      }
-    }
-  }
-
   lazy val stringErrors: Var[Seq[String]] = Var(Seq())
 
   val isPanelValid = Rx {
@@ -65,14 +34,14 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
       case Some(u: UserData) =>
         lastNameInput.value = u.lastName
         firstNameInput.value = u.firstName
-        affiliationInput.value = u.affiliation
+      // emailInput.value = u.email
       case _ =>
     }
   }
 
   def lastName = lastNameInput.value
   def firstName = firstNameInput.value
-  def affiliation = affiliationInput.value
+
   def email = emailInput.value
 
   def checkData = {
@@ -92,33 +61,14 @@ class UserEdition(user: Var[Option[UserData]] = Var(None)) {
   }
 
   lazy val panel =
-    Rx {
-      affUpdated() match {
-        case true =>
-          bs.vForm(width := "100%")(
-            firstNameInput.withLabel("First name"),
-            lastNameInput.withLabel("* Last name"),
-            emailInput.withLabel("* Email"),
-            affiliationInput.withLabel("Affiliation"),
-            affAutocompleteList()
-          )
-        case false =>
-          bs.vForm(width := "100%")(
-            firstNameInput.withLabel("First name"),
-            lastNameInput.withLabel("* Last name"),
-            emailInput.withLabel("* Email"),
-            affiliationInput.withLabel("Affiliation"),
-            affAutocompleteList()
-          )
-      }
-    }
+    bs.vForm(width := "100%")(
+      firstNameInput.withLabel("First name"),
+      lastNameInput.withLabel("Last name"),
+      emailInput.withLabel("Email")
+    )
 
   lazy val panelWithError = div(
     panel,
     errorPanel
   )
-
-  // async API call to update the affiliations content
-  updateAffiliationAutocompleteList()
 }
-

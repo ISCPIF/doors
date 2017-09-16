@@ -190,12 +190,11 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
     val loginEmail = params get "login"
     val firstName = params get "firstName"
     val lastName = params get "lastName"
-    val affiliation = params get "affiliation"
     val pass = params get "password"
 
-    (loginEmail, firstName, lastName, affiliation, pass) match {
-      case (Some(email), Some(firstName), Some(lastName), Some(affiliation), Some(pass)) =>
-        unloggedAPI.addUser(firstName: String, lastName: String, affiliation: String, email, pass) match {
+    (loginEmail, firstName, lastName, pass) match {
+      case (Some(email), Some(firstName), Some(lastName), Some(pass)) =>
+        unloggedAPI.addUser(firstName, lastName, email, pass) match {
           case Right(uid) =>  Ok(registrationPending(email = loginEmail, userID = Some(uid.id)).toJson)
           case Left(e) => halt(500, (e))
         }

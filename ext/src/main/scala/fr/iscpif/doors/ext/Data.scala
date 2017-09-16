@@ -51,7 +51,7 @@ object Data {
 
   case class LockID(id: String)
 
-  case class PartialUser(id: UserID, firstName: String, lastName: String, affiliation: String)
+  case class PartialUser(id: UserID, firstName: String, lastName: String)
 
   case class Password(value: String)
 
@@ -174,9 +174,9 @@ object Data {
   }
 
   object UserData {
-    def empty = UserData(UserID(""), "", "", "", Password(""))
+    def empty = UserData(UserID(""), "", "", Password(""))
   }
 
-  case class UserData(id: UserID, firstName: String, lastName: String, affiliation: String, password: Password)
+  case class UserData(id: UserID, firstName: String, lastName: String, password: Password)
 
 }
