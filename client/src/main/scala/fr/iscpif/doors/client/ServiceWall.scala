@@ -69,7 +69,7 @@ class ServiceWall(user: UserData) {
       adminEditionPanel.modalDialog.dialog,
       tags.div(ms("centerpanel"))(
         div(doorsheet.user)(
-          s"${user.firstName} ${user.lastName}",
+          s"${user.name}",
           tags.span(glyph_settings +++ settingsStyle +++ Seq(left := 10, top := 30) +++ pointer, onclick := {()=> adminEditionPanel.modalDialog.show}),
           BootstrapTags.thumbs(services).render,
           tags.img(src := Resources.isc, logoISC)

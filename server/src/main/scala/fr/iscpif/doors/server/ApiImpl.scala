@@ -100,8 +100,8 @@ class ApiImpl(loggedUserId: UserID, settings: Settings, database: db.Database) e
     db.DB { scheme =>
       val q = for {
         u <- scheme.users if u.id === puser.id.id
-      } yield (u.firstName, u.lastName)
-      q.update((puser.firstName, puser.lastName))
+      } yield (u.name)
+      q.update((puser.name))
     }.execute(settings, database)
   }
 
