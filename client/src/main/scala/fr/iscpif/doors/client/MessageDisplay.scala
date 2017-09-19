@@ -3,12 +3,11 @@ package fr.iscpif.doors.client
 import scaladget.api.{BootstrapTags => bs}
 import scaladget.stylesheet.all._
 import fr.iscpif.doors.client.stylesheet._
-import scaladget.stylesheet.{all => sheet}
 
-import scalatags.JsDom.tags
+import scaladget.stylesheet.{all => sheet}
+import scalatags.JsDom.{TypedTag, tags}
 import scalatags.JsDom.all._
 import Client.panelInBody
-
 import org.scalajs.dom.html.Element
 
 /*
@@ -29,7 +28,13 @@ import org.scalajs.dom.html.Element
  */
 
 
-class MessageDisplay(aMessage: String) {
+object MessageDisplay {
+  def apply(aMessage: String) = new MessageDisplay(tags.p(aMessage))
+}
+
+class MessageDisplay(content: TypedTag[Element],
+                     buttons: Seq[TypedTag[Element]] = Seq(tags.a(btn_primary +++ Seq(href := "/"))("Ok"))
+                    ) {
 
   def render = {
     bs.withBootstrapNative(
@@ -38,13 +43,9 @@ class MessageDisplay(aMessage: String) {
           panelInBody(
             "Information",
             tags.div(
-              tags.p(
-                aMessage
-              ),
+              content.render,
               tags.div(Seq(textAlign := "right")) (
-                tags.a(btn +++ btn_default +++ btn_primary +++ Seq(href := "/"))(
-                  "Ok"
-                )
+                buttons: _*
               ).render
             ).render
           ).render
