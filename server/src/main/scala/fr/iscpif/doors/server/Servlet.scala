@@ -33,7 +33,6 @@ import fr.iscpif.doors.server.DoorsAPIStatus._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import db.{User, query}
-import fr.iscpif.doors.server.db.query.user
 import fr.iscpif.doors.server.lock.EmailSettings.UnlockError
 import freedsl.io.IO.IOError
 
@@ -62,6 +61,8 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
   val emailValidatedMessage = html("emailValidatedMessage();")
 
   val application = html("application();")
+
+  def sendNewPasswordPage(someString: String) = html(s"""sendNewPasswordPage("${someString}");""")
 
   val askNewPassword = html("askNewPassword();")
   val secretAlreadyUsedMessage = html("secretAlreadyUsedMessage();")
@@ -228,6 +229,18 @@ class Servlet(val settings: Settings, val database: db.Database) extends Scalatr
         case Right(_) => Ok()
       }
     case _ => halt(404, "Wrong arguments")
+  }
+
+  get(resetPasswordRequestRoute) {
+    val email = params get "email"
+    email match {
+      case Some(s: String) =>
+        db.query.email.exists(s) execute(settings, database) match {
+          case Right(true) => sendNewPasswordPage(s)
+          case _ => sendNewPasswordPage("")
+        }
+      case _ => sendNewPasswordPage("")
+    }
   }
 
 

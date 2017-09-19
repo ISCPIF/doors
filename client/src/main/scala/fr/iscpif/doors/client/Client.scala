@@ -61,6 +61,21 @@ object Client {
     new MessageDisplay("Your email was successfully validated !").render
   }
 
+
+  @JSExportTopLevel("sendNewPasswordPage")
+  def sendNewPasswordPage(email: String): Unit = {
+    val askResetPassword = new AskResetPassword()
+    askResetPassword.emailForPasswordInput.value = email
+
+    bs.withBootstrapNative(
+      tags.div()(
+        tags.div(wall +++ Seq(width := "400px", margin := "auto"))(
+          Rx{ askResetPassword.panel }.now.render
+        ).render
+      ).render
+    ).render
+  }
+
   @JSExportTopLevel("application")
   def application(): Unit = {
     Post[Api].loggedUser.call().foreach {

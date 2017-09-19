@@ -25,6 +25,7 @@ package object route {
   val emailValidationRoute = "/emailValidation"
   val resetPasswordValidationRoute = "/resetPasswordValidation"
   val resetPasswordRoute = "/resetPassword"
+  val resetPasswordRequestRoute = "/resetPasswordRequest"
 
   val apiAllRoute = "/api/*"
   val apiUserExistsRoute = "/api/userExists"

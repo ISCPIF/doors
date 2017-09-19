@@ -45,6 +45,8 @@ class UserConnection {
   val user: Var[Option[UserData]] = Var(None)
   val isPasswordReset: Var[Boolean] = Var(false)
 
+  val askResetPasswordOnOffButton = bs.button("Finish", btn_default, () => { isPasswordReset() = false })(Seq(float := "right"))
+
   // SIGN IN
   val emailInput = bs.input("")(
     name := "email",
@@ -104,45 +106,6 @@ class UserConnection {
     )
   ).dropdown("Register", btn_primary, Seq(sheet.marginTop(15), sheet.marginLeft(10)))
 
-  def resetPasswordStartBox(email: String) = {
-    Post[UnloggedApi].resetPasswordSend(email).call().foreach {
-      _ match {
-        case Right(true) => resetPassSendStatus() = darOk("Ok, our message was just sent to your address.")
-        case _ => resetPassSendStatus() = darError("There is no account with this email. You can still register if you want.")
-      }
-    }
-  }
-
-
-  val emailForPasswordInput = bs.input("")(placeholder := "Type your email for confirmation").render
-
-  val emailForPasswordDiv = div(
-    bs.hForm(
-      emailForPasswordInput,
-      bs.button("Send", btn_primary, () => {
-        // try send the email and update GUI with result
-        resetPasswordStartBox(emailForPasswordInput.value)
-      }).render,
-      bs.button("Finish", btn_default, () => {
-        // when user closes box, all GUI elements will return to neutral status
-          emailForPasswordInput.value = ""
-          isPasswordReset() = false
-          resetPassSendStatus() = darUndefined()
-      })(Seq(float := "right")).render
-    )
-  )
-
-  // val passStatus: Var[PassStatus] = Var(PassUndefined())
-  //
-  // val errorToShow = Rx {
-  //   passStatus() match {
-  //     case _@(_: PassMatchOk | _: PassUndefined) => false
-  //     case _: PassStatus => true
-  //   }
-  // }
-
-  val resetPassSendStatus: Var[darStatus] = Var(darUndefined())
-
 
   val render = {
     tags.div(
@@ -170,14 +133,8 @@ class UserConnection {
                   })
                 )
               } else {
-                Client.panelInBody(
-                  "Please enter your account's email and we will send you a unique link to reset your password",
-                  tags.div(
-                    emailForPasswordDiv,
-                    tags.p(resetPassSendStatus().message)
-                  ).render,
-                  Seq(id := "resetPassStartBox", width := "400px", sheet.marginTop(25), clear := "both")
-                ).render
+                val askResetPassword = new AskResetPassword(Some(askResetPasswordOnOffButton))
+                askResetPassword.panel.render
               }
             ).render
           )
